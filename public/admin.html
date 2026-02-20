@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>InnovateHub AI Gateway - Admin</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .gradient-bg { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); }
+    .glass { background: rgba(255,255,255,0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
+    .glow { box-shadow: 0 0 20px rgba(99, 102, 241, 0.3); }
+    .typing::after { content: '|'; animation: blink 1s infinite; }
+    @keyframes blink { 0%, 50% { opacity: 1; } 51%, 100% { opacity: 0; } }
+    .fade-in { animation: fadeIn 0.3s ease-in; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  </style>
+</head>
+<body class="gradient-bg min-h-screen text-white">
+  <!-- Login Modal -->
+  <div id="loginModal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+    <div class="glass rounded-2xl p-8 w-full max-w-md">
+      <div class="text-center mb-6">
+        <i class="fas fa-robot text-5xl text-indigo-400 mb-4"></i>
+        <h1 class="text-2xl font-bold">InnovateHub AI Gateway</h1>
+        <p class="text-gray-400">Admin Login</p>
+      </div>
+      <input type="password" id="adminKeyInput" placeholder="Enter Admin Key" 
+        class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 mb-4 focus:outline-none focus:border-indigo-500">
+      <button onclick="login()" class="w-full bg-indigo-600 hover:bg-indigo-700 rounded-lg py-3 font-semibold transition">
+        <i class="fas fa-sign-in-alt mr-2"></i>Login
+      </button>
+      <p id="loginError" class="text-red-400 text-center mt-4 hidden">Invalid admin key</p>
+    </div>
+  </div>
+
+  <!-- Main App -->
+  <div id="mainApp" class="hidden">
+    <!-- Header -->
+    <header class="glass border-b border-white/10 px-6 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <i class="fas fa-robot text-3xl text-indigo-400"></i>
+        <div>
+          <h1 class="text-xl font-bold">InnovateHub AI Gateway</h1>
+          <p class="text-gray-400 text-sm">Admin Dashboard</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-4">
+        <span id="statusBadge" class="bg-green-500/20 text-green-400 px-3 py-1 rounded-full text-sm">
+          <i class="fas fa-circle text-xs mr-1"></i>Online
+        </span>
+        <button onclick="logout()" class="text-gray-400 hover:text-white transition">
+          <i class="fas fa-sign-out-alt text-xl"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="glass border-b border-white/10 px-6">
+      <div class="flex gap-1">
+        <button onclick="showTab('dashboard')" class="tab-btn active px-4 py-3 border-b-2 border-indigo-500 text-indigo-400" data-tab="dashboard">
+          <i class="fas fa-chart-line mr-2"></i>Dashboard
+        </button>
+        <button onclick="showTab('playground')" class="tab-btn px-4 py-3 border-b-2 border-transparent text-gray-400 hover:text-white" data-tab="playground">
+          <i class="fas fa-flask mr-2"></i>Playground
+        </button>
+        <button onclick="showTab('logs')" class="tab-btn px-4 py-3 border-b-2 border-transparent text-gray-400 hover:text-white" data-tab="logs">
+          <i class="fas fa-list mr-2"></i>Logs
+        </button>
+        <button onclick="showTab('settings')" class="tab-btn px-4 py-3 border-b-2 border-transparent text-gray-400 hover:text-white" data-tab="settings">
+          <i class="fas fa-cog mr-2"></i>Settings
+        </button>
+      </div>
+    </nav>
+
+    <!-- Dashboard Tab -->
+    <div id="tab-dashboard" class="tab-content p-6">
+      <!-- Stats Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div class="glass rounded-xl p-6 glow">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-gray-400 text-sm">Total Requests</p>
+              <p id="statRequests" class="text-3xl font-bold mt-1">0</p>
+            </div>
+            <i class="fas fa-paper-plane text-3xl text-indigo-400"></i>
+          </div>
+        </div>
+        <div class="glass rounded-xl p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-gray-400 text-sm">Total Tokens</p>
+              <p id="statTokens" class="text-3xl font-bold mt-1">0</p>
+            </div>
+            <i class="fas fa-coins text-3xl text-yellow-400"></i>
+          </div>
+        </div>
+        <div class="glass rounded-xl p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-gray-400 text-sm">Uptime</p>
+              <p id="statUptime" class="text-3xl font-bold mt-1">0h</p>
+            </div>
+            <i class="fas fa-clock text-3xl text-green-400"></i>
+          </div>
+        </div>
+        <div class="glass rounded-xl p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-gray-400 text-sm">Avg Latency</p>
+              <p id="statLatency" class="text-3xl font-bold mt-1">0ms</p>
+            </div>
+            <i class="fas fa-bolt text-3xl text-purple-400"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts Row -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div class="glass rounded-xl p-6">
+          <h3 class="text-lg font-semibold mb-4"><i class="fas fa-chart-bar mr-2 text-indigo-400"></i>Requests (Last 24h)</h3>
+          <canvas id="hourlyChart" height="200"></canvas>
+        </div>
+        <div class="glass rounded-xl p-6">
+          <h3 class="text-lg font-semibold mb-4"><i class="fas fa-chart-pie mr-2 text-indigo-400"></i>Model Distribution</h3>
+          <canvas id="modelChart" height="200"></canvas>
+        </div>
+      </div>
+
+      <!-- System Info -->
+      <div class="glass rounded-xl p-6">
+        <h3 class="text-lg font-semibold mb-4"><i class="fas fa-server mr-2 text-indigo-400"></i>System Info</h3>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div class="bg-white/5 rounded-lg p-4">
+            <p class="text-gray-400 text-sm">CPU Usage</p>
+            <p id="sysCpu" class="text-xl font-semibold">-</p>
+          </div>
+          <div class="bg-white/5 rounded-lg p-4">
+            <p class="text-gray-400 text-sm">Memory</p>
+            <p id="sysMemory" class="text-xl font-semibold">-</p>
+          </div>
+          <div class="bg-white/5 rounded-lg p-4">
+            <p class="text-gray-400 text-sm">Disk</p>
+            <p id="sysDisk" class="text-xl font-semibold">-</p>
+          </div>
+          <div class="bg-white/5 rounded-lg p-4">
+            <p class="text-gray-400 text-sm">Node.js</p>
+            <p id="sysNode" class="text-xl font-semibold">-</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Playground Tab -->
+    <div id="tab-playground" class="tab-content hidden p-6">
+      <div class="glass rounded-xl p-6 max-w-4xl mx-auto">
+        <h3 class="text-lg font-semibold mb-4"><i class="fas fa-flask mr-2 text-indigo-400"></i>AI Playground</h3>
+        
+        <!-- Model Selector -->
+        <div class="mb-4">
+          <label class="text-gray-400 text-sm">Model</label>
+          <select id="playgroundModel" class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2 mt-1">
+            <option value="inno-ai-boyong-4.5">inno-ai-boyong-4.5 (Most Capable)</option>
+            <option value="inno-ai-boyong-4.0">inno-ai-boyong-4.0 (Balanced)</option>
+            <option value="inno-ai-boyong-mini">inno-ai-boyong-mini (Fast)</option>
+          </select>
+        </div>
+
+        <!-- Chat Area -->
+        <div id="chatArea" class="bg-black/30 rounded-lg p-4 h-96 overflow-y-auto mb-4 space-y-4">
+          <div class="text-gray-500 text-center py-8">
+            <i class="fas fa-comments text-4xl mb-2"></i>
+            <p>Start a conversation with the AI</p>
+          </div>
+        </div>
+
+        <!-- Input -->
+        <div class="flex gap-2">
+          <input type="text" id="playgroundInput" placeholder="Type your message..." 
+            class="flex-1 bg-white/10 border border-white/20 rounded-lg px-4 py-3 focus:outline-none focus:border-indigo-500"
+            onkeypress="if(event.key==='Enter')sendPlayground()">
+          <button onclick="sendPlayground()" id="sendBtn" class="bg-indigo-600 hover:bg-indigo-700 rounded-lg px-6 py-3 font-semibold transition">
+            <i class="fas fa-paper-plane"></i>
+          </button>
+        </div>
+        
+        <!-- Token Counter -->
+        <div class="flex justify-between mt-4 text-sm text-gray-400">
+          <span>Tokens: <span id="playgroundTokens">0</span></span>
+          <button onclick="clearChat()" class="hover:text-white"><i class="fas fa-trash mr-1"></i>Clear</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Logs Tab -->
+    <div id="tab-logs" class="tab-content hidden p-6">
+      <div class="glass rounded-xl p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-semibold"><i class="fas fa-list mr-2 text-indigo-400"></i>Request Logs</h3>
+          <button onclick="loadLogs()" class="text-indigo-400 hover:text-indigo-300">
+            <i class="fas fa-sync-alt mr-1"></i>Refresh
+          </button>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead>
+              <tr class="text-left text-gray-400 text-sm border-b border-white/10">
+                <th class="pb-3">Time</th>
+                <th class="pb-3">Model</th>
+                <th class="pb-3">Prompt</th>
+                <th class="pb-3">Tokens</th>
+                <th class="pb-3">Latency</th>
+                <th class="pb-3">Status</th>
+              </tr>
+            </thead>
+            <tbody id="logsTable" class="text-sm">
+              <tr><td colspan="6" class="py-8 text-center text-gray-500">Loading logs...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings Tab -->
+    <div id="tab-settings" class="tab-content hidden p-6">
+      <div class="max-w-2xl mx-auto space-y-6">
+        <!-- API Info -->
+        <div class="glass rounded-xl p-6">
+          <h3 class="text-lg font-semibold mb-4"><i class="fas fa-key mr-2 text-indigo-400"></i>API Information</h3>
+          <div class="space-y-4">
+            <div>
+              <label class="text-gray-400 text-sm">API Endpoint</label>
+              <div class="flex gap-2 mt-1">
+                <input type="text" value="https://ai-gateway.innoserver.cloud/v1/chat/completions" readonly
+                  class="flex-1 bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-sm">
+                <button onclick="copyToClipboard('https://ai-gateway.innoserver.cloud/v1/chat/completions')" class="bg-white/10 hover:bg-white/20 rounded-lg px-4">
+                  <i class="fas fa-copy"></i>
+                </button>
+              </div>
+            </div>
+            <div>
+              <label class="text-gray-400 text-sm">Available Models</label>
+              <div class="mt-2 space-y-2">
+                <div class="bg-white/5 rounded-lg px-4 py-2 flex justify-between">
+                  <span>inno-ai-boyong-4.5</span>
+                  <span class="text-gray-400">Most Capable</span>
+                </div>
+                <div class="bg-white/5 rounded-lg px-4 py-2 flex justify-between">
+                  <span>inno-ai-boyong-4.0</span>
+                  <span class="text-gray-400">Balanced</span>
+                </div>
+                <div class="bg-white/5 rounded-lg px-4 py-2 flex justify-between">
+                  <span>inno-ai-boyong-mini</span>
+                  <span class="text-gray-400">Fast</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Danger Zone -->
+        <div class="glass rounded-xl p-6 border border-red-500/30">
+          <h3 class="text-lg font-semibold mb-4 text-red-400"><i class="fas fa-exclamation-triangle mr-2"></i>Danger Zone</h3>
+          <p class="text-gray-400 mb-4">Reset all analytics and logs. This action cannot be undone.</p>
+          <button onclick="resetAnalytics()" class="bg-red-600 hover:bg-red-700 rounded-lg px-6 py-2 font-semibold transition">
+            <i class="fas fa-trash mr-2"></i>Reset All Data
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let adminKey = localStorage.getItem('adminKey') || '';
+    let hourlyChart, modelChart;
+    let totalPlaygroundTokens = 0;
+
+    // Check if already logged in
+    if (adminKey) {
+      verifyLogin();
+    }
+
+    async function login() {
+      adminKey = document.getElementById('adminKeyInput').value;
+      await verifyLogin();
+    }
+
+    async function verifyLogin() {
+      try {
+        const res = await fetch('/admin/analytics', {
+          headers: { 'X-Admin-Key': adminKey }
+        });
+        if (res.ok) {
+          localStorage.setItem('adminKey', adminKey);
+          document.getElementById('loginModal').classList.add('hidden');
+          document.getElementById('mainApp').classList.remove('hidden');
+          initDashboard();
+        } else {
+          document.getElementById('loginError').classList.remove('hidden');
+          localStorage.removeItem('adminKey');
+        }
+      } catch (e) {
+        document.getElementById('loginError').classList.remove('hidden');
+      }
+    }
+
+    function logout() {
+      localStorage.removeItem('adminKey');
+      location.reload();
+    }
+
+    function showTab(tab) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.tab-btn').forEach(el => {
+        el.classList.remove('border-indigo-500', 'text-indigo-400');
+        el.classList.add('border-transparent', 'text-gray-400');
+      });
+      
+      document.getElementById(`tab-${tab}`).classList.remove('hidden');
+      document.querySelector(`[data-tab="${tab}"]`).classList.add('border-indigo-500', 'text-indigo-400');
+      document.querySelector(`[data-tab="${tab}"]`).classList.remove('border-transparent', 'text-gray-400');
+      
+      if (tab === 'logs') loadLogs();
+    }
+
+    async function initDashboard() {
+      await loadAnalytics();
+      await loadSystemInfo();
+      setInterval(loadAnalytics, 30000);
+      setInterval(loadSystemInfo, 60000);
+    }
+
+    async function loadAnalytics() {
+      try {
+        const res = await fetch('/admin/analytics', {
+          headers: { 'X-Admin-Key': adminKey }
+        });
+        const data = await res.json();
+        
+        document.getElementById('statRequests').textContent = data.totalRequests.toLocaleString();
+        document.getElementById('statTokens').textContent = formatNumber(data.totalTokens);
+        document.getElementById('statUptime').textContent = data.uptime_human;
+        
+        // Calculate avg latency from logs
+        const logsRes = await fetch('/admin/logs?limit=100', {
+          headers: { 'X-Admin-Key': adminKey }
+        });
+        const logs = await logsRes.json();
+        const avgLatency = logs.length > 0 
+          ? Math.round(logs.reduce((a, l) => a + (l.latency || 0), 0) / logs.length)
+          : 0;
+        document.getElementById('statLatency').textContent = avgLatency + 'ms';
+        
+        updateCharts(data);
+      } catch (e) {
+        console.error('Failed to load analytics', e);
+      }
+    }
+
+    function formatNumber(num) {
+      if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+      if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+      return num.toString();
+    }
+
+    function updateCharts(data) {
+      // Hourly Chart
+      const hours = Object.keys(data.last24Hours);
+      const hourlyData = Object.values(data.last24Hours);
+      
+      if (hourlyChart) hourlyChart.destroy();
+      hourlyChart = new Chart(document.getElementById('hourlyChart'), {
+        type: 'bar',
+        data: {
+          labels: hours.map(h => h.slice(11) + ':00'),
+          datasets: [{
+            label: 'Requests',
+            data: hourlyData,
+            backgroundColor: 'rgba(99, 102, 241, 0.5)',
+            borderColor: 'rgba(99, 102, 241, 1)',
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { color: '#9ca3af' } },
+            x: { grid: { display: false }, ticks: { color: '#9ca3af' } }
+          }
+        }
+      });
+
+      // Model Chart
+      const models = Object.keys(data.requestsByModel);
+      const modelData = Object.values(data.requestsByModel);
+      
+      if (modelChart) modelChart.destroy();
+      modelChart = new Chart(document.getElementById('modelChart'), {
+        type: 'doughnut',
+        data: {
+          labels: models,
+          datasets: [{
+            data: modelData,
+            backgroundColor: ['rgba(99, 102, 241, 0.8)', 'rgba(168, 85, 247, 0.8)', 'rgba(236, 72, 153, 0.8)']
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { position: 'bottom', labels: { color: '#9ca3af' } } }
+        }
+      });
+    }
+
+    async function loadSystemInfo() {
+      try {
+        const res = await fetch('/admin/system', {
+          headers: { 'X-Admin-Key': adminKey }
+        });
+        const data = await res.json();
+        
+        document.getElementById('sysCpu').textContent = data.cpu || '-';
+        document.getElementById('sysMemory').textContent = data.memory || '-';
+        document.getElementById('sysDisk').textContent = data.disk || '-';
+        document.getElementById('sysNode').textContent = data.nodeVersion || '-';
+      } catch (e) {
+        console.error('Failed to load system info', e);
+      }
+    }
+
+    async function loadLogs() {
+      try {
+        const res = await fetch('/admin/logs?limit=100', {
+          headers: { 'X-Admin-Key': adminKey }
+        });
+        const logs = await res.json();
+        
+        const table = document.getElementById('logsTable');
+        if (logs.length === 0) {
+          table.innerHTML = '<tr><td colspan="6" class="py-8 text-center text-gray-500">No logs yet</td></tr>';
+          return;
+        }
+        
+        table.innerHTML = logs.map(log => `
+          <tr class="border-b border-white/5 hover:bg-white/5">
+            <td class="py-3">${new Date(log.timestamp).toLocaleString()}</td>
+            <td><span class="bg-indigo-500/20 text-indigo-300 px-2 py-1 rounded text-xs">${log.model || '-'}</span></td>
+            <td class="max-w-xs truncate">${log.promptPreview || '-'}</td>
+            <td>${log.totalTokens || 0}</td>
+            <td>${log.latency || 0}ms</td>
+            <td>${log.status === 'success' 
+              ? '<span class="text-green-400"><i class="fas fa-check"></i></span>' 
+              : '<span class="text-red-400"><i class="fas fa-times"></i></span>'}</td>
+          </tr>
+        `).join('');
+      } catch (e) {
+        console.error('Failed to load logs', e);
+      }
+    }
+
+    async function sendPlayground() {
+      const input = document.getElementById('playgroundInput');
+      const message = input.value.trim();
+      if (!message) return;
+      
+      const model = document.getElementById('playgroundModel').value;
+      const chatArea = document.getElementById('chatArea');
+      const sendBtn = document.getElementById('sendBtn');
+      
+      // Clear placeholder
+      if (chatArea.querySelector('.text-gray-500')) {
+        chatArea.innerHTML = '';
+      }
+      
+      // Add user message
+      chatArea.innerHTML += `
+        <div class="flex justify-end fade-in">
+          <div class="bg-indigo-600 rounded-lg px-4 py-2 max-w-[80%]">${escapeHtml(message)}</div>
+        </div>
+      `;
+      
+      input.value = '';
+      sendBtn.disabled = true;
+      sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+      
+      // Add typing indicator
+      const typingId = 'typing-' + Date.now();
+      chatArea.innerHTML += `
+        <div id="${typingId}" class="flex fade-in">
+          <div class="bg-white/10 rounded-lg px-4 py-2">
+            <span class="typing">Thinking</span>
+          </div>
+        </div>
+      `;
+      chatArea.scrollTop = chatArea.scrollHeight;
+      
+      try {
+        const res = await fetch('/admin/playground', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'X-Admin-Key': adminKey 
+          },
+          body: JSON.stringify({
+            model,
+            messages: [{ role: 'user', content: message }]
+          })
+        });
+        
+        const data = await res.json();
+        document.getElementById(typingId).remove();
+        
+        if (data.error) {
+          chatArea.innerHTML += `
+            <div class="flex fade-in">
+              <div class="bg-red-500/20 text-red-300 rounded-lg px-4 py-2 max-w-[80%]">Error: ${escapeHtml(data.error)}</div>
+            </div>
+          `;
+        } else {
+          chatArea.innerHTML += `
+            <div class="flex fade-in">
+              <div class="bg-white/10 rounded-lg px-4 py-2 max-w-[80%] whitespace-pre-wrap">${escapeHtml(data.response)}</div>
+            </div>
+          `;
+          totalPlaygroundTokens += data.usage?.total_tokens || 0;
+          document.getElementById('playgroundTokens').textContent = totalPlaygroundTokens.toLocaleString();
+        }
+      } catch (e) {
+        document.getElementById(typingId).remove();
+        chatArea.innerHTML += `
+          <div class="flex fade-in">
+            <div class="bg-red-500/20 text-red-300 rounded-lg px-4 py-2">Network error</div>
+          </div>
+        `;
+      }
+      
+      sendBtn.disabled = false;
+      sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i>';
+      chatArea.scrollTop = chatArea.scrollHeight;
+    }
+
+    function clearChat() {
+      document.getElementById('chatArea').innerHTML = `
+        <div class="text-gray-500 text-center py-8">
+          <i class="fas fa-comments text-4xl mb-2"></i>
+          <p>Start a conversation with the AI</p>
+        </div>
+      `;
+      totalPlaygroundTokens = 0;
+      document.getElementById('playgroundTokens').textContent = '0';
+    }
+
+    async function resetAnalytics() {
+      if (!confirm('Are you sure you want to reset all analytics and logs?')) return;
+      
+      try {
+        await fetch('/admin/reset', {
+          method: 'POST',
+          headers: { 'X-Admin-Key': adminKey }
+        });
+        alert('Analytics reset successfully');
+        loadAnalytics();
+      } catch (e) {
+        alert('Failed to reset analytics');
+      }
+    }
+
+    function copyToClipboard(text) {
+      navigator.clipboard.writeText(text);
+      alert('Copied to clipboard!');
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+  </script>
+</body>
+</html>

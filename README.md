@@ -2,13 +2,34 @@
 
 🤖 OpenAI-compatible API Gateway powered by InnovateHub's proprietary AI models.
 
+![Dashboard](https://img.shields.io/badge/Admin-Dashboard-blue)
+![Version](https://img.shields.io/badge/Version-2.0.0-green)
+![License](https://img.shields.io/badge/License-Proprietary-red)
+
 ## Features
 
-- ✅ OpenAI-compatible API (`/v1/chat/completions`, `/v1/models`)
-- ✅ Multiple model support (inno-ai-boyong-4.5, 4.0, mini)
-- ✅ API key authentication
-- ✅ Token usage tracking
-- ✅ CORS enabled
+- ✅ **OpenAI-compatible API** (`/v1/chat/completions`, `/v1/models`)
+- ✅ **Admin Dashboard** - Beautiful web UI for monitoring and management
+- ✅ **Analytics** - Track requests, tokens, and model usage
+- ✅ **Playground** - Test the AI directly from the browser
+- ✅ **Request Logs** - View all API requests with details
+- ✅ **System Monitoring** - CPU, memory, disk usage
+- ✅ **Multiple Models** - inno-ai-boyong-4.5, 4.0, mini
+
+## Screenshots
+
+### Dashboard
+- Real-time request statistics
+- Token usage tracking
+- Hourly request charts
+- Model distribution pie chart
+- System health monitoring
+
+### Playground
+- Interactive chat interface
+- Model selection
+- Token counter
+- Dark theme UI
 
 ## Available Models
 
@@ -20,11 +41,24 @@
 
 ## API Endpoints
 
+### Public Endpoints
+
 | Endpoint | Method | Auth | Description |
 |----------|--------|------|-------------|
-| `/health` | GET | No | Health check |
-| `/v1/models` | GET | Yes | List available models |
-| `/v1/chat/completions` | POST | Yes | Chat completion |
+| `/health` | GET | No | Health check with uptime |
+| `/v1/models` | GET | API Key | List available models |
+| `/v1/chat/completions` | POST | API Key | Chat completion |
+
+### Admin Endpoints
+
+| Endpoint | Method | Auth | Description |
+|----------|--------|------|-------------|
+| `/admin` | GET | - | Admin dashboard UI |
+| `/admin/analytics` | GET | Admin Key | Get analytics data |
+| `/admin/logs` | GET | Admin Key | Get request logs |
+| `/admin/system` | GET | Admin Key | Get system info |
+| `/admin/playground` | POST | Admin Key | Test AI (no logging) |
+| `/admin/reset` | POST | Admin Key | Reset all analytics |
 
 ## Usage
 
@@ -80,7 +114,8 @@ curl -X POST https://ai-gateway.innoserver.cloud/v1/chat/completions \
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `PORT` | 8095 | Server port |
-| `API_KEY` | - | API key for authentication |
+| `API_KEY` | - | API key for chat endpoints |
+| `ADMIN_KEY` | - | Admin key for dashboard |
 
 ## Installation
 
@@ -89,6 +124,20 @@ npm install
 npm start
 ```
 
+## Admin Dashboard
+
+Access the admin dashboard at `/admin`:
+
+1. Open `https://your-domain/admin`
+2. Enter your admin key
+3. Explore the dashboard!
+
+### Features:
+- 📊 **Dashboard** - Overview stats, charts, system info
+- 🧪 **Playground** - Test AI with live chat
+- 📋 **Logs** - View all API requests
+- ⚙️ **Settings** - API info and data management
+
 ## Integration
 
 Works with any OpenAI-compatible client:
@@ -96,7 +145,14 @@ Works with any OpenAI-compatible client:
 - LangChain
 - n8n
 - AutoGen
+- Cursor IDE
 - Custom applications
+
+## Tech Stack
+
+- **Backend**: Node.js, Express
+- **Frontend**: Tailwind CSS, Chart.js
+- **Storage**: JSON file-based (lightweight)
 
 ## License
 
