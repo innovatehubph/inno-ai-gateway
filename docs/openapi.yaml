@@ -1,0 +1,937 @@
+openapi: 3.1.0
+info:
+  title: InnovateHub AI Gateway
+  description: |
+    # 🚀 InnovateHub AI Gateway
+    
+    A production-ready, multimodal AI gateway with OpenAI-compatible API.
+    
+    ## Features
+    - **Chat Completions** - GPT/Claude compatible with streaming
+    - **Image Generation** - 12 tiered models from budget to ultra premium
+    - **Video Generation** - Text-to-video, Image-to-video, Video editing
+    - **3D Generation** - Text/Image to 3D models (GLB/OBJ)
+    - **Audio** - Text-to-speech and Speech-to-text
+    - **Embeddings** - Vector embeddings for RAG/search
+    
+    ## Authentication
+    All endpoints require an API key via `Authorization: Bearer <key>` header.
+    
+    ## Base URL
+    ```
+    https://ai-gateway.innoserver.cloud
+    ```
+    
+    ## Rate Limits
+    - Default: 100 requests/minute
+    - Headers: `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`
+  version: 3.1.0
+  contact:
+    name: InnovateHub Support
+    url: https://innovatehub.ph
+    email: support@innovatehub.ph
+  license:
+    name: Proprietary
+    url: https://innovatehub.ph/license
+
+servers:
+  - url: https://ai-gateway.innoserver.cloud
+    description: Production
+  - url: http://localhost:8095
+    description: Local Development
+
+tags:
+  - name: Chat
+    description: Chat completions (OpenAI compatible)
+  - name: Images
+    description: Image generation with 12 tiered models
+  - name: Video
+    description: Video generation, editing, and audio
+  - name: 3D
+    description: 3D model generation
+  - name: Audio
+    description: Text-to-speech and transcription
+  - name: Embeddings
+    description: Vector embeddings
+  - name: Models
+    description: List available models
+  - name: Admin
+    description: Admin dashboard and analytics
+
+security:
+  - BearerAuth: []
+
+paths:
+  # ==================== CHAT ====================
+  /v1/chat/completions:
+    post:
+      tags: [Chat]
+      summary: Create chat completion
+      description: |
+        Generate a chat completion. Supports streaming via SSE.
+        
+        **Models:**
+        - `inno-ai-boyong-4.5` - Most capable
+        - `inno-ai-boyong-4.0` - Balanced
+        - `inno-ai-boyong-mini` - Fast
+      operationId: createChatCompletion
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatCompletionRequest'
+            examples:
+              simple:
+                summary: Simple message
+                value:
+                  model: inno-ai-boyong-4.5
+                  messages:
+                    - role: user
+                      content: "Hello, how are you?"
+              streaming:
+                summary: With streaming
+                value:
+                  model: inno-ai-boyong-4.5
+                  messages:
+                    - role: system
+                      content: "You are a helpful assistant."
+                    - role: user
+                      content: "Write a haiku about coding"
+                  stream: true
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatCompletionResponse'
+            text/event-stream:
+              schema:
+                type: string
+                description: SSE stream of chat chunks
+
+  # ==================== IMAGES ====================
+  /v1/images/generations:
+    post:
+      tags: [Images]
+      summary: Generate images
+      description: |
+        Generate images from text prompts using tiered models.
+        
+        ## Available Tiers
+        
+        | Tier | Model | Speed | Cost |
+        |------|-------|-------|------|
+        | `image-1` | prunaai/p-image | <1s | ~$0.001 |
+        | `image-2` | prunaai/z-image-turbo | ~1s | ~$0.003 |
+        | `image-3` | flux-schnell | ~3s | ~$0.003 |
+        | `image-4` | flux-dev | ~10s | ~$0.03 |
+        | `image-5` | flux-pro | ~8s | ~$0.05 |
+        | `image-6` | nano-banana-pro | ~15s | ~$0.08 |
+        | `ultrafast` | imagen-4-fast | ~2s | ~$0.02 |
+        | `ultrav1` | gpt-image-1.5 | ~12s | ~$0.08 |
+        | `ultrav2` | imagen-4 | ~10s | ~$0.08 |
+        | `standard` | gemini-2.5-flash-image | ~5s | ~$0.02 |
+        | `standard-edit` | nano-banana | ~8s | ~$0.04 |
+        | `premium-edit` | nano-banana-pro | ~15s | ~$0.08 |
+        
+        ## Aliases
+        `fast`, `turbo`, `standard`, `quality`, `premium`, `ultra`, `best`, `openai`, `gpt`, `imagen`
+      operationId: createImage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ImageGenerationRequest'
+            examples:
+              fast:
+                summary: Fast generation
+                value:
+                  prompt: "A cute robot playing guitar"
+                  model: "image-1"
+              ultra:
+                summary: Ultra quality
+                value:
+                  prompt: "Photorealistic portrait of a cyberpunk samurai, 8K, detailed"
+                  model: "ultrav2"
+                  size: "1024x1024"
+      responses:
+        '200':
+          description: Generated images
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImageGenerationResponse'
+
+  /v1/images/models:
+    get:
+      tags: [Images]
+      summary: List image models
+      description: Get all available image generation tiers with pricing
+      operationId: listImageModels
+      security: []
+      responses:
+        '200':
+          description: List of image models
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImageModelsResponse'
+
+  # ==================== VIDEO ====================
+  /v1/video/generations:
+    post:
+      tags: [Video]
+      summary: Generate video
+      description: |
+        Generate video from text prompt or image.
+        
+        ## Text-to-Video Models
+        | Tier | Model | Speed | Cost |
+        |------|-------|-------|------|
+        | `video-1` | animate-diff | ~30s | ~$0.05 |
+        | `video-2` | minimax/video-01 | ~1m | ~$0.15 |
+        | `video-3` | luma/ray | ~1m | ~$0.25 |
+        | `video-premium` | wan-2.5-t2v | ~2m | ~$0.35 |
+        | `video-premium2` | wan-2.6-t2v | ~2m | ~$0.40 |
+        
+        ## Image-to-Video Models
+        | Tier | Model | Speed | Cost |
+        |------|-------|-------|------|
+        | `video-i2v` | wan-2.2-i2v-fast | ~30s | ~$0.10 |
+        | `video-i2v-kling` | kling-v2.1 | ~1m | ~$0.25 |
+      operationId: createVideo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VideoGenerationRequest'
+            examples:
+              text_to_video:
+                summary: Text to video
+                value:
+                  prompt: "A cat playing piano, cute animation"
+                  model: "video-2"
+                  duration: 5
+              image_to_video:
+                summary: Image to video
+                value:
+                  image: "https://example.com/cat.jpg"
+                  model: "video-i2v"
+      responses:
+        '200':
+          description: Generated video
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VideoGenerationResponse'
+
+  /v1/video/edit:
+    post:
+      tags: [Video]
+      summary: Edit video
+      description: |
+        Edit video with style transfer or prompt-based modifications.
+        
+        Models:
+        - `video-edit` - Style transfer & prompt editing (luma/modify-video)
+        - `video-reframe` - Change aspect ratio (luma/reframe-video)
+      operationId: editVideo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VideoEditRequest'
+      responses:
+        '200':
+          description: Edited video
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VideoGenerationResponse'
+
+  /v1/video/add-audio:
+    post:
+      tags: [Video]
+      summary: Add audio to video
+      description: Generate and add AI audio to video using MMAudio
+      operationId: addAudioToVideo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [video]
+              properties:
+                video:
+                  type: string
+                  format: uri
+                  description: URL of video to add audio to
+                prompt:
+                  type: string
+                  description: Optional prompt to guide audio generation
+      responses:
+        '200':
+          description: Video with audio
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VideoGenerationResponse'
+
+  /v1/video/models:
+    get:
+      tags: [Video]
+      summary: List video models
+      description: Get all available video generation models
+      operationId: listVideoModels
+      security: []
+      responses:
+        '200':
+          description: List of video models
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VideoModelsResponse'
+
+  # ==================== 3D ====================
+  /v1/3d/generations:
+    post:
+      tags: [3D]
+      summary: Generate 3D model
+      description: |
+        Generate 3D models from text prompts.
+        
+        ## Models
+        | Tier | Model | Speed | Cost |
+        |------|-------|-------|------|
+        | `3d-1` | dreamgaussian | ~30s | ~$0.05 |
+        | `3d-2` | hunyuan-3d-3.1 | ~2m | ~$0.15 |
+        | `3d-premium` | hyper3d/rodin | ~3m | ~$0.20 |
+        
+        ## Output Formats
+        GLB, OBJ (depending on model)
+      operationId: create3DModel
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Model3DRequest'
+            examples:
+              standard:
+                summary: Standard quality
+                value:
+                  prompt: "A coffee mug with steam"
+                  model: "3d-2"
+              premium:
+                summary: Premium quality
+                value:
+                  prompt: "Detailed dragon statue"
+                  model: "3d-premium"
+      responses:
+        '200':
+          description: Generated 3D model
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Model3DResponse'
+
+  /v1/3d/image-to-3d:
+    post:
+      tags: [3D]
+      summary: Convert image to 3D
+      description: Convert a 2D image into a 3D model
+      operationId: imageToModel3D
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [image]
+              properties:
+                image:
+                  type: string
+                  description: Base64 image or URL
+                model:
+                  type: string
+                  default: "3d-2"
+      responses:
+        '200':
+          description: Generated 3D model
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Model3DResponse'
+
+  /v1/3d/models:
+    get:
+      tags: [3D]
+      summary: List 3D models
+      description: Get all available 3D generation models
+      operationId: list3DModels
+      security: []
+      responses:
+        '200':
+          description: List of 3D models
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Model3DModelsResponse'
+
+  # ==================== AUDIO ====================
+  /v1/audio/speech:
+    post:
+      tags: [Audio]
+      summary: Text to speech
+      description: Convert text to speech audio
+      operationId: createSpeech
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [input]
+              properties:
+                input:
+                  type: string
+                  description: Text to convert to speech
+                model:
+                  type: string
+                  default: inno-ai-voice-1
+                voice:
+                  type: string
+                  default: alloy
+                  enum: [alloy, echo, fable, onyx, nova, shimmer]
+                response_format:
+                  type: string
+                  default: mp3
+                  enum: [mp3, opus, aac, flac, wav]
+      responses:
+        '200':
+          description: Audio file
+          content:
+            audio/mpeg:
+              schema:
+                type: string
+                format: binary
+
+  /v1/audio/transcriptions:
+    post:
+      tags: [Audio]
+      summary: Speech to text
+      description: Transcribe audio to text using Whisper
+      operationId: createTranscription
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Audio file to transcribe
+                model:
+                  type: string
+                  default: inno-ai-whisper-1
+                language:
+                  type: string
+                  description: Language code (optional)
+      responses:
+        '200':
+          description: Transcription
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  text:
+                    type: string
+
+  # ==================== EMBEDDINGS ====================
+  /v1/embeddings:
+    post:
+      tags: [Embeddings]
+      summary: Create embeddings
+      description: Generate vector embeddings for text
+      operationId: createEmbeddings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [input]
+              properties:
+                input:
+                  oneOf:
+                    - type: string
+                    - type: array
+                      items:
+                        type: string
+                  description: Text or array of texts
+                model:
+                  type: string
+                  default: inno-ai-embed-1
+      responses:
+        '200':
+          description: Embeddings
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmbeddingsResponse'
+
+  # ==================== MODELS ====================
+  /v1/models:
+    get:
+      tags: [Models]
+      summary: List all models
+      description: Get all available models across all capabilities
+      operationId: listModels
+      responses:
+        '200':
+          description: List of models
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModelsResponse'
+
+  # ==================== ADMIN ====================
+  /admin/analytics:
+    get:
+      tags: [Admin]
+      summary: Get analytics
+      description: Get usage analytics and statistics
+      operationId: getAnalytics
+      security:
+        - AdminAuth: []
+      responses:
+        '200':
+          description: Analytics data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalyticsResponse'
+
+  /admin/logs:
+    get:
+      tags: [Admin]
+      summary: Get request logs
+      description: Get recent API request logs
+      operationId: getLogs
+      security:
+        - AdminAuth: []
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 100
+      responses:
+        '200':
+          description: Request logs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LogEntry'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: API Key authentication
+    AdminAuth:
+      type: apiKey
+      in: header
+      name: X-Admin-Key
+      description: Admin key for dashboard access
+
+  schemas:
+    # Chat
+    ChatCompletionRequest:
+      type: object
+      required: [model, messages]
+      properties:
+        model:
+          type: string
+          example: inno-ai-boyong-4.5
+        messages:
+          type: array
+          items:
+            type: object
+            properties:
+              role:
+                type: string
+                enum: [system, user, assistant]
+              content:
+                type: string
+        stream:
+          type: boolean
+          default: false
+        temperature:
+          type: number
+          default: 0.7
+        max_tokens:
+          type: integer
+
+    ChatCompletionResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        object:
+          type: string
+          example: chat.completion
+        created:
+          type: integer
+        model:
+          type: string
+        choices:
+          type: array
+          items:
+            type: object
+            properties:
+              index:
+                type: integer
+              message:
+                type: object
+                properties:
+                  role:
+                    type: string
+                  content:
+                    type: string
+              finish_reason:
+                type: string
+        usage:
+          type: object
+          properties:
+            prompt_tokens:
+              type: integer
+            completion_tokens:
+              type: integer
+            total_tokens:
+              type: integer
+
+    # Images
+    ImageGenerationRequest:
+      type: object
+      required: [prompt]
+      properties:
+        prompt:
+          type: string
+          description: Text description of the image
+        model:
+          type: string
+          default: image-3
+          description: Model tier (image-1 to image-6, or aliases)
+        n:
+          type: integer
+          default: 1
+          description: Number of images
+        size:
+          type: string
+          default: "1024x1024"
+          description: Image dimensions
+        response_format:
+          type: string
+          enum: [url, b64_json]
+          default: url
+
+    ImageGenerationResponse:
+      type: object
+      properties:
+        created:
+          type: integer
+        model:
+          type: string
+        tier:
+          type: string
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              url:
+                type: string
+              external_url:
+                type: string
+              b64_json:
+                type: string
+
+    ImageModelsResponse:
+      type: object
+      properties:
+        object:
+          type: string
+          example: list
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              name:
+                type: string
+              description:
+                type: string
+              speed:
+                type: string
+              cost:
+                type: string
+              quality:
+                type: string
+              replicate_model:
+                type: string
+        aliases:
+          type: object
+        default:
+          type: string
+
+    # Video
+    VideoGenerationRequest:
+      type: object
+      properties:
+        prompt:
+          type: string
+          description: Text description (for T2V)
+        image:
+          type: string
+          description: Image URL (for I2V)
+        model:
+          type: string
+          default: video-2
+        duration:
+          type: integer
+          default: 5
+
+    VideoEditRequest:
+      type: object
+      required: [video]
+      properties:
+        video:
+          type: string
+          format: uri
+        prompt:
+          type: string
+        model:
+          type: string
+          default: video-edit
+        aspect_ratio:
+          type: string
+
+    VideoGenerationResponse:
+      type: object
+      properties:
+        created:
+          type: integer
+        model:
+          type: string
+        tier:
+          type: string
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              url:
+                type: string
+              external_url:
+                type: string
+              duration:
+                type: integer
+
+    VideoModelsResponse:
+      type: object
+      properties:
+        object:
+          type: string
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              name:
+                type: string
+              description:
+                type: string
+              type:
+                type: string
+              speed:
+                type: string
+              cost:
+                type: string
+              quality:
+                type: string
+        aliases:
+          type: object
+
+    # 3D
+    Model3DRequest:
+      type: object
+      required: [prompt]
+      properties:
+        prompt:
+          type: string
+        model:
+          type: string
+          default: "3d-2"
+        format:
+          type: string
+          default: glb
+
+    Model3DResponse:
+      type: object
+      properties:
+        created:
+          type: integer
+        model:
+          type: string
+        tier:
+          type: string
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              url:
+                type: string
+              format:
+                type: string
+              external_url:
+                type: string
+
+    Model3DModelsResponse:
+      type: object
+      properties:
+        object:
+          type: string
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              name:
+                type: string
+              description:
+                type: string
+              speed:
+                type: string
+              cost:
+                type: string
+              quality:
+                type: string
+        aliases:
+          type: object
+
+    # Embeddings
+    EmbeddingsResponse:
+      type: object
+      properties:
+        object:
+          type: string
+          example: list
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              object:
+                type: string
+              index:
+                type: integer
+              embedding:
+                type: array
+                items:
+                  type: number
+        model:
+          type: string
+        usage:
+          type: object
+          properties:
+            prompt_tokens:
+              type: integer
+            total_tokens:
+              type: integer
+
+    # Models
+    ModelsResponse:
+      type: object
+      properties:
+        object:
+          type: string
+          example: list
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              object:
+                type: string
+              owned_by:
+                type: string
+              capabilities:
+                type: array
+                items:
+                  type: string
+              description:
+                type: string
+
+    # Admin
+    AnalyticsResponse:
+      type: object
+      properties:
+        totalRequests:
+          type: integer
+        totalTokens:
+          type: integer
+        requestsByModel:
+          type: object
+        requestsByHour:
+          type: object
+        requestsByDay:
+          type: object
+        uptime_ms:
+          type: integer
+        uptime_human:
+          type: string
+
+    LogEntry:
+      type: object
+      properties:
+        id:
+          type: string
+        timestamp:
+          type: string
+        model:
+          type: string
+        source:
+          type: string
+        type:
+          type: string
+        status:
+          type: string
+        latency:
+          type: integer
+        promptPreview:
+          type: string
+        error:
+          type: string

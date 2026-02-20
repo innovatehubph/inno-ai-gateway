@@ -1,0 +1,17 @@
+{
+  "name": "inno-ai-gateway-docs",
+  "version": "1.0.0",
+  "description": "InnovateHub AI Gateway Documentation",
+  "scripts": {
+    "dev": "vitepress dev",
+    "build": "vitepress build",
+    "preview": "vitepress preview"
+  },
+  "keywords": ["ai", "gateway", "api", "documentation"],
+  "author": "InnovateHub",
+  "license": "Proprietary",
+  "devDependencies": {
+    "vitepress": "^1.6.4",
+    "vue": "^3.5.28"
+  }
+}

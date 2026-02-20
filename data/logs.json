@@ -490,5 +490,37 @@
     "status": "error",
     "type": "video_generation",
     "timestamp": "2026-02-20T14:51:24.875Z"
+  },
+  {
+    "id": "be3c0f4f-085b-4d30-8a02-e1ea86674346",
+    "model": "inno-ai-boyong-4.5",
+    "source": "api",
+    "apiKey": "masipag-ai-gateway-2026",
+    "promptPreview": "Respond with only \"OK\" if working.",
+    "responsePreview": "OK",
+    "promptTokens": 10,
+    "completionTokens": 28,
+    "totalTokens": 20737,
+    "latency": 4452,
+    "status": "success",
+    "fullPrompt": "Respond with only \"OK\" if working.",
+    "fullResponse": "OK",
+    "timestamp": "2026-02-20T14:55:23.481Z"
+  },
+  {
+    "id": "1394cdcd-ceba-46cd-a3b2-9baeefa657bc",
+    "model": "inno-ai-boyong-4.5",
+    "source": "api",
+    "apiKey": "masipag-ai-gateway-2026",
+    "promptPreview": "Say hello in 5 words",
+    "responsePreview": "Hello Boss Marc, how's everything? 👋",
+    "promptTokens": 10,
+    "completionTokens": 43,
+    "totalTokens": 20749,
+    "latency": 4717,
+    "status": "success",
+    "fullPrompt": "Say hello in 5 words",
+    "fullResponse": "Hello Boss Marc, how's everything? 👋",
+    "timestamp": "2026-02-20T14:55:53.339Z"
   }
 ]

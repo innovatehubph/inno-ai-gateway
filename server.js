@@ -5,9 +5,19 @@ const { v4: uuidv4 } = require('uuid');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const swaggerUi = require('swagger-ui-express');
+const YAML = require('yamljs');
 
 // Load environment variables
 require('dotenv').config();
+
+// Load OpenAPI spec
+let swaggerDocument = null;
+try {
+  swaggerDocument = YAML.load(path.join(__dirname, 'docs', 'openapi.yaml'));
+} catch (e) {
+  console.log('OpenAPI spec not found, Swagger UI will be unavailable');
+}
 
 const app = express();
 const PORT = process.env.PORT || 8095;
@@ -510,6 +520,40 @@ function logRequest(data) {
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
+
+// Swagger UI - API Documentation
+if (swaggerDocument) {
+  app.use('/swagger', swaggerUi.serve, swaggerUi.setup(swaggerDocument, {
+    customCss: `
+      .swagger-ui .topbar { display: none }
+      .swagger-ui .info { margin: 30px 0 }
+      .swagger-ui .info .title { color: #6366f1 }
+    `,
+    customSiteTitle: 'InnovateHub AI Gateway - API Docs',
+    customfavIcon: '/favicon.ico'
+  }));
+  
+  // OpenAPI JSON endpoint
+  app.get('/openapi.json', (req, res) => {
+    res.json(swaggerDocument);
+  });
+  
+  // OpenAPI YAML endpoint
+  app.get('/openapi.yaml', (req, res) => {
+    res.setHeader('Content-Type', 'text/yaml');
+    res.sendFile(path.join(__dirname, 'docs', 'openapi.yaml'));
+  });
+}
+
+// VitePress Documentation (built static site)
+const docsDistPath = path.join(__dirname, 'docs', '.vitepress', 'dist');
+if (fs.existsSync(docsDistPath)) {
+  app.use('/docs', express.static(docsDistPath));
+  // SPA fallback for VitePress
+  app.get('/docs/*', (req, res) => {
+    res.sendFile(path.join(docsDistPath, 'index.html'));
+  });
+}
 
 // OpenClaw CLI runner
 function runOpenClaw(args, timeout = 180000) {
