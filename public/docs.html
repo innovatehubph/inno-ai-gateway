@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>InnovateHub AI Gateway - API Documentation</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    code, pre { font-family: 'JetBrains Mono', monospace; }
+    .gradient-mesh {
+      background: radial-gradient(at 40% 20%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
+                  radial-gradient(at 80% 0%, rgba(139, 92, 246, 0.1) 0px, transparent 50%),
+                  #0a0a0f;
+    }
+    .glass { background: rgba(255,255,255,0.03); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.05); }
+    pre { overflow-x: auto; }
+    .method-get { background: #10b981; }
+    .method-post { background: #3b82f6; }
+    .method-delete { background: #ef4444; }
+    .method-patch { background: #f59e0b; }
+  </style>
+</head>
+<body class="gradient-mesh min-h-screen text-white">
+  <div class="max-w-5xl mx-auto p-6">
+    
+    <!-- Header -->
+    <header class="mb-12 text-center">
+      <div class="inline-flex items-center gap-3 mb-4">
+        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+          <i class="fas fa-robot text-xl"></i>
+        </div>
+        <h1 class="text-3xl font-bold">InnovateHub AI Gateway</h1>
+      </div>
+      <p class="text-gray-400">OpenAI-compatible Multimodal AI API</p>
+      <div class="flex justify-center gap-4 mt-6">
+        <a href="/admin" class="px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-sm transition-all">
+          <i class="fas fa-cog mr-2"></i>Admin Dashboard
+        </a>
+        <a href="/openapi.json" class="px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-sm transition-all">
+          <i class="fas fa-download mr-2"></i>OpenAPI Spec
+        </a>
+      </div>
+    </header>
+
+    <!-- Base URL -->
+    <section class="glass rounded-2xl p-6 mb-6">
+      <h2 class="text-lg font-semibold mb-3">Base URL</h2>
+      <code class="block bg-black/30 rounded-xl p-4 text-green-400">https://ai-gateway.innoserver.cloud</code>
+    </section>
+
+    <!-- Authentication -->
+    <section class="glass rounded-2xl p-6 mb-6">
+      <h2 class="text-lg font-semibold mb-3"><i class="fas fa-key text-indigo-400 mr-2"></i>Authentication</h2>
+      <p class="text-gray-400 mb-4">All API requests require authentication via API key in the Authorization header:</p>
+      <code class="block bg-black/30 rounded-xl p-4 text-yellow-400">Authorization: Bearer YOUR_API_KEY</code>
+    </section>
+
+    <!-- Models -->
+    <section class="glass rounded-2xl p-6 mb-6">
+      <h2 class="text-lg font-semibold mb-4"><i class="fas fa-robot text-indigo-400 mr-2"></i>Available Models</h2>
+      <div class="grid md:grid-cols-2 gap-4">
+        <div class="bg-white/5 rounded-xl p-4">
+          <h3 class="font-medium text-indigo-400">Chat Models</h3>
+          <ul class="mt-2 space-y-1 text-sm text-gray-400">
+            <li>• <code>inno-ai-boyong-4.5</code> - Most capable</li>
+            <li>• <code>inno-ai-boyong-4.0</code> - Balanced</li>
+            <li>• <code>inno-ai-boyong-mini</code> - Fast</li>
+          </ul>
+        </div>
+        <div class="bg-white/5 rounded-xl p-4">
+          <h3 class="font-medium text-purple-400">Multimodal Models</h3>
+          <ul class="mt-2 space-y-1 text-sm text-gray-400">
+            <li>• <code>inno-ai-vision-xl</code> - Image generation</li>
+            <li>• <code>inno-ai-voice-1</code> - Text to speech</li>
+            <li>• <code>inno-ai-whisper-1</code> - Speech to text</li>
+            <li>• <code>inno-ai-embed-1</code> - Embeddings</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Endpoints -->
+    <section class="space-y-4">
+      <h2 class="text-xl font-semibold mb-4"><i class="fas fa-plug text-indigo-400 mr-2"></i>API Endpoints</h2>
+
+      <!-- Chat Completions -->
+      <div class="glass rounded-2xl overflow-hidden">
+        <div class="flex items-center gap-3 p-4 border-b border-white/5">
+          <span class="method-post px-3 py-1 rounded-lg text-xs font-bold">POST</span>
+          <code class="text-sm">/v1/chat/completions</code>
+          <span class="text-gray-500 text-sm ml-auto">Create chat completion</span>
+        </div>
+        <div class="p-4">
+          <p class="text-gray-400 text-sm mb-4">Generate AI responses. Supports streaming via SSE.</p>
+          <h4 class="text-sm font-medium mb-2">Request Body</h4>
+          <pre class="bg-black/30 rounded-xl p-4 text-sm overflow-x-auto"><code class="text-gray-300">{
+  "model": "inno-ai-boyong-4.5",
+  "messages": [
+    {"role": "system", "content": "You are a helpful assistant."},
+    {"role": "user", "content": "Hello!"}
+  ],
+  "stream": false,
+  "max_tokens": 4096,
+  "temperature": 0.7
+}</code></pre>
+          <h4 class="text-sm font-medium mt-4 mb-2">Example (cURL)</h4>
+          <pre class="bg-black/30 rounded-xl p-4 text-sm overflow-x-auto"><code class="text-green-400">curl -X POST https://ai-gateway.innoserver.cloud/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -d '{"model": "inno-ai-boyong-4.5", "messages": [{"role": "user", "content": "Hello!"}]}'</code></pre>
+        </div>
+      </div>
+
+      <!-- Image Generation -->
+      <div class="glass rounded-2xl overflow-hidden">
+        <div class="flex items-center gap-3 p-4 border-b border-white/5">
+          <span class="method-post px-3 py-1 rounded-lg text-xs font-bold">POST</span>
+          <code class="text-sm">/v1/images/generations</code>
+          <span class="text-gray-500 text-sm ml-auto">Generate images</span>
+        </div>
+        <div class="p-4">
+          <p class="text-gray-400 text-sm mb-4">Generate images from text prompts using Stable Diffusion XL.</p>
+          <pre class="bg-black/30 rounded-xl p-4 text-sm overflow-x-auto"><code class="text-gray-300">{
+  "prompt": "A futuristic city at sunset, cyberpunk style",
+  "n": 1,
+  "size": "1024x1024",
+  "response_format": "url"  // or "b64_json"
+}</code></pre>
+        </div>
+      </div>
+
+      <!-- Text to Speech -->
+      <div class="glass rounded-2xl overflow-hidden">
+        <div class="flex items-center gap-3 p-4 border-b border-white/5">
+          <span class="method-post px-3 py-1 rounded-lg text-xs font-bold">POST</span>
+          <code class="text-sm">/v1/audio/speech</code>
+          <span class="text-gray-500 text-sm ml-auto">Text to speech</span>
+        </div>
+        <div class="p-4">
+          <p class="text-gray-400 text-sm mb-4">Convert text to spoken audio.</p>
+          <pre class="bg-black/30 rounded-xl p-4 text-sm overflow-x-auto"><code class="text-gray-300">{
+  "input": "Hello, welcome to InnovateHub AI!",
+  "voice": "alloy",
+  "response_format": "mp3"
+}</code></pre>
+        </div>
+      </div>
+
+      <!-- Speech to Text -->
+      <div class="glass rounded-2xl overflow-hidden">
+        <div class="flex items-center gap-3 p-4 border-b border-white/5">
+          <span class="method-post px-3 py-1 rounded-lg text-xs font-bold">POST</span>
+          <code class="text-sm">/v1/audio/transcriptions</code>
+          <span class="text-gray-500 text-sm ml-auto">Speech to text</span>
+        </div>
+        <div class="p-4">
+          <p class="text-gray-400 text-sm mb-4">Transcribe audio to text using Whisper.</p>
+          <pre class="bg-black/30 rounded-xl p-4 text-sm overflow-x-auto"><code class="text-gray-300">{
+  "file": "&lt;base64_audio_data&gt;",
+  "model": "inno-ai-whisper-1"
+}</code></pre>
+        </div>
+      </div>
+
+      <!-- Embeddings -->
+      <div class="glass rounded-2xl overflow-hidden">
+        <div class="flex items-center gap-3 p-4 border-b border-white/5">
+          <span class="method-post px-3 py-1 rounded-lg text-xs font-bold">POST</span>
+          <code class="text-sm">/v1/embeddings</code>
+          <span class="text-gray-500 text-sm ml-auto">Create embeddings</span>
+        </div>
+        <div class="p-4">
+          <p class="text-gray-400 text-sm mb-4">Generate vector embeddings for text (useful for RAG, semantic search).</p>
+          <pre class="bg-black/30 rounded-xl p-4 text-sm overflow-x-auto"><code class="text-gray-300">{
+  "input": "The quick brown fox jumps over the lazy dog",
+  "model": "inno-ai-embed-1"
+}</code></pre>
+        </div>
+      </div>
+
+      <!-- Usage -->
+      <div class="glass rounded-2xl overflow-hidden">
+        <div class="flex items-center gap-3 p-4 border-b border-white/5">
+          <span class="method-get px-3 py-1 rounded-lg text-xs font-bold">GET</span>
+          <code class="text-sm">/v1/usage</code>
+          <span class="text-gray-500 text-sm ml-auto">Get API key usage</span>
+        </div>
+        <div class="p-4">
+          <p class="text-gray-400 text-sm mb-4">Check your API key's usage statistics.</p>
+          <pre class="bg-black/30 rounded-xl p-4 text-sm overflow-x-auto"><code class="text-green-400">curl https://ai-gateway.innoserver.cloud/v1/usage \
+  -H "Authorization: Bearer YOUR_API_KEY"</code></pre>
+        </div>
+      </div>
+
+      <!-- Models -->
+      <div class="glass rounded-2xl overflow-hidden">
+        <div class="flex items-center gap-3 p-4 border-b border-white/5">
+          <span class="method-get px-3 py-1 rounded-lg text-xs font-bold">GET</span>
+          <code class="text-sm">/v1/models</code>
+          <span class="text-gray-500 text-sm ml-auto">List models</span>
+        </div>
+        <div class="p-4">
+          <p class="text-gray-400 text-sm">List all available models and their capabilities.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Rate Limits -->
+    <section class="glass rounded-2xl p-6 mt-6">
+      <h2 class="text-lg font-semibold mb-3"><i class="fas fa-tachometer-alt text-indigo-400 mr-2"></i>Rate Limits</h2>
+      <p class="text-gray-400 text-sm mb-4">Rate limit headers are included in all responses:</p>
+      <ul class="space-y-2 text-sm text-gray-400">
+        <li><code class="text-yellow-400">X-RateLimit-Limit</code> - Requests allowed per minute</li>
+        <li><code class="text-yellow-400">X-RateLimit-Remaining</code> - Requests remaining</li>
+        <li><code class="text-yellow-400">X-RateLimit-Reset</code> - Unix timestamp when limit resets</li>
+      </ul>
+    </section>
+
+    <!-- SDKs -->
+    <section class="glass rounded-2xl p-6 mt-6">
+      <h2 class="text-lg font-semibold mb-3"><i class="fas fa-code text-indigo-400 mr-2"></i>SDK Examples</h2>
+      
+      <h4 class="text-sm font-medium mt-4 mb-2">Python (OpenAI SDK)</h4>
+      <pre class="bg-black/30 rounded-xl p-4 text-sm overflow-x-auto"><code class="text-gray-300">from openai import OpenAI
+
+client = OpenAI(
+    api_key="YOUR_API_KEY",
+    base_url="https://ai-gateway.innoserver.cloud/v1"
+)
+
+response = client.chat.completions.create(
+    model="inno-ai-boyong-4.5",
+    messages=[{"role": "user", "content": "Hello!"}]
+)
+print(response.choices[0].message.content)</code></pre>
+
+      <h4 class="text-sm font-medium mt-6 mb-2">JavaScript (Node.js)</h4>
+      <pre class="bg-black/30 rounded-xl p-4 text-sm overflow-x-auto"><code class="text-gray-300">import OpenAI from 'openai';
+
+const client = new OpenAI({
+  apiKey: 'YOUR_API_KEY',
+  baseURL: 'https://ai-gateway.innoserver.cloud/v1'
+});
+
+const response = await client.chat.completions.create({
+  model: 'inno-ai-boyong-4.5',
+  messages: [{ role: 'user', content: 'Hello!' }]
+});
+console.log(response.choices[0].message.content);</code></pre>
+    </section>
+
+    <!-- Footer -->
+    <footer class="text-center text-gray-500 text-sm py-8">
+      <p>© 2026 InnovateHub Philippines. All rights reserved.</p>
+    </footer>
+  </div>
+</body>
+</html>

@@ -1,77 +1,78 @@
 # InnovateHub AI Gateway
 
-🤖 OpenAI-compatible API Gateway powered by InnovateHub's proprietary AI models.
+🤖 **OpenAI-compatible Multimodal AI API** powered by InnovateHub Philippines.
 
-![Dashboard](https://img.shields.io/badge/Admin-Dashboard-blue)
-![Version](https://img.shields.io/badge/Version-2.0.0-green)
-![License](https://img.shields.io/badge/License-Proprietary-red)
+![Version](https://img.shields.io/badge/Version-3.0.0-blue)
+![Models](https://img.shields.io/badge/Models-7-green)
+![Multimodal](https://img.shields.io/badge/Multimodal-✓-purple)
 
 ## Features
 
-- ✅ **OpenAI-compatible API** (`/v1/chat/completions`, `/v1/models`)
-- ✅ **Admin Dashboard** - Beautiful web UI for monitoring and management
-- ✅ **Analytics** - Track requests, tokens, and model usage
-- ✅ **Playground** - Test the AI directly from the browser
-- ✅ **Request Logs** - View all API requests with details
-- ✅ **System Monitoring** - CPU, memory, disk usage
-- ✅ **Multiple Models** - inno-ai-boyong-4.5, 4.0, mini
+### 🎯 Core Capabilities
+- ✅ **OpenAI-compatible API** - Drop-in replacement
+- ✅ **Streaming Support** - Server-sent events (SSE)
+- ✅ **Rate Limiting** - Per-API-key limits with headers
+- ✅ **API Key Management** - Create, rotate, disable keys
+- ✅ **Usage Tracking** - Per-key request and token counts
 
-## Screenshots
+### 🎨 Multimodal (via HuggingFace)
+- 🖼️ **Image Generation** - Stable Diffusion XL
+- 🔊 **Text-to-Speech** - Neural TTS
+- 🎤 **Speech-to-Text** - Whisper
+- 📊 **Embeddings** - Sentence transformers
 
-### Dashboard
-- Real-time request statistics
-- Token usage tracking
-- Hourly request charts
-- Model distribution pie chart
-- System health monitoring
-
-### Playground
-- Interactive chat interface
-- Model selection
-- Token counter
-- Dark theme UI
+### 📊 Admin Dashboard
+- 📈 Real-time analytics with charts
+- 🧪 AI Playground for testing
+- 📋 Request logs with inspector
+- 🔑 API key management UI
+- 💻 System health monitoring
+- 📱 Mobile-responsive design
 
 ## Available Models
 
-| Model | Description |
-|-------|-------------|
-| `inno-ai-boyong-4.5` | Most capable model for complex tasks |
-| `inno-ai-boyong-4.0` | Balanced performance and speed |
-| `inno-ai-boyong-mini` | Fast and efficient for simple tasks |
+| Model | Type | Description |
+|-------|------|-------------|
+| `inno-ai-boyong-4.5` | Chat | Most capable, complex tasks |
+| `inno-ai-boyong-4.0` | Chat | Balanced performance |
+| `inno-ai-boyong-mini` | Chat | Fast responses |
+| `inno-ai-vision-xl` | Image | Stable Diffusion XL |
+| `inno-ai-voice-1` | TTS | Text to speech |
+| `inno-ai-whisper-1` | STT | Speech to text |
+| `inno-ai-embed-1` | Embeddings | Vector embeddings |
 
 ## API Endpoints
 
-### Public Endpoints
-
-| Endpoint | Method | Auth | Description |
-|----------|--------|------|-------------|
-| `/health` | GET | No | Health check with uptime |
-| `/v1/models` | GET | API Key | List available models |
-| `/v1/chat/completions` | POST | API Key | Chat completion |
-
-### Admin Endpoints
-
-| Endpoint | Method | Auth | Description |
-|----------|--------|------|-------------|
-| `/admin` | GET | - | Admin dashboard UI |
-| `/admin/analytics` | GET | Admin Key | Get analytics data |
-| `/admin/logs` | GET | Admin Key | Get request logs |
-| `/admin/system` | GET | Admin Key | Get system info |
-| `/admin/playground` | POST | Admin Key | Test AI (no logging) |
-| `/admin/reset` | POST | Admin Key | Reset all analytics |
-
-## Usage
-
-### Health Check
+### Chat
 ```bash
-curl https://ai-gateway.innoserver.cloud/health
+POST /v1/chat/completions
 ```
 
-### List Models
+### Images
 ```bash
-curl https://ai-gateway.innoserver.cloud/v1/models \
-  -H "Authorization: Bearer YOUR_API_KEY"
+POST /v1/images/generations
 ```
+
+### Audio
+```bash
+POST /v1/audio/speech        # Text to speech
+POST /v1/audio/transcriptions # Speech to text
+```
+
+### Embeddings
+```bash
+POST /v1/embeddings
+```
+
+### Utility
+```bash
+GET /v1/models   # List models
+GET /v1/usage    # Check API key usage
+GET /health      # Health check
+GET /docs        # API documentation
+```
+
+## Quick Start
 
 ### Chat Completion
 ```bash
@@ -80,79 +81,112 @@ curl -X POST https://ai-gateway.innoserver.cloud/v1/chat/completions \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -d '{
     "model": "inno-ai-boyong-4.5",
-    "messages": [
-      {"role": "user", "content": "Hello!"}
-    ]
+    "messages": [{"role": "user", "content": "Hello!"}],
+    "stream": false
   }'
 ```
 
-### Response Format
-```json
-{
-  "id": "chatcmpl-xxx",
-  "object": "chat.completion",
-  "created": 1234567890,
-  "model": "inno-ai-boyong-4.5",
-  "choices": [{
-    "index": 0,
-    "message": {
-      "role": "assistant",
-      "content": "Response here..."
-    },
-    "finish_reason": "stop"
-  }],
-  "usage": {
-    "prompt_tokens": 10,
-    "completion_tokens": 50,
-    "total_tokens": 60
-  }
-}
+### Streaming
+```bash
+curl -X POST https://ai-gateway.innoserver.cloud/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -d '{
+    "model": "inno-ai-boyong-4.5",
+    "messages": [{"role": "user", "content": "Tell me a story"}],
+    "stream": true
+  }'
+```
+
+### Image Generation
+```bash
+curl -X POST https://ai-gateway.innoserver.cloud/v1/images/generations \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -d '{
+    "prompt": "A futuristic city at sunset",
+    "size": "1024x1024"
+  }'
+```
+
+### Text to Speech
+```bash
+curl -X POST https://ai-gateway.innoserver.cloud/v1/audio/speech \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -d '{"input": "Hello world!"}' \
+  --output speech.mp3
+```
+
+### Embeddings
+```bash
+curl -X POST https://ai-gateway.innoserver.cloud/v1/embeddings \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -d '{"input": "The quick brown fox"}'
+```
+
+## SDK Examples
+
+### Python
+```python
+from openai import OpenAI
+
+client = OpenAI(
+    api_key="YOUR_API_KEY",
+    base_url="https://ai-gateway.innoserver.cloud/v1"
+)
+
+# Chat
+response = client.chat.completions.create(
+    model="inno-ai-boyong-4.5",
+    messages=[{"role": "user", "content": "Hello!"}]
+)
+
+# Streaming
+for chunk in client.chat.completions.create(
+    model="inno-ai-boyong-4.5",
+    messages=[{"role": "user", "content": "Tell me a story"}],
+    stream=True
+):
+    print(chunk.choices[0].delta.content, end="")
+```
+
+### JavaScript
+```javascript
+import OpenAI from 'openai';
+
+const client = new OpenAI({
+  apiKey: 'YOUR_API_KEY',
+  baseURL: 'https://ai-gateway.innoserver.cloud/v1'
+});
+
+const response = await client.chat.completions.create({
+  model: 'inno-ai-boyong-4.5',
+  messages: [{ role: 'user', content: 'Hello!' }]
+});
 ```
 
 ## Environment Variables
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `PORT` | 8095 | Server port |
-| `API_KEY` | - | API key for chat endpoints |
-| `ADMIN_KEY` | - | Admin key for dashboard |
+| Variable | Description |
+|----------|-------------|
+| `PORT` | Server port (default: 8095) |
+| `ADMIN_KEY` | Admin dashboard key |
+| `HF_API_KEY` | HuggingFace API key for multimodal |
 
-## Installation
+## Rate Limiting
 
-```bash
-npm install
-npm start
-```
+Rate limit headers are included in all responses:
+- `X-RateLimit-Limit` - Requests per minute
+- `X-RateLimit-Remaining` - Remaining requests
+- `X-RateLimit-Reset` - Reset timestamp
 
-## Admin Dashboard
+## Links
 
-Access the admin dashboard at `/admin`:
-
-1. Open `https://your-domain/admin`
-2. Enter your admin key
-3. Explore the dashboard!
-
-### Features:
-- 📊 **Dashboard** - Overview stats, charts, system info
-- 🧪 **Playground** - Test AI with live chat
-- 📋 **Logs** - View all API requests
-- ⚙️ **Settings** - API info and data management
-
-## Integration
-
-Works with any OpenAI-compatible client:
-- CrewAI
-- LangChain
-- n8n
-- AutoGen
-- Cursor IDE
-- Custom applications
-
-## Tech Stack
-
-- **Backend**: Node.js, Express
-- **Frontend**: Tailwind CSS, Chart.js
-- **Storage**: JSON file-based (lightweight)
+- **Admin Dashboard**: https://ai-gateway.innoserver.cloud/admin
+- **API Documentation**: https://ai-gateway.innoserver.cloud/docs
+- **Health Check**: https://ai-gateway.innoserver.cloud/health
 
 ## License
 
