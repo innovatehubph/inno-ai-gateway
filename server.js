@@ -52,15 +52,17 @@ const HF_MODELS = {
   image_to_3d_alt: 'sudo-ai/zero123plus-v1.2'
 };
 
-// Tiered Image Models (Replicate) - from fastest/cheapest to best quality
+// Tiered Image Models (Replicate) - organized by speed and quality
 const IMAGE_TIERS = {
+  // === FAST TIER (Budget) ===
   'image-1': {
     name: 'Fast',
     model: 'prunaai/p-image',
     description: 'Sub-second generation, budget-friendly',
     speed: '< 1 sec',
     cost: '~$0.001',
-    quality: '⭐⭐⭐'
+    quality: '⭐⭐⭐',
+    category: 'fast'
   },
   'image-2': {
     name: 'Turbo',
@@ -68,23 +70,57 @@ const IMAGE_TIERS = {
     description: 'Fast with better quality, 6B params',
     speed: '~1 sec',
     cost: '~$0.003',
-    quality: '⭐⭐⭐⭐'
+    quality: '⭐⭐⭐⭐',
+    category: 'fast'
   },
+  'ultrafast': {
+    name: 'Ultra Fast',
+    model: 'google/imagen-4-fast',
+    description: 'Google Imagen 4 optimized for speed',
+    speed: '~2 sec',
+    cost: '~$0.02',
+    quality: '⭐⭐⭐⭐',
+    category: 'fast'
+  },
+  
+  // === STANDARD TIER ===
   'image-3': {
     name: 'Standard',
     model: 'black-forest-labs/flux-schnell',
     description: 'Great balance of speed and quality',
     speed: '~3 sec',
     cost: '~$0.003',
-    quality: '⭐⭐⭐⭐'
+    quality: '⭐⭐⭐⭐',
+    category: 'standard'
   },
+  'standard': {
+    name: 'Gemini Standard',
+    model: 'google/gemini-2.5-flash-image',
+    description: 'Google Gemini 2.5 Flash image generation',
+    speed: '~5 sec',
+    cost: '~$0.02',
+    quality: '⭐⭐⭐⭐',
+    category: 'standard'
+  },
+  'standard-edit': {
+    name: 'Standard Edit',
+    model: 'google/nano-banana',
+    description: 'Google Gemini 2.5 with image editing',
+    speed: '~8 sec',
+    cost: '~$0.04',
+    quality: '⭐⭐⭐⭐⭐',
+    category: 'edit'
+  },
+  
+  // === QUALITY TIER ===
   'image-4': {
     name: 'Quality',
     model: 'black-forest-labs/flux-dev',
     description: 'High quality, detailed outputs',
     speed: '~10 sec',
     cost: '~$0.03',
-    quality: '⭐⭐⭐⭐⭐'
+    quality: '⭐⭐⭐⭐⭐',
+    category: 'quality'
   },
   'image-5': {
     name: 'Premium',
@@ -92,29 +128,83 @@ const IMAGE_TIERS = {
     description: 'Professional quality, best prompt following',
     speed: '~8 sec',
     cost: '~$0.05',
-    quality: '⭐⭐⭐⭐⭐'
+    quality: '⭐⭐⭐⭐⭐',
+    category: 'premium'
   },
+  'premium-edit': {
+    name: 'Premium Edit',
+    model: 'google/nano-banana-pro',
+    description: 'Best editing model with text rendering',
+    speed: '~15 sec',
+    cost: '~$0.08',
+    quality: '⭐⭐⭐⭐⭐+',
+    category: 'edit'
+  },
+  
+  // === ULTRA TIER (Best Quality) ===
   'image-6': {
     name: 'Ultra',
     model: 'google/nano-banana-pro',
     description: 'State-of-the-art, text rendering, editing',
     speed: '~15 sec',
     cost: '~$0.08',
-    quality: '⭐⭐⭐⭐⭐+'
+    quality: '⭐⭐⭐⭐⭐+',
+    category: 'ultra'
+  },
+  'ultrav1': {
+    name: 'Ultra V1 (OpenAI)',
+    model: 'openai/gpt-image-1.5',
+    description: 'OpenAI GPT Image 1.5 - best instruction following',
+    speed: '~12 sec',
+    cost: '~$0.08',
+    quality: '⭐⭐⭐⭐⭐+',
+    category: 'ultra'
+  },
+  'ultrav2': {
+    name: 'Ultra V2 (Google)',
+    model: 'google/imagen-4',
+    description: 'Google Imagen 4 flagship - highest fidelity',
+    speed: '~10 sec',
+    cost: '~$0.08',
+    quality: '⭐⭐⭐⭐⭐+',
+    category: 'ultra'
   }
 };
 
 // Model aliases for convenience
 const IMAGE_ALIASES = {
+  // Speed aliases
   'fast': 'image-1',
   'turbo': 'image-2',
-  'standard': 'image-3',
+  'quick': 'ultrafast',
+  
+  // Standard aliases
+  'default': 'image-3',
+  'gemini': 'standard',
+  'flash': 'standard',
+  
+  // Quality aliases
   'quality': 'image-4',
   'premium': 'image-5',
+  'pro': 'image-5',
+  
+  // Ultra aliases
   'ultra': 'image-6',
-  'best': 'image-6',
+  'best': 'ultrav2',
+  'openai': 'ultrav1',
+  'gpt': 'ultrav1',
+  'imagen': 'ultrav2',
+  'imagen4': 'ultrav2',
+  
+  // Edit aliases
+  'edit': 'standard-edit',
+  'edit-pro': 'premium-edit',
+  'banana': 'standard-edit',
+  'banana-pro': 'premium-edit',
+  
+  // Budget alias
   'cheap': 'image-1',
-  'default': 'image-3'
+  'budget': 'image-1'
 };
 
 // Data storage
