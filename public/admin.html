@@ -2,278 +2,654 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>InnovateHub AI Gateway - Admin</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0f172a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>InnovateHub AI Gateway</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'sans-serif'] },
+          colors: {
+            dark: { 900: '#0a0a0f', 800: '#12121a', 700: '#1a1a25', 600: '#252532' },
+            accent: { DEFAULT: '#6366f1', light: '#818cf8', dark: '#4f46e5' },
+            success: '#10b981', warning: '#f59e0b', danger: '#ef4444'
+          }
+        }
+      }
+    }
+  </script>
   <style>
-    .gradient-bg { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); }
-    .glass { background: rgba(255,255,255,0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
-    .glow { box-shadow: 0 0 20px rgba(99, 102, 241, 0.3); }
-    .typing::after { content: '|'; animation: blink 1s infinite; }
-    @keyframes blink { 0%, 50% { opacity: 1; } 51%, 100% { opacity: 0; } }
-    .fade-in { animation: fadeIn 0.3s ease-in; }
+    * { -webkit-tap-highlight-color: transparent; }
+    body { font-family: 'Inter', sans-serif; }
+    
+    /* Glassmorphism */
+    .glass { 
+      background: rgba(255,255,255,0.03); 
+      backdrop-filter: blur(20px); 
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+    .glass-strong {
+      background: rgba(255,255,255,0.08);
+      backdrop-filter: blur(40px);
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    
+    /* Gradient backgrounds */
+    .gradient-mesh {
+      background: 
+        radial-gradient(at 40% 20%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
+        radial-gradient(at 80% 0%, rgba(139, 92, 246, 0.1) 0px, transparent 50%),
+        radial-gradient(at 0% 50%, rgba(99, 102, 241, 0.1) 0px, transparent 50%),
+        radial-gradient(at 80% 50%, rgba(236, 72, 153, 0.08) 0px, transparent 50%),
+        radial-gradient(at 0% 100%, rgba(99, 102, 241, 0.1) 0px, transparent 50%),
+        #0a0a0f;
+    }
+    
+    /* Glow effects */
+    .glow { box-shadow: 0 0 40px rgba(99, 102, 241, 0.15); }
+    .glow-sm { box-shadow: 0 0 20px rgba(99, 102, 241, 0.1); }
+    .glow-accent { box-shadow: 0 0 30px rgba(99, 102, 241, 0.3); }
+    
+    /* Animations */
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes pulse-soft { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+    
+    .fade-in { animation: fadeIn 0.3s ease-out; }
+    .slide-up { animation: slideUp 0.4s ease-out; }
+    .pulse-soft { animation: pulse-soft 2s ease-in-out infinite; }
+    
+    /* Skeleton loading */
+    .skeleton {
+      background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+    
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+    
+    /* Custom checkbox */
+    .toggle { position: relative; width: 44px; height: 24px; }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider {
+      position: absolute; cursor: pointer; inset: 0;
+      background: rgba(255,255,255,0.1); border-radius: 24px;
+      transition: 0.3s;
+    }
+    .toggle-slider:before {
+      position: absolute; content: ""; height: 18px; width: 18px;
+      left: 3px; bottom: 3px; background: white; border-radius: 50%;
+      transition: 0.3s;
+    }
+    .toggle input:checked + .toggle-slider { background: #6366f1; }
+    .toggle input:checked + .toggle-slider:before { transform: translateX(20px); }
+    
+    /* Mobile nav */
+    .mobile-nav {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: rgba(10, 10, 15, 0.95);
+      backdrop-filter: blur(20px);
+      border-top: 1px solid rgba(255,255,255,0.05);
+      z-index: 100;
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+    
+    /* Toast */
+    .toast {
+      position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%);
+      background: rgba(255,255,255,0.1); backdrop-filter: blur(20px);
+      padding: 12px 24px; border-radius: 12px; z-index: 200;
+      animation: slideUp 0.3s ease-out;
+    }
+    
+    /* Chat bubbles */
+    .chat-bubble-user {
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      border-radius: 20px 20px 4px 20px;
+    }
+    .chat-bubble-ai {
+      background: rgba(255,255,255,0.08);
+      border-radius: 20px 20px 20px 4px;
+    }
+    
+    /* Stat card hover */
+    .stat-card {
+      transition: all 0.3s ease;
+    }
+    .stat-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    }
+    
+    /* Hide mobile nav on desktop */
+    @media (min-width: 768px) {
+      .mobile-nav { display: none; }
+      .desktop-nav { display: flex; }
+    }
+    @media (max-width: 767px) {
+      .desktop-nav { display: none; }
+      .main-content { padding-bottom: 80px; }
+    }
+    
+    /* Typing indicator */
+    .typing-dot { animation: pulse-soft 1.4s infinite; }
+    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
   </style>
 </head>
-<body class="gradient-bg min-h-screen text-white">
-  <!-- Login Modal -->
-  <div id="loginModal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
-    <div class="glass rounded-2xl p-8 w-full max-w-md">
-      <div class="text-center mb-6">
-        <i class="fas fa-robot text-5xl text-indigo-400 mb-4"></i>
-        <h1 class="text-2xl font-bold">InnovateHub AI Gateway</h1>
-        <p class="text-gray-400">Admin Login</p>
+<body class="gradient-mesh min-h-screen text-white overflow-x-hidden">
+
+  <!-- Login Screen -->
+  <div id="loginScreen" class="fixed inset-0 flex items-center justify-center p-6 z-50">
+    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
+    <div class="glass-strong rounded-3xl p-8 w-full max-w-sm relative slide-up">
+      <!-- Logo -->
+      <div class="text-center mb-8">
+        <div class="w-20 h-20 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-accent to-purple-600 flex items-center justify-center glow-accent">
+          <i class="fas fa-robot text-3xl"></i>
+        </div>
+        <h1 class="text-2xl font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">InnovateHub AI</h1>
+        <p class="text-gray-500 text-sm mt-1">Admin Gateway</p>
       </div>
-      <input type="password" id="adminKeyInput" placeholder="Enter Admin Key" 
-        class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 mb-4 focus:outline-none focus:border-indigo-500">
-      <button onclick="login()" class="w-full bg-indigo-600 hover:bg-indigo-700 rounded-lg py-3 font-semibold transition">
-        <i class="fas fa-sign-in-alt mr-2"></i>Login
-      </button>
-      <p id="loginError" class="text-red-400 text-center mt-4 hidden">Invalid admin key</p>
+      
+      <!-- Login Form -->
+      <div class="space-y-4">
+        <div class="relative">
+          <input type="password" id="adminKeyInput" placeholder="Enter admin key" 
+            class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-4 pl-12 focus:outline-none focus:border-accent/50 focus:bg-white/10 transition-all"
+            onkeypress="if(event.key==='Enter')login()">
+          <i class="fas fa-key absolute left-4 top-1/2 -translate-y-1/2 text-gray-500"></i>
+        </div>
+        <button onclick="login()" class="w-full bg-gradient-to-r from-accent to-purple-600 hover:from-accent-light hover:to-purple-500 rounded-xl py-4 font-semibold transition-all glow-sm hover:glow-accent active:scale-[0.98]">
+          Sign In
+        </button>
+      </div>
+      
+      <p id="loginError" class="text-danger text-center mt-4 text-sm hidden">
+        <i class="fas fa-exclamation-circle mr-1"></i>Invalid admin key
+      </p>
+      
+      <p class="text-center text-gray-600 text-xs mt-6">
+        Powered by InnovateHub Philippines
+      </p>
     </div>
   </div>
 
   <!-- Main App -->
   <div id="mainApp" class="hidden">
-    <!-- Header -->
-    <header class="glass border-b border-white/10 px-6 py-4 flex items-center justify-between">
+    
+    <!-- Desktop Header -->
+    <header class="hidden md:flex glass-strong sticky top-0 z-40 px-6 py-4 items-center justify-between">
       <div class="flex items-center gap-4">
-        <i class="fas fa-robot text-3xl text-indigo-400"></i>
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-accent to-purple-600 flex items-center justify-center">
+          <i class="fas fa-robot text-lg"></i>
+        </div>
         <div>
-          <h1 class="text-xl font-bold">InnovateHub AI Gateway</h1>
-          <p class="text-gray-400 text-sm">Admin Dashboard</p>
+          <h1 class="font-bold text-lg">InnovateHub AI</h1>
+          <p class="text-gray-500 text-xs">Gateway Admin</p>
         </div>
       </div>
-      <div class="flex items-center gap-4">
-        <span id="statusBadge" class="bg-green-500/20 text-green-400 px-3 py-1 rounded-full text-sm">
-          <i class="fas fa-circle text-xs mr-1"></i>Online
-        </span>
-        <button onclick="logout()" class="text-gray-400 hover:text-white transition">
-          <i class="fas fa-sign-out-alt text-xl"></i>
+      
+      <!-- Desktop Navigation -->
+      <nav class="desktop-nav items-center gap-1 bg-white/5 rounded-xl p-1">
+        <button onclick="showTab('dashboard')" data-tab="dashboard" class="nav-btn px-4 py-2 rounded-lg text-sm font-medium transition-all bg-accent text-white">
+          <i class="fas fa-chart-line mr-2"></i>Dashboard
+        </button>
+        <button onclick="showTab('playground')" data-tab="playground" class="nav-btn px-4 py-2 rounded-lg text-sm font-medium transition-all text-gray-400 hover:text-white hover:bg-white/5">
+          <i class="fas fa-flask mr-2"></i>Playground
+        </button>
+        <button onclick="showTab('logs')" data-tab="logs" class="nav-btn px-4 py-2 rounded-lg text-sm font-medium transition-all text-gray-400 hover:text-white hover:bg-white/5">
+          <i class="fas fa-list mr-2"></i>Logs
+        </button>
+        <button onclick="showTab('settings')" data-tab="settings" class="nav-btn px-4 py-2 rounded-lg text-sm font-medium transition-all text-gray-400 hover:text-white hover:bg-white/5">
+          <i class="fas fa-cog mr-2"></i>Settings
+        </button>
+      </nav>
+      
+      <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-success/10 border border-success/20">
+          <span class="w-2 h-2 rounded-full bg-success pulse-soft"></span>
+          <span class="text-success text-sm font-medium">Online</span>
+        </div>
+        <button onclick="logout()" class="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center transition-all">
+          <i class="fas fa-sign-out-alt text-gray-400"></i>
         </button>
       </div>
     </header>
 
-    <!-- Navigation -->
-    <nav class="glass border-b border-white/10 px-6">
-      <div class="flex gap-1">
-        <button onclick="showTab('dashboard')" class="tab-btn active px-4 py-3 border-b-2 border-indigo-500 text-indigo-400" data-tab="dashboard">
-          <i class="fas fa-chart-line mr-2"></i>Dashboard
-        </button>
-        <button onclick="showTab('playground')" class="tab-btn px-4 py-3 border-b-2 border-transparent text-gray-400 hover:text-white" data-tab="playground">
-          <i class="fas fa-flask mr-2"></i>Playground
-        </button>
-        <button onclick="showTab('logs')" class="tab-btn px-4 py-3 border-b-2 border-transparent text-gray-400 hover:text-white" data-tab="logs">
-          <i class="fas fa-list mr-2"></i>Logs
-        </button>
-        <button onclick="showTab('settings')" class="tab-btn px-4 py-3 border-b-2 border-transparent text-gray-400 hover:text-white" data-tab="settings">
-          <i class="fas fa-cog mr-2"></i>Settings
+    <!-- Mobile Header -->
+    <header class="md:hidden glass-strong sticky top-0 z-40 px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-accent to-purple-600 flex items-center justify-center">
+          <i class="fas fa-robot"></i>
+        </div>
+        <span class="font-bold">InnovateHub AI</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-success pulse-soft"></span>
+        <button onclick="logout()" class="w-9 h-9 rounded-xl bg-white/5 flex items-center justify-center">
+          <i class="fas fa-sign-out-alt text-gray-400 text-sm"></i>
         </button>
       </div>
-    </nav>
+    </header>
 
-    <!-- Dashboard Tab -->
-    <div id="tab-dashboard" class="tab-content p-6">
-      <!-- Stats Cards -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div class="glass rounded-xl p-6 glow">
-          <div class="flex items-center justify-between">
+    <!-- Main Content -->
+    <main class="main-content p-4 md:p-6 max-w-7xl mx-auto">
+      
+      <!-- Dashboard Tab -->
+      <div id="tab-dashboard" class="tab-content space-y-6">
+        <!-- Welcome Card -->
+        <div class="glass rounded-2xl p-6 glow slide-up">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-              <p class="text-gray-400 text-sm">Total Requests</p>
-              <p id="statRequests" class="text-3xl font-bold mt-1">0</p>
+              <h2 class="text-xl md:text-2xl font-bold">Welcome back! 👋</h2>
+              <p class="text-gray-400 mt-1">Here's what's happening with your AI gateway</p>
             </div>
-            <i class="fas fa-paper-plane text-3xl text-indigo-400"></i>
-          </div>
-        </div>
-        <div class="glass rounded-xl p-6">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-gray-400 text-sm">Total Tokens</p>
-              <p id="statTokens" class="text-3xl font-bold mt-1">0</p>
+            <div class="flex gap-2">
+              <button onclick="loadAnalytics()" class="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-sm transition-all flex items-center gap-2">
+                <i class="fas fa-sync-alt"></i>
+                <span class="hidden sm:inline">Refresh</span>
+              </button>
             </div>
-            <i class="fas fa-coins text-3xl text-yellow-400"></i>
           </div>
         </div>
-        <div class="glass rounded-xl p-6">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-gray-400 text-sm">Uptime</p>
-              <p id="statUptime" class="text-3xl font-bold mt-1">0h</p>
+
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="stat-card glass rounded-2xl p-5 cursor-pointer">
+            <div class="flex items-start justify-between">
+              <div>
+                <p class="text-gray-400 text-sm">Total Requests</p>
+                <p id="statRequests" class="text-2xl md:text-3xl font-bold mt-1">-</p>
+                <p class="text-xs text-gray-500 mt-2"><span class="text-success">↑ 12%</span> vs last week</p>
+              </div>
+              <div class="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center">
+                <i class="fas fa-paper-plane text-accent text-lg"></i>
+              </div>
             </div>
-            <i class="fas fa-clock text-3xl text-green-400"></i>
           </div>
-        </div>
-        <div class="glass rounded-xl p-6">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-gray-400 text-sm">Avg Latency</p>
-              <p id="statLatency" class="text-3xl font-bold mt-1">0ms</p>
+          
+          <div class="stat-card glass rounded-2xl p-5 cursor-pointer">
+            <div class="flex items-start justify-between">
+              <div>
+                <p class="text-gray-400 text-sm">Total Tokens</p>
+                <p id="statTokens" class="text-2xl md:text-3xl font-bold mt-1">-</p>
+                <p class="text-xs text-gray-500 mt-2"><span class="text-warning">~$0.00</span> estimated</p>
+              </div>
+              <div class="w-12 h-12 rounded-xl bg-warning/10 flex items-center justify-center">
+                <i class="fas fa-coins text-warning text-lg"></i>
+              </div>
             </div>
-            <i class="fas fa-bolt text-3xl text-purple-400"></i>
+          </div>
+          
+          <div class="stat-card glass rounded-2xl p-5 cursor-pointer">
+            <div class="flex items-start justify-between">
+              <div>
+                <p class="text-gray-400 text-sm">Uptime</p>
+                <p id="statUptime" class="text-2xl md:text-3xl font-bold mt-1">-</p>
+                <p class="text-xs text-gray-500 mt-2"><span class="text-success">99.9%</span> availability</p>
+              </div>
+              <div class="w-12 h-12 rounded-xl bg-success/10 flex items-center justify-center">
+                <i class="fas fa-clock text-success text-lg"></i>
+              </div>
+            </div>
+          </div>
+          
+          <div class="stat-card glass rounded-2xl p-5 cursor-pointer">
+            <div class="flex items-start justify-between">
+              <div>
+                <p class="text-gray-400 text-sm">Avg Latency</p>
+                <p id="statLatency" class="text-2xl md:text-3xl font-bold mt-1">-</p>
+                <p class="text-xs text-gray-500 mt-2">Response time</p>
+              </div>
+              <div class="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center">
+                <i class="fas fa-bolt text-purple-400 text-lg"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Charts Row -->
+        <div class="grid lg:grid-cols-2 gap-4">
+          <div class="glass rounded-2xl p-5">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="font-semibold">Requests (24h)</h3>
+              <span class="text-xs text-gray-500">Hourly breakdown</span>
+            </div>
+            <div class="h-48 md:h-64">
+              <canvas id="hourlyChart"></canvas>
+            </div>
+          </div>
+          
+          <div class="glass rounded-2xl p-5">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="font-semibold">Model Usage</h3>
+              <span class="text-xs text-gray-500">Distribution</span>
+            </div>
+            <div class="h-48 md:h-64 flex items-center justify-center">
+              <canvas id="modelChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- System & Recent Activity -->
+        <div class="grid lg:grid-cols-3 gap-4">
+          <!-- System Health -->
+          <div class="glass rounded-2xl p-5">
+            <h3 class="font-semibold mb-4 flex items-center gap-2">
+              <i class="fas fa-server text-accent"></i>System Health
+            </h3>
+            <div class="space-y-4">
+              <div>
+                <div class="flex justify-between text-sm mb-1">
+                  <span class="text-gray-400">CPU</span>
+                  <span id="sysCpu">-</span>
+                </div>
+                <div class="h-2 bg-white/5 rounded-full overflow-hidden">
+                  <div id="sysCpuBar" class="h-full bg-gradient-to-r from-accent to-purple-500 rounded-full transition-all" style="width: 0%"></div>
+                </div>
+              </div>
+              <div>
+                <div class="flex justify-between text-sm mb-1">
+                  <span class="text-gray-400">Memory</span>
+                  <span id="sysMemory">-</span>
+                </div>
+                <div class="h-2 bg-white/5 rounded-full overflow-hidden">
+                  <div id="sysMemoryBar" class="h-full bg-gradient-to-r from-success to-emerald-400 rounded-full transition-all" style="width: 0%"></div>
+                </div>
+              </div>
+              <div>
+                <div class="flex justify-between text-sm mb-1">
+                  <span class="text-gray-400">Disk</span>
+                  <span id="sysDisk">-</span>
+                </div>
+                <div class="h-2 bg-white/5 rounded-full overflow-hidden">
+                  <div id="sysDiskBar" class="h-full bg-gradient-to-r from-warning to-orange-400 rounded-full transition-all" style="width: 0%"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Recent Activity -->
+          <div class="lg:col-span-2 glass rounded-2xl p-5">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="font-semibold flex items-center gap-2">
+                <i class="fas fa-history text-accent"></i>Recent Activity
+              </h3>
+              <button onclick="showTab('logs')" class="text-accent text-sm hover:underline">View all</button>
+            </div>
+            <div id="recentActivity" class="space-y-3">
+              <div class="skeleton h-12 rounded-xl"></div>
+              <div class="skeleton h-12 rounded-xl"></div>
+              <div class="skeleton h-12 rounded-xl"></div>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- Charts Row -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <div class="glass rounded-xl p-6">
-          <h3 class="text-lg font-semibold mb-4"><i class="fas fa-chart-bar mr-2 text-indigo-400"></i>Requests (Last 24h)</h3>
-          <canvas id="hourlyChart" height="200"></canvas>
-        </div>
-        <div class="glass rounded-xl p-6">
-          <h3 class="text-lg font-semibold mb-4"><i class="fas fa-chart-pie mr-2 text-indigo-400"></i>Model Distribution</h3>
-          <canvas id="modelChart" height="200"></canvas>
-        </div>
-      </div>
-
-      <!-- System Info -->
-      <div class="glass rounded-xl p-6">
-        <h3 class="text-lg font-semibold mb-4"><i class="fas fa-server mr-2 text-indigo-400"></i>System Info</h3>
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div class="bg-white/5 rounded-lg p-4">
-            <p class="text-gray-400 text-sm">CPU Usage</p>
-            <p id="sysCpu" class="text-xl font-semibold">-</p>
+      <!-- Playground Tab -->
+      <div id="tab-playground" class="tab-content hidden">
+        <div class="max-w-3xl mx-auto">
+          <!-- Model Selector Card -->
+          <div class="glass rounded-2xl p-4 mb-4 slide-up">
+            <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+              <div class="flex items-center gap-3 flex-1">
+                <div class="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center">
+                  <i class="fas fa-flask text-accent"></i>
+                </div>
+                <div>
+                  <h3 class="font-semibold">AI Playground</h3>
+                  <p class="text-xs text-gray-500">Test your AI models</p>
+                </div>
+              </div>
+              <select id="playgroundModel" class="bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-accent/50">
+                <option value="inno-ai-boyong-4.5">🚀 inno-ai-boyong-4.5</option>
+                <option value="inno-ai-boyong-4.0">⚡ inno-ai-boyong-4.0</option>
+                <option value="inno-ai-boyong-mini">💨 inno-ai-boyong-mini</option>
+              </select>
+            </div>
           </div>
-          <div class="bg-white/5 rounded-lg p-4">
-            <p class="text-gray-400 text-sm">Memory</p>
-            <p id="sysMemory" class="text-xl font-semibold">-</p>
-          </div>
-          <div class="bg-white/5 rounded-lg p-4">
-            <p class="text-gray-400 text-sm">Disk</p>
-            <p id="sysDisk" class="text-xl font-semibold">-</p>
-          </div>
-          <div class="bg-white/5 rounded-lg p-4">
-            <p class="text-gray-400 text-sm">Node.js</p>
-            <p id="sysNode" class="text-xl font-semibold">-</p>
-          </div>
-        </div>
-      </div>
-    </div>
 
-    <!-- Playground Tab -->
-    <div id="tab-playground" class="tab-content hidden p-6">
-      <div class="glass rounded-xl p-6 max-w-4xl mx-auto">
-        <h3 class="text-lg font-semibold mb-4"><i class="fas fa-flask mr-2 text-indigo-400"></i>AI Playground</h3>
-        
-        <!-- Model Selector -->
-        <div class="mb-4">
-          <label class="text-gray-400 text-sm">Model</label>
-          <select id="playgroundModel" class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2 mt-1">
-            <option value="inno-ai-boyong-4.5">inno-ai-boyong-4.5 (Most Capable)</option>
-            <option value="inno-ai-boyong-4.0">inno-ai-boyong-4.0 (Balanced)</option>
-            <option value="inno-ai-boyong-mini">inno-ai-boyong-mini (Fast)</option>
-          </select>
-        </div>
-
-        <!-- Chat Area -->
-        <div id="chatArea" class="bg-black/30 rounded-lg p-4 h-96 overflow-y-auto mb-4 space-y-4">
-          <div class="text-gray-500 text-center py-8">
-            <i class="fas fa-comments text-4xl mb-2"></i>
-            <p>Start a conversation with the AI</p>
-          </div>
-        </div>
-
-        <!-- Input -->
-        <div class="flex gap-2">
-          <input type="text" id="playgroundInput" placeholder="Type your message..." 
-            class="flex-1 bg-white/10 border border-white/20 rounded-lg px-4 py-3 focus:outline-none focus:border-indigo-500"
-            onkeypress="if(event.key==='Enter')sendPlayground()">
-          <button onclick="sendPlayground()" id="sendBtn" class="bg-indigo-600 hover:bg-indigo-700 rounded-lg px-6 py-3 font-semibold transition">
-            <i class="fas fa-paper-plane"></i>
-          </button>
-        </div>
-        
-        <!-- Token Counter -->
-        <div class="flex justify-between mt-4 text-sm text-gray-400">
-          <span>Tokens: <span id="playgroundTokens">0</span></span>
-          <button onclick="clearChat()" class="hover:text-white"><i class="fas fa-trash mr-1"></i>Clear</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Logs Tab -->
-    <div id="tab-logs" class="tab-content hidden p-6">
-      <div class="glass rounded-xl p-6">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="text-lg font-semibold"><i class="fas fa-list mr-2 text-indigo-400"></i>Request Logs</h3>
-          <div class="flex items-center gap-4">
-            <span id="logsLastUpdated" class="text-gray-500 text-sm"></span>
-            <button onclick="loadLogs()" class="text-indigo-400 hover:text-indigo-300 flex items-center gap-1">
-              <i class="fas fa-sync-alt"></i><span class="hidden sm:inline">Refresh</span>
-            </button>
-          </div>
-        </div>
-        <div class="overflow-x-auto">
-          <table class="w-full">
-            <thead>
-              <tr class="text-left text-gray-400 text-sm border-b border-white/10">
-                <th class="pb-3">Time</th>
-                <th class="pb-3">Source</th>
-                <th class="pb-3">Model</th>
-                <th class="pb-3">Prompt</th>
-                <th class="pb-3">Tokens</th>
-                <th class="pb-3">Latency</th>
-                <th class="pb-3">Status</th>
-              </tr>
-            </thead>
-            <tbody id="logsTable" class="text-sm">
-              <tr><td colspan="7" class="py-8 text-center text-gray-500">Loading logs...</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <!-- Settings Tab -->
-    <div id="tab-settings" class="tab-content hidden p-6">
-      <div class="max-w-2xl mx-auto space-y-6">
-        <!-- API Info -->
-        <div class="glass rounded-xl p-6">
-          <h3 class="text-lg font-semibold mb-4"><i class="fas fa-key mr-2 text-indigo-400"></i>API Information</h3>
-          <div class="space-y-4">
-            <div>
-              <label class="text-gray-400 text-sm">API Endpoint</label>
-              <div class="flex gap-2 mt-1">
-                <input type="text" value="https://ai-gateway.innoserver.cloud/v1/chat/completions" readonly
-                  class="flex-1 bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-sm">
-                <button onclick="copyToClipboard('https://ai-gateway.innoserver.cloud/v1/chat/completions')" class="bg-white/10 hover:bg-white/20 rounded-lg px-4">
-                  <i class="fas fa-copy"></i>
+          <!-- Chat Container -->
+          <div class="glass rounded-2xl overflow-hidden slide-up" style="animation-delay: 0.1s">
+            <!-- Chat Messages -->
+            <div id="chatArea" class="h-[50vh] md:h-[60vh] overflow-y-auto p-4 space-y-4">
+              <div class="flex flex-col items-center justify-center h-full text-center p-4">
+                <div class="w-16 h-16 rounded-2xl bg-accent/10 flex items-center justify-center mb-4">
+                  <i class="fas fa-comments text-accent text-2xl"></i>
+                </div>
+                <h3 class="font-semibold text-lg">Start a conversation</h3>
+                <p class="text-gray-500 text-sm mt-1">Send a message to test the AI</p>
+              </div>
+            </div>
+            
+            <!-- Input Area -->
+            <div class="border-t border-white/5 p-4">
+              <div class="flex gap-2">
+                <input type="text" id="playgroundInput" placeholder="Type your message..." 
+                  class="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-accent/50 focus:bg-white/10 transition-all"
+                  onkeypress="if(event.key==='Enter' && !event.shiftKey)sendPlayground()">
+                <button onclick="sendPlayground()" id="sendBtn" class="w-12 h-12 bg-gradient-to-r from-accent to-purple-600 hover:from-accent-light hover:to-purple-500 rounded-xl flex items-center justify-center transition-all active:scale-95">
+                  <i class="fas fa-paper-plane"></i>
+                </button>
+              </div>
+              <div class="flex justify-between mt-3 text-xs text-gray-500">
+                <span>Tokens: <span id="playgroundTokens" class="text-accent font-medium">0</span></span>
+                <button onclick="clearChat()" class="hover:text-white transition-colors flex items-center gap-1">
+                  <i class="fas fa-trash-alt"></i>Clear chat
                 </button>
               </div>
             </div>
-            <div>
-              <label class="text-gray-400 text-sm">Available Models</label>
-              <div class="mt-2 space-y-2">
-                <div class="bg-white/5 rounded-lg px-4 py-2 flex justify-between">
-                  <span>inno-ai-boyong-4.5</span>
-                  <span class="text-gray-400">Most Capable</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Logs Tab -->
+      <div id="tab-logs" class="tab-content hidden">
+        <div class="glass rounded-2xl overflow-hidden slide-up">
+          <!-- Logs Header -->
+          <div class="p-4 border-b border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center">
+                <i class="fas fa-list text-accent"></i>
+              </div>
+              <div>
+                <h3 class="font-semibold">Request Logs</h3>
+                <p id="logsLastUpdated" class="text-xs text-gray-500">Loading...</p>
+              </div>
+            </div>
+            <div class="flex gap-2">
+              <button onclick="loadLogs()" class="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-sm transition-all flex items-center gap-2">
+                <i class="fas fa-sync-alt"></i>Refresh
+              </button>
+            </div>
+          </div>
+          
+          <!-- Logs Table (Desktop) -->
+          <div class="hidden md:block overflow-x-auto">
+            <table class="w-full">
+              <thead>
+                <tr class="text-left text-gray-400 text-sm border-b border-white/5">
+                  <th class="px-4 py-3 font-medium">Time</th>
+                  <th class="px-4 py-3 font-medium">Source</th>
+                  <th class="px-4 py-3 font-medium">Model</th>
+                  <th class="px-4 py-3 font-medium">Prompt</th>
+                  <th class="px-4 py-3 font-medium">Tokens</th>
+                  <th class="px-4 py-3 font-medium">Latency</th>
+                  <th class="px-4 py-3 font-medium">Status</th>
+                </tr>
+              </thead>
+              <tbody id="logsTable" class="text-sm">
+                <tr><td colspan="7" class="px-4 py-12 text-center text-gray-500">
+                  <i class="fas fa-spinner fa-spin mr-2"></i>Loading logs...
+                </td></tr>
+              </tbody>
+            </table>
+          </div>
+          
+          <!-- Logs Cards (Mobile) -->
+          <div id="logsCards" class="md:hidden p-4 space-y-3">
+            <div class="skeleton h-24 rounded-xl"></div>
+            <div class="skeleton h-24 rounded-xl"></div>
+            <div class="skeleton h-24 rounded-xl"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Settings Tab -->
+      <div id="tab-settings" class="tab-content hidden">
+        <div class="max-w-2xl mx-auto space-y-4">
+          
+          <!-- API Information -->
+          <div class="glass rounded-2xl p-5 slide-up">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center">
+                <i class="fas fa-plug text-accent"></i>
+              </div>
+              <div>
+                <h3 class="font-semibold">API Endpoint</h3>
+                <p class="text-xs text-gray-500">Use this URL in your applications</p>
+              </div>
+            </div>
+            <div class="flex gap-2">
+              <input type="text" value="https://ai-gateway.innoserver.cloud/v1/chat/completions" readonly
+                class="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm font-mono">
+              <button onclick="copyToClipboard('https://ai-gateway.innoserver.cloud/v1/chat/completions')" class="px-4 rounded-xl bg-accent/10 hover:bg-accent/20 text-accent transition-all">
+                <i class="fas fa-copy"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Models -->
+          <div class="glass rounded-2xl p-5 slide-up" style="animation-delay: 0.1s">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center">
+                <i class="fas fa-robot text-purple-400"></i>
+              </div>
+              <div>
+                <h3 class="font-semibold">Available Models</h3>
+                <p class="text-xs text-gray-500">AI models you can use</p>
+              </div>
+            </div>
+            <div class="space-y-2">
+              <div class="flex items-center justify-between p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-all cursor-pointer">
+                <div class="flex items-center gap-3">
+                  <span class="text-xl">🚀</span>
+                  <div>
+                    <p class="font-medium">inno-ai-boyong-4.5</p>
+                    <p class="text-xs text-gray-500">Most capable model</p>
+                  </div>
                 </div>
-                <div class="bg-white/5 rounded-lg px-4 py-2 flex justify-between">
-                  <span>inno-ai-boyong-4.0</span>
-                  <span class="text-gray-400">Balanced</span>
+                <span class="px-2 py-1 rounded-lg bg-success/10 text-success text-xs">Recommended</span>
+              </div>
+              <div class="flex items-center justify-between p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-all cursor-pointer">
+                <div class="flex items-center gap-3">
+                  <span class="text-xl">⚡</span>
+                  <div>
+                    <p class="font-medium">inno-ai-boyong-4.0</p>
+                    <p class="text-xs text-gray-500">Balanced performance</p>
+                  </div>
                 </div>
-                <div class="bg-white/5 rounded-lg px-4 py-2 flex justify-between">
-                  <span>inno-ai-boyong-mini</span>
-                  <span class="text-gray-400">Fast</span>
+              </div>
+              <div class="flex items-center justify-between p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-all cursor-pointer">
+                <div class="flex items-center gap-3">
+                  <span class="text-xl">💨</span>
+                  <div>
+                    <p class="font-medium">inno-ai-boyong-mini</p>
+                    <p class="text-xs text-gray-500">Fast responses</p>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- Danger Zone -->
-        <div class="glass rounded-xl p-6 border border-red-500/30">
-          <h3 class="text-lg font-semibold mb-4 text-red-400"><i class="fas fa-exclamation-triangle mr-2"></i>Danger Zone</h3>
-          <p class="text-gray-400 mb-4">Reset all analytics and logs. This action cannot be undone.</p>
-          <button onclick="resetAnalytics()" class="bg-red-600 hover:bg-red-700 rounded-lg px-6 py-2 font-semibold transition">
-            <i class="fas fa-trash mr-2"></i>Reset All Data
-          </button>
+          <!-- Quick Actions -->
+          <div class="glass rounded-2xl p-5 slide-up" style="animation-delay: 0.2s">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="w-10 h-10 rounded-xl bg-warning/10 flex items-center justify-center">
+                <i class="fas fa-bolt text-warning"></i>
+              </div>
+              <div>
+                <h3 class="font-semibold">Quick Actions</h3>
+                <p class="text-xs text-gray-500">Common admin tasks</p>
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <button onclick="loadAnalytics()" class="p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-all text-left">
+                <i class="fas fa-sync-alt text-accent mb-1"></i>
+                <p class="text-sm font-medium">Refresh Stats</p>
+              </button>
+              <button onclick="showTab('playground')" class="p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-all text-left">
+                <i class="fas fa-flask text-purple-400 mb-1"></i>
+                <p class="text-sm font-medium">Open Playground</p>
+              </button>
+              <button onclick="showTab('logs')" class="p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-all text-left">
+                <i class="fas fa-list text-success mb-1"></i>
+                <p class="text-sm font-medium">View Logs</p>
+              </button>
+              <button onclick="exportLogs()" class="p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-all text-left">
+                <i class="fas fa-download text-warning mb-1"></i>
+                <p class="text-sm font-medium">Export Logs</p>
+              </button>
+            </div>
+          </div>
+
+          <!-- Danger Zone -->
+          <div class="glass rounded-2xl p-5 border border-danger/20 slide-up" style="animation-delay: 0.3s">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="w-10 h-10 rounded-xl bg-danger/10 flex items-center justify-center">
+                <i class="fas fa-exclamation-triangle text-danger"></i>
+              </div>
+              <div>
+                <h3 class="font-semibold text-danger">Danger Zone</h3>
+                <p class="text-xs text-gray-500">Irreversible actions</p>
+              </div>
+            </div>
+            <button onclick="resetAnalytics()" class="w-full p-3 rounded-xl bg-danger/10 hover:bg-danger/20 text-danger transition-all text-sm font-medium">
+              <i class="fas fa-trash-alt mr-2"></i>Reset All Analytics & Logs
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+    </main>
+
+    <!-- Mobile Bottom Navigation -->
+    <nav class="mobile-nav">
+      <div class="flex justify-around py-2">
+        <button onclick="showTab('dashboard')" data-tab="dashboard" class="mobile-nav-btn flex flex-col items-center gap-1 px-4 py-2 text-accent">
+          <i class="fas fa-chart-line text-lg"></i>
+          <span class="text-xs font-medium">Dashboard</span>
+        </button>
+        <button onclick="showTab('playground')" data-tab="playground" class="mobile-nav-btn flex flex-col items-center gap-1 px-4 py-2 text-gray-500">
+          <i class="fas fa-flask text-lg"></i>
+          <span class="text-xs font-medium">Playground</span>
+        </button>
+        <button onclick="showTab('logs')" data-tab="logs" class="mobile-nav-btn flex flex-col items-center gap-1 px-4 py-2 text-gray-500">
+          <i class="fas fa-list text-lg"></i>
+          <span class="text-xs font-medium">Logs</span>
+        </button>
+        <button onclick="showTab('settings')" data-tab="settings" class="mobile-nav-btn flex flex-col items-center gap-1 px-4 py-2 text-gray-500">
+          <i class="fas fa-cog text-lg"></i>
+          <span class="text-xs font-medium">Settings</span>
+        </button>
+      </div>
+    </nav>
   </div>
+
+  <!-- Toast Container -->
+  <div id="toastContainer" class="fixed bottom-24 md:bottom-6 left-0 right-0 flex justify-center pointer-events-none z-50"></div>
 
   <script>
     let adminKey = localStorage.getItem('adminKey') || '';
@@ -281,9 +657,7 @@
     let totalPlaygroundTokens = 0;
 
     // Check if already logged in
-    if (adminKey) {
-      verifyLogin();
-    }
+    if (adminKey) verifyLogin();
 
     async function login() {
       adminKey = document.getElementById('adminKeyInput').value;
@@ -292,12 +666,10 @@
 
     async function verifyLogin() {
       try {
-        const res = await fetch('/admin/analytics', {
-          headers: { 'X-Admin-Key': adminKey }
-        });
+        const res = await fetch('/admin/analytics', { headers: { 'X-Admin-Key': adminKey } });
         if (res.ok) {
           localStorage.setItem('adminKey', adminKey);
-          document.getElementById('loginModal').classList.add('hidden');
+          document.getElementById('loginScreen').classList.add('hidden');
           document.getElementById('mainApp').classList.remove('hidden');
           initDashboard();
         } else {
@@ -316,50 +688,87 @@
 
     function showTab(tab) {
       document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-      document.querySelectorAll('.tab-btn').forEach(el => {
-        el.classList.remove('border-indigo-500', 'text-indigo-400');
-        el.classList.add('border-transparent', 'text-gray-400');
-      });
-      
       document.getElementById(`tab-${tab}`).classList.remove('hidden');
-      document.querySelector(`[data-tab="${tab}"]`).classList.add('border-indigo-500', 'text-indigo-400');
-      document.querySelector(`[data-tab="${tab}"]`).classList.remove('border-transparent', 'text-gray-400');
+      
+      // Update desktop nav
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.classList.remove('bg-accent', 'text-white');
+        btn.classList.add('text-gray-400', 'hover:text-white', 'hover:bg-white/5');
+      });
+      document.querySelector(`.nav-btn[data-tab="${tab}"]`)?.classList.add('bg-accent', 'text-white');
+      document.querySelector(`.nav-btn[data-tab="${tab}"]`)?.classList.remove('text-gray-400', 'hover:text-white', 'hover:bg-white/5');
+      
+      // Update mobile nav
+      document.querySelectorAll('.mobile-nav-btn').forEach(btn => {
+        btn.classList.remove('text-accent');
+        btn.classList.add('text-gray-500');
+      });
+      document.querySelector(`.mobile-nav-btn[data-tab="${tab}"]`)?.classList.add('text-accent');
+      document.querySelector(`.mobile-nav-btn[data-tab="${tab}"]`)?.classList.remove('text-gray-500');
       
       if (tab === 'logs') loadLogs();
     }
 
     async function initDashboard() {
-      await loadAnalytics();
-      await loadSystemInfo();
+      await Promise.all([loadAnalytics(), loadSystemInfo(), loadRecentActivity()]);
       setInterval(loadAnalytics, 30000);
       setInterval(loadSystemInfo, 60000);
     }
 
     async function loadAnalytics() {
       try {
-        const res = await fetch('/admin/analytics', {
-          headers: { 'X-Admin-Key': adminKey }
-        });
+        const res = await fetch('/admin/analytics', { headers: { 'X-Admin-Key': adminKey } });
         const data = await res.json();
         
         document.getElementById('statRequests').textContent = data.totalRequests.toLocaleString();
         document.getElementById('statTokens').textContent = formatNumber(data.totalTokens);
         document.getElementById('statUptime').textContent = data.uptime_human;
         
-        // Calculate avg latency from logs
-        const logsRes = await fetch('/admin/logs?limit=100', {
-          headers: { 'X-Admin-Key': adminKey }
-        });
+        const logsRes = await fetch('/admin/logs?limit=100', { headers: { 'X-Admin-Key': adminKey } });
         const logs = await logsRes.json();
-        const avgLatency = logs.length > 0 
-          ? Math.round(logs.reduce((a, l) => a + (l.latency || 0), 0) / logs.length)
-          : 0;
+        const avgLatency = logs.length > 0 ? Math.round(logs.reduce((a, l) => a + (l.latency || 0), 0) / logs.length) : 0;
         document.getElementById('statLatency').textContent = avgLatency + 'ms';
         
         updateCharts(data);
       } catch (e) {
         console.error('Failed to load analytics', e);
       }
+    }
+
+    async function loadRecentActivity() {
+      try {
+        const res = await fetch('/admin/logs?limit=5', { headers: { 'X-Admin-Key': adminKey } });
+        const logs = await res.json();
+        
+        const container = document.getElementById('recentActivity');
+        if (!logs.length) {
+          container.innerHTML = '<p class="text-center text-gray-500 py-4">No recent activity</p>';
+          return;
+        }
+        
+        container.innerHTML = logs.map(log => `
+          <div class="flex items-center gap-3 p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-all">
+            <div class="w-10 h-10 rounded-xl ${log.status === 'success' ? 'bg-success/10' : 'bg-danger/10'} flex items-center justify-center flex-shrink-0">
+              <i class="fas ${log.status === 'success' ? 'fa-check text-success' : 'fa-times text-danger'}"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-medium truncate">${escapeHtml(log.promptPreview || 'No prompt')}</p>
+              <p class="text-xs text-gray-500">${log.model} · ${log.latency}ms</p>
+            </div>
+            <span class="text-xs text-gray-500 flex-shrink-0">${timeAgo(log.timestamp)}</span>
+          </div>
+        `).join('');
+      } catch (e) {
+        console.error('Failed to load recent activity', e);
+      }
+    }
+
+    function timeAgo(timestamp) {
+      const seconds = Math.floor((Date.now() - new Date(timestamp)) / 1000);
+      if (seconds < 60) return 'Just now';
+      if (seconds < 3600) return Math.floor(seconds / 60) + 'm ago';
+      if (seconds < 86400) return Math.floor(seconds / 3600) + 'h ago';
+      return Math.floor(seconds / 86400) + 'd ago';
     }
 
     function formatNumber(num) {
@@ -369,65 +778,85 @@
     }
 
     function updateCharts(data) {
-      // Hourly Chart
       const hours = Object.keys(data.last24Hours);
       const hourlyData = Object.values(data.last24Hours);
       
       if (hourlyChart) hourlyChart.destroy();
       hourlyChart = new Chart(document.getElementById('hourlyChart'), {
-        type: 'bar',
+        type: 'line',
         data: {
           labels: hours.map(h => h.slice(11) + ':00'),
           datasets: [{
             label: 'Requests',
             data: hourlyData,
-            backgroundColor: 'rgba(99, 102, 241, 0.5)',
-            borderColor: 'rgba(99, 102, 241, 1)',
-            borderWidth: 1
+            borderColor: '#6366f1',
+            backgroundColor: 'rgba(99, 102, 241, 0.1)',
+            fill: true,
+            tension: 0.4,
+            pointRadius: 0,
+            pointHoverRadius: 6
           }]
         },
         options: {
           responsive: true,
+          maintainAspectRatio: false,
           plugins: { legend: { display: false } },
           scales: {
-            y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { color: '#9ca3af' } },
-            x: { grid: { display: false }, ticks: { color: '#9ca3af' } }
-          }
+            y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#6b7280' } },
+            x: { grid: { display: false }, ticks: { color: '#6b7280', maxRotation: 0, maxTicksLimit: 8 } }
+          },
+          interaction: { intersect: false, mode: 'index' }
         }
       });
 
-      // Model Chart
       const models = Object.keys(data.requestsByModel);
       const modelData = Object.values(data.requestsByModel);
       
       if (modelChart) modelChart.destroy();
+      if (models.length === 0) {
+        document.getElementById('modelChart').parentElement.innerHTML = '<div class="flex items-center justify-center h-full text-gray-500"><p>No data yet</p></div>';
+        return;
+      }
+      
       modelChart = new Chart(document.getElementById('modelChart'), {
         type: 'doughnut',
         data: {
           labels: models,
           datasets: [{
             data: modelData,
-            backgroundColor: ['rgba(99, 102, 241, 0.8)', 'rgba(168, 85, 247, 0.8)', 'rgba(236, 72, 153, 0.8)']
+            backgroundColor: ['#6366f1', '#8b5cf6', '#ec4899'],
+            borderWidth: 0
           }]
         },
         options: {
           responsive: true,
-          plugins: { legend: { position: 'bottom', labels: { color: '#9ca3af' } } }
+          maintainAspectRatio: false,
+          cutout: '70%',
+          plugins: { legend: { position: 'bottom', labels: { color: '#9ca3af', padding: 16, usePointStyle: true } } }
         }
       });
     }
 
     async function loadSystemInfo() {
       try {
-        const res = await fetch('/admin/system', {
-          headers: { 'X-Admin-Key': adminKey }
-        });
+        const res = await fetch('/admin/system', { headers: { 'X-Admin-Key': adminKey } });
         const data = await res.json();
         
+        const cpuVal = parseFloat(data.cpu) || 0;
         document.getElementById('sysCpu').textContent = data.cpu || '-';
+        document.getElementById('sysCpuBar').style.width = cpuVal + '%';
+        
+        const memParts = (data.memory || '').split('/');
+        const memPercent = memParts.length === 2 ? (parseInt(memParts[0]) / parseInt(memParts[1]) * 100) : 0;
         document.getElementById('sysMemory').textContent = data.memory || '-';
+        document.getElementById('sysMemoryBar').style.width = memPercent + '%';
+        
+        const diskParts = (data.disk || '').split('/');
+        const diskUsed = parseFloat(diskParts[0]) || 0;
+        const diskTotal = parseFloat(diskParts[1]) || 1;
+        const diskPercent = (diskUsed / diskTotal) * 100;
         document.getElementById('sysDisk').textContent = data.disk || '-';
-        document.getElementById('sysNode').textContent = data.nodeVersion || '-';
+        document.getElementById('sysDiskBar').style.width = diskPercent + '%';
       } catch (e) {
         console.error('Failed to load system info', e);
       }
@@ -435,44 +864,59 @@
 
     async function loadLogs() {
       const table = document.getElementById('logsTable');
-      table.innerHTML = '<tr><td colspan="7" class="py-8 text-center text-gray-500"><i class="fas fa-spinner fa-spin mr-2"></i>Loading...</td></tr>';
+      const cards = document.getElementById('logsCards');
       
       try {
-        const res = await fetch('/admin/logs?limit=100', {
-          headers: { 'X-Admin-Key': adminKey }
-        });
-        
-        if (!res.ok) {
-          throw new Error('Failed to fetch logs');
-        }
-        
+        const res = await fetch('/admin/logs?limit=100', { headers: { 'X-Admin-Key': adminKey } });
         const logs = await res.json();
         
+        document.getElementById('logsLastUpdated').textContent = 'Updated ' + new Date().toLocaleTimeString();
+        
         if (!logs || logs.length === 0) {
-          table.innerHTML = '<tr><td colspan="7" class="py-8 text-center text-gray-500"><i class="fas fa-inbox mr-2"></i>No logs yet. Make some API requests first!</td></tr>';
+          table.innerHTML = '<tr><td colspan="7" class="px-4 py-12 text-center text-gray-500"><i class="fas fa-inbox text-2xl mb-2 block"></i>No logs yet</td></tr>';
+          cards.innerHTML = '<p class="text-center text-gray-500 py-8">No logs yet. Make some API requests first!</p>';
           return;
         }
         
+        // Desktop table
         table.innerHTML = logs.map(log => `
-          <tr class="border-b border-white/5 hover:bg-white/5 fade-in">
-            <td class="py-3 text-gray-300">${new Date(log.timestamp).toLocaleString()}</td>
-            <td>${log.source === 'playground' 
-              ? '<span class="bg-purple-500/20 text-purple-300 px-2 py-1 rounded text-xs"><i class="fas fa-flask mr-1"></i>Playground</span>'
-              : '<span class="bg-green-500/20 text-green-300 px-2 py-1 rounded text-xs"><i class="fas fa-code mr-1"></i>API</span>'}</td>
-            <td><span class="bg-indigo-500/20 text-indigo-300 px-2 py-1 rounded text-xs">${log.model || '-'}</span></td>
-            <td class="max-w-xs truncate text-gray-300" title="${escapeHtml(log.promptPreview || '')}">${escapeHtml(log.promptPreview || '-')}</td>
-            <td class="text-gray-300">${(log.totalTokens || 0).toLocaleString()}</td>
-            <td class="text-gray-300">${log.latency || 0}ms</td>
-            <td>${log.status === 'success' 
-              ? '<span class="text-green-400"><i class="fas fa-check-circle"></i></span>' 
-              : '<span class="text-red-400" title="' + escapeHtml(log.error || 'Error') + '"><i class="fas fa-times-circle"></i></span>'}</td>
+          <tr class="border-b border-white/5 hover:bg-white/5 transition-all">
+            <td class="px-4 py-3 text-gray-300">${new Date(log.timestamp).toLocaleString()}</td>
+            <td class="px-4 py-3">${log.source === 'playground' 
+              ? '<span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-purple-500/10 text-purple-400 text-xs"><i class="fas fa-flask"></i>Playground</span>'
+              : '<span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-success/10 text-success text-xs"><i class="fas fa-code"></i>API</span>'}</td>
+            <td class="px-4 py-3"><span class="px-2 py-1 rounded-lg bg-accent/10 text-accent text-xs">${log.model || '-'}</span></td>
+            <td class="px-4 py-3 max-w-xs truncate text-gray-300" title="${escapeHtml(log.promptPreview || '')}">${escapeHtml(log.promptPreview || '-')}</td>
+            <td class="px-4 py-3 text-gray-300">${(log.totalTokens || 0).toLocaleString()}</td>
+            <td class="px-4 py-3 text-gray-300">${log.latency || 0}ms</td>
+            <td class="px-4 py-3">${log.status === 'success' 
+              ? '<span class="text-success"><i class="fas fa-check-circle"></i></span>' 
+              : '<span class="text-danger"><i class="fas fa-times-circle"></i></span>'}</td>
           </tr>
         `).join('');
         
-        document.getElementById('logsLastUpdated').textContent = 'Updated: ' + new Date().toLocaleTimeString();
+        // Mobile cards
+        cards.innerHTML = logs.map(log => `
+          <div class="p-4 rounded-xl bg-white/5 space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-xs text-gray-500">${timeAgo(log.timestamp)}</span>
+              ${log.status === 'success' 
+                ? '<span class="text-success text-sm"><i class="fas fa-check-circle"></i></span>' 
+                : '<span class="text-danger text-sm"><i class="fas fa-times-circle"></i></span>'}
+            </div>
+            <p class="text-sm truncate">${escapeHtml(log.promptPreview || '-')}</p>
+            <div class="flex items-center gap-2 text-xs">
+              ${log.source === 'playground' 
+                ? '<span class="px-2 py-1 rounded-lg bg-purple-500/10 text-purple-400"><i class="fas fa-flask mr-1"></i>Playground</span>'
+                : '<span class="px-2 py-1 rounded-lg bg-success/10 text-success"><i class="fas fa-code mr-1"></i>API</span>'}
+              <span class="px-2 py-1 rounded-lg bg-accent/10 text-accent">${log.model || '-'}</span>
+              <span class="text-gray-500">${log.latency}ms</span>
+            </div>
+          </div>
+        `).join('');
       } catch (e) {
         console.error('Failed to load logs', e);
-        table.innerHTML = '<tr><td colspan="7" class="py-8 text-center text-red-400"><i class="fas fa-exclamation-triangle mr-2"></i>Failed to load logs: ' + e.message + '</td></tr>';
+        table.innerHTML = '<tr><td colspan="7" class="px-4 py-12 text-center text-danger"><i class="fas fa-exclamation-triangle mr-2"></i>Failed to load logs</td></tr>';
       }
     }
 
@@ -485,15 +929,15 @@
       const chatArea = document.getElementById('chatArea');
       const sendBtn = document.getElementById('sendBtn');
       
-      // Clear placeholder
-      if (chatArea.querySelector('.text-gray-500')) {
-        chatArea.innerHTML = '';
-      }
+      // Clear empty state
+      if (chatArea.querySelector('.fa-comments')) chatArea.innerHTML = '';
       
       // Add user message
       chatArea.innerHTML += `
         <div class="flex justify-end fade-in">
-          <div class="bg-indigo-600 rounded-lg px-4 py-2 max-w-[80%]">${escapeHtml(message)}</div>
+          <div class="chat-bubble-user px-4 py-3 max-w-[85%]">
+            <p class="text-sm">${escapeHtml(message)}</p>
+          </div>
         </div>
       `;
       
@@ -501,12 +945,16 @@
       sendBtn.disabled = true;
       sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
       
-      // Add typing indicator
+      // Typing indicator
       const typingId = 'typing-' + Date.now();
       chatArea.innerHTML += `
         <div id="${typingId}" class="flex fade-in">
-          <div class="bg-white/10 rounded-lg px-4 py-2">
-            <span class="typing">Thinking</span>
+          <div class="chat-bubble-ai px-4 py-3">
+            <div class="flex gap-1">
+              <span class="typing-dot w-2 h-2 bg-gray-400 rounded-full"></span>
+              <span class="typing-dot w-2 h-2 bg-gray-400 rounded-full"></span>
+              <span class="typing-dot w-2 h-2 bg-gray-400 rounded-full"></span>
+            </div>
           </div>
         </div>
       `;
@@ -515,39 +963,40 @@
       try {
         const res = await fetch('/admin/playground', {
           method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'X-Admin-Key': adminKey 
-          },
-          body: JSON.stringify({
-            model,
-            messages: [{ role: 'user', content: message }]
-          })
+          headers: { 'Content-Type': 'application/json', 'X-Admin-Key': adminKey },
+          body: JSON.stringify({ model, messages: [{ role: 'user', content: message }] })
         });
         
         const data = await res.json();
-        document.getElementById(typingId).remove();
+        document.getElementById(typingId)?.remove();
         
         if (data.error) {
           chatArea.innerHTML += `
             <div class="flex fade-in">
-              <div class="bg-red-500/20 text-red-300 rounded-lg px-4 py-2 max-w-[80%]">Error: ${escapeHtml(data.error)}</div>
+              <div class="chat-bubble-ai px-4 py-3 max-w-[85%] border border-danger/30">
+                <p class="text-sm text-danger"><i class="fas fa-exclamation-circle mr-1"></i>${escapeHtml(data.error)}</p>
+              </div>
             </div>
           `;
         } else {
           chatArea.innerHTML += `
             <div class="flex fade-in">
-              <div class="bg-white/10 rounded-lg px-4 py-2 max-w-[80%] whitespace-pre-wrap">${escapeHtml(data.response)}</div>
+              <div class="chat-bubble-ai px-4 py-3 max-w-[85%]">
+                <p class="text-sm whitespace-pre-wrap">${escapeHtml(data.response)}</p>
+                <p class="text-xs text-gray-500 mt-2">${data.model} · ${data.usage?.total_tokens || 0} tokens</p>
+              </div>
             </div>
           `;
           totalPlaygroundTokens += data.usage?.total_tokens || 0;
           document.getElementById('playgroundTokens').textContent = totalPlaygroundTokens.toLocaleString();
         }
       } catch (e) {
-        document.getElementById(typingId).remove();
+        document.getElementById(typingId)?.remove();
         chatArea.innerHTML += `
           <div class="flex fade-in">
-            <div class="bg-red-500/20 text-red-300 rounded-lg px-4 py-2">Network error</div>
+            <div class="chat-bubble-ai px-4 py-3 border border-danger/30">
+              <p class="text-sm text-danger"><i class="fas fa-wifi mr-1"></i>Network error</p>
+            </div>
           </div>
         `;
       }
@@ -555,13 +1004,17 @@
       sendBtn.disabled = false;
       sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i>';
       chatArea.scrollTop = chatArea.scrollHeight;
+      loadRecentActivity();
     }
 
     function clearChat() {
       document.getElementById('chatArea').innerHTML = `
-        <div class="text-gray-500 text-center py-8">
-          <i class="fas fa-comments text-4xl mb-2"></i>
-          <p>Start a conversation with the AI</p>
+        <div class="flex flex-col items-center justify-center h-full text-center p-4">
+          <div class="w-16 h-16 rounded-2xl bg-accent/10 flex items-center justify-center mb-4">
+            <i class="fas fa-comments text-accent text-2xl"></i>
+          </div>
+          <h3 class="font-semibold text-lg">Start a conversation</h3>
+          <p class="text-gray-500 text-sm mt-1">Send a message to test the AI</p>
         </div>
       `;
       totalPlaygroundTokens = 0;
@@ -569,23 +1022,47 @@
     }
 
     async function resetAnalytics() {
-      if (!confirm('Are you sure you want to reset all analytics and logs?')) return;
+      if (!confirm('Are you sure you want to reset all analytics and logs? This cannot be undone.')) return;
       
       try {
-        await fetch('/admin/reset', {
-          method: 'POST',
-          headers: { 'X-Admin-Key': adminKey }
-        });
-        alert('Analytics reset successfully');
+        await fetch('/admin/reset', { method: 'POST', headers: { 'X-Admin-Key': adminKey } });
+        showToast('Analytics reset successfully', 'success');
         loadAnalytics();
+        loadRecentActivity();
       } catch (e) {
-        alert('Failed to reset analytics');
+        showToast('Failed to reset analytics', 'error');
       }
+    }
+
+    function exportLogs() {
+      fetch('/admin/logs?limit=1000', { headers: { 'X-Admin-Key': adminKey } })
+        .then(r => r.json())
+        .then(logs => {
+          const csv = 'Timestamp,Source,Model,Prompt,Tokens,Latency,Status\n' + 
+            logs.map(l => `"${l.timestamp}","${l.source || 'api'}","${l.model}","${(l.promptPreview || '').replace(/"/g, '""')}",${l.totalTokens},${l.latency},"${l.status}"`).join('\n');
+          const blob = new Blob([csv], { type: 'text/csv' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `ai-gateway-logs-${new Date().toISOString().slice(0,10)}.csv`;
+          a.click();
+          showToast('Logs exported', 'success');
+        });
     }
 
     function copyToClipboard(text) {
       navigator.clipboard.writeText(text);
-      alert('Copied to clipboard!');
+      showToast('Copied to clipboard', 'success');
+    }
+
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = `toast glass-strong flex items-center gap-2 text-sm pointer-events-auto`;
+      const icon = type === 'success' ? 'fa-check-circle text-success' : type === 'error' ? 'fa-exclamation-circle text-danger' : 'fa-info-circle text-accent';
+      toast.innerHTML = `<i class="fas ${icon}"></i>${message}`;
+      container.appendChild(toast);
+      setTimeout(() => toast.remove(), 3000);
     }
 
     function escapeHtml(text) {
