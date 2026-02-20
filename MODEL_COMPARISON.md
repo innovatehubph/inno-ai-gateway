@@ -1,231 +1,211 @@
 # 🤖 InnovateHub AI Gateway - Model Comparison Guide
-
-## Overview
-
-This guide compares the best AI models available from **OpenRouter**, **Replicate**, and **HuggingFace** for various use cases.
+## Updated: February 2026 (Researched by AI Agent Swarm)
 
 ---
 
-## 🖼️ IMAGE GENERATION
+# 🖼️ IMAGE GENERATION
 
-### Top Models Ranked
+## 🏆 TOP 10 MODELS (Ranked)
 
-| Rank | Model | Provider | Platform | Speed | Quality | Cost | Best For |
-|------|-------|----------|----------|-------|---------|------|----------|
-| 🥇 | **FLUX.2 Pro** | Black Forest Labs | Replicate | Fast | ⭐⭐⭐⭐⭐ | $0.05/img | Pro quality, best overall |
-| 🥈 | **FLUX.1 Schnell** | Black Forest Labs | HuggingFace/Replicate | ⚡ Very Fast | ⭐⭐⭐⭐ | Free/Low | Fast prototyping |
-| 🥉 | **FLUX.1 Dev** | Black Forest Labs | HuggingFace/Replicate | Medium | ⭐⭐⭐⭐⭐ | $0.025/img | Development |
-| 4 | **Recraft V4** | Recraft AI | Replicate | Fast | ⭐⭐⭐⭐⭐ | $0.04/img | Design, text in images |
-| 5 | **SDXL Turbo** | Stability AI | HuggingFace | ⚡ Very Fast | ⭐⭐⭐ | Free | Quick generations |
-| 6 | **DALL-E 3** | OpenAI | OpenRouter | Medium | ⭐⭐⭐⭐ | $0.04/img | Following complex prompts |
-| 7 | **Ideogram 2.0** | Ideogram | Replicate | Medium | ⭐⭐⭐⭐⭐ | $0.08/img | Text rendering |
-| 8 | **Stable Diffusion 3** | Stability AI | Replicate | Medium | ⭐⭐⭐⭐ | $0.035/img | General purpose |
-| 9 | **Playground v2.5** | Playground | HuggingFace | Fast | ⭐⭐⭐⭐ | Free | Aesthetic images |
-| 10 | **Z-Image Turbo** | Tongyi | Replicate | ⚡ Ultra Fast | ⭐⭐⭐ | $0.001/img | Production scale |
+| Rank | Model | Provider | Platform | Speed | Cost | Quality | Best For |
+|------|-------|----------|----------|-------|------|---------|----------|
+| 🥇 | **Google Nano Banana Pro** | Google DeepMind | Replicate | Medium | $0.05-0.08 | ⭐⭐⭐⭐⭐ | Best overall - text, editing, reasoning |
+| 🥈 | **Google Imagen 4 Ultra** | Google | Replicate | Slower | $0.08 | ⭐⭐⭐⭐⭐ | Maximum quality, premium |
+| 🥉 | **FLUX.2 Max** | Black Forest Labs | Replicate | Fast | $0.08 | ⭐⭐⭐⭐⭐ | Highest fidelity, multi-reference |
+| 4 | **Ideogram V3 Quality** | Ideogram AI | Replicate | Medium | $0.09 | ⭐⭐⭐⭐⭐ | Best text rendering |
+| 5 | **Recraft V3** | Recraft AI | Replicate | Medium | $0.04 | ⭐⭐⭐⭐⭐ | SOTA text, SVG support |
+| 6 | **ByteDance Seedream 4.5** | ByteDance | Replicate | Medium | $0.03 | ⭐⭐⭐⭐⭐ | 4K output, spatial understanding |
+| 7 | **FLUX Pro** | Black Forest Labs | Replicate | Fast | $0.04 | ⭐⭐⭐⭐⭐ | Production-grade |
+| 8 | **Google Imagen 4 Fast** | Google | Replicate | ⚡ Very Fast | $0.02 | ⭐⭐⭐⭐ | Speed-critical |
+| 9 | **Z-Image Turbo** | Tongyi-MAI/Pruna | Replicate/HF | ⚡ <1 sec | $0.001 | ⭐⭐⭐⭐ | Production scale |
+| 10 | **P-Image** | Pruna AI | Replicate | ⚡ <1 sec | $0.01 | ⭐⭐⭐⭐ | Fastest production |
 
-### Platform-Specific Recommendations
+## 🆓 Best Free/Open Source (HuggingFace)
 
-#### HuggingFace (Free/Low Cost)
-```
-Best Free: FLUX.1-schnell, SDXL-Turbo, Playground-v2.5
-Best Quality: FLUX.1-dev (requires Pro)
-Fastest: SDXL-Turbo (4 steps)
-```
+| Model | Parameters | Quality | Speed | License |
+|-------|------------|---------|-------|---------|
+| **Z-Image-Turbo** | ~6B | ⭐⭐⭐⭐⭐ | ⚡ Ultra Fast | Open |
+| **FLUX.1-dev** | 12B | ⭐⭐⭐⭐⭐ | Medium | Open weights |
+| **FLUX.1-schnell** | 12B | ⭐⭐⭐⭐ | ⚡ Fastest | Apache 2.0 |
+| **Qwen-Image-2512** | 20B | ⭐⭐⭐⭐⭐ | Medium | Open |
+| **SDXL Base 1.0** | 6.6B | ⭐⭐⭐⭐ | Medium | Open |
 
-#### Replicate (Pay-per-use)
-```
-Best Overall: FLUX.2-pro ($0.05/image)
-Best Value: FLUX.1-schnell ($0.003/image)
-Best for Text: Recraft-V4, Ideogram-2.0
-Fastest: Z-Image-Turbo, P-Image (sub-second)
-```
+## 💰 Pricing Tiers
 
-#### OpenRouter (API Gateway)
-```
-Available: DALL-E 3 (via OpenAI)
-Best for: Complex prompt understanding
-Note: Limited image generation options
-```
+| Tier | Cost/Image | Models |
+|------|------------|--------|
+| **Ultra Budget** | $0.001-0.005 | Z-Image-Turbo, FLUX-schnell |
+| **Budget** | $0.01-0.03 | P-Image, Imagen 4 Fast, Seedream |
+| **Standard** | $0.04-0.05 | FLUX Pro, Recraft V3, Nano Banana |
+| **Premium** | $0.06-0.10 | FLUX.2 Max, Ideogram V3, Imagen 4 Ultra |
 
 ---
 
-## 🎬 VIDEO GENERATION
+# 🎬 VIDEO GENERATION
 
-### Top Models Ranked
+## 🏆 TOP 10 MODELS (Ranked)
 
-| Rank | Model | Provider | Platform | Duration | Quality | Cost | Best For |
-|------|-------|----------|----------|----------|---------|------|----------|
-| 🥇 | **Runway Gen-4.5** | Runway | Replicate | 5-10s | ⭐⭐⭐⭐⭐ | $0.50/5s | Best motion quality |
-| 🥈 | **Kling 1.6** | Kuaishou | Replicate | 5-10s | ⭐⭐⭐⭐⭐ | $0.32/5s | Realistic motion |
-| 🥉 | **PixVerse V5.6** | PixVerse | Replicate | 4s | ⭐⭐⭐⭐ | $0.20/vid | Physics simulation |
-| 4 | **Grok Imagine Video** | xAI | Replicate | 5s | ⭐⭐⭐⭐ | $0.25/vid | Creative styles |
-| 5 | **Luma Dream Machine** | Luma AI | Replicate | 5s | ⭐⭐⭐⭐ | $0.30/vid | Cinematic |
-| 6 | **Minimax Video** | Minimax | Replicate | 6s | ⭐⭐⭐⭐ | $0.15/vid | Cost effective |
-| 7 | **Stable Video Diffusion** | Stability | HuggingFace | 4s | ⭐⭐⭐ | Free | Open source |
-| 8 | **CogVideoX** | THUDM | HuggingFace | 6s | ⭐⭐⭐ | Free | Open source |
-| 9 | **AnimateDiff** | Various | HuggingFace | 2-4s | ⭐⭐⭐ | Free | Animation |
-| 10 | **Mochi 1** | Genmo | Replicate | 5s | ⭐⭐⭐ | $0.10/vid | Budget option |
+| Rank | Model | Provider | Platform | Duration | Cost | Quality | Best For |
+|------|-------|----------|----------|----------|------|---------|----------|
+| 🥇 | **Runway Gen-4.5** | RunwayML | Replicate | 10s | $0.50-1.50 | ⭐⭐⭐⭐⭐ | #1 Ranked (1247 Elo), best motion |
+| 🥈 | **Kling V3** | Kuaishou | Replicate/fal | 15s | $0.20-0.40/s | ⭐⭐⭐⭐⭐ | Multi-shot, native audio, lip-sync |
+| 🥉 | **Kling V3 Omni** | Kuaishou | Replicate | 15s | $0.25-0.50/s | ⭐⭐⭐⭐⭐ | Video editing, character consistency |
+| 4 | **Grok Imagine Video** | xAI | Replicate/fal | 15s | $0.30-0.60 | ⭐⭐⭐⭐½ | Auto-generated audio |
+| 5 | **PixVerse V5.6** | PixVerse | Replicate | 10s | $0.15-0.30 | ⭐⭐⭐⭐½ | Multi-shot cinematic |
+| 6 | **Sora** | OpenAI | Native | 20s | $20/mo (Plus) | ⭐⭐⭐⭐½ | Hyperreal motion |
+| 7 | **Veo 3.1** | Google | fal.ai | 8s | $0.25/s | ⭐⭐⭐⭐ | Google ecosystem |
+| 8 | **MiniMax Video-01** | MiniMax | Replicate | 6s | $0.10-0.20 | ⭐⭐⭐⭐ | Budget-friendly |
+| 9 | **Luma Dream Machine** | Luma Labs | Native | 10s | Free tier | ⭐⭐⭐⭐ | Easy prototyping |
+| 10 | **LTX-2 19B** | Lightricks | fal.ai | 8s | ~$0.15 | ⭐⭐⭐⭐ | Video with audio |
 
-### Platform-Specific Recommendations
+## 🆓 Best Free/Open Source (HuggingFace)
 
-#### HuggingFace (Free/Low Cost)
-```
-Best Free: CogVideoX-5B, Stable Video Diffusion
-Best Quality: CogVideoX with custom fine-tuning
-Limitations: Requires GPU Spaces or local GPU
-```
-
-#### Replicate (Pay-per-use)
-```
-Best Overall: Runway Gen-4.5 (industry standard)
-Best Value: Minimax Video, Mochi 1
-Best Motion: Kling 1.6
-Image-to-Video: Runway, Kling, PixVerse
-```
+| Model | Parameters | Quality | Best For |
+|-------|------------|---------|----------|
+| **Wan2.2-T2V-A14B** | 14B | ⭐⭐⭐⭐⭐ | Best open model |
+| **HunyuanVideo 1.5** | 13B | ⭐⭐⭐⭐ | Tencent's latest |
+| **CogVideoX-5B** | 5B | ⭐⭐⭐⭐ | Stable performance |
+| **Mochi-1-Preview** | - | ⭐⭐⭐½ | Quick testing |
+| **SkyReels-V2** | 1.3B-14B | ⭐⭐⭐⭐ | Multi-resolution |
 
 ---
 
-## 🔊 AUDIO GENERATION
+# 🔊 AUDIO GENERATION
 
-### Text-to-Speech (TTS)
+## Text-to-Speech (TTS)
 
-| Rank | Model | Provider | Platform | Quality | Speed | Cost | Best For |
-|------|-------|----------|----------|---------|-------|------|----------|
-| 🥇 | **ElevenLabs** | ElevenLabs | Replicate/API | ⭐⭐⭐⭐⭐ | Fast | $0.30/1K chars | Most natural |
-| 🥈 | **OpenAI TTS** | OpenAI | OpenRouter | ⭐⭐⭐⭐⭐ | Fast | $0.015/1K chars | Great value |
-| 🥉 | **XTTS-v2** | Coqui | HuggingFace | ⭐⭐⭐⭐ | Medium | Free | Voice cloning |
-| 4 | **Bark** | Suno | HuggingFace | ⭐⭐⭐⭐ | Slow | Free | Expressive |
-| 5 | **MMS-TTS** | Meta | HuggingFace | ⭐⭐⭐ | Fast | Free | Multilingual |
-| 6 | **Parler TTS** | HuggingFace | HuggingFace | ⭐⭐⭐⭐ | Fast | Free | Controllable |
-| 7 | **StyleTTS 2** | Various | Replicate | ⭐⭐⭐⭐ | Fast | $0.002/s | Natural prosody |
+| Rank | Model | Provider | Platform | Cost | Latency | Quality |
+|------|-------|----------|----------|------|---------|---------|
+| 🥇 | **GPT-4o-mini-TTS** | OpenAI | API | $15/1M chars | Low | ⭐⭐⭐⭐⭐ |
+| 🥈 | **ElevenLabs Multilingual V3** | ElevenLabs | API | $0.12-0.30/min | Medium | ⭐⭐⭐⭐⭐ |
+| 🥉 | **ElevenLabs Flash** | ElevenLabs | API | $0.06-0.15/min | ⚡ Very Low | ⭐⭐⭐⭐ |
+| 4 | **Deepgram Aura-2** | Deepgram | API | $0.03/1K chars | ⚡ Very Low | ⭐⭐⭐⭐ |
+| 5 | **MOSS-TTS 8B** | OpenMOSS | HuggingFace | FREE | Medium | ⭐⭐⭐⭐⭐ |
+| 6 | **Qwen3-TTS 1.7B** | Alibaba | HuggingFace | FREE | Low | ⭐⭐⭐⭐ |
+| 7 | **Kokoro-82M** | hexgrad | HuggingFace | FREE | ⚡ Very Low | ⭐⭐⭐⭐ |
+| 8 | **Fish Speech 1.5** | FishAudio | API/HF | $4.49/mo | Low | ⭐⭐⭐⭐ |
 
-### Speech-to-Text (STT)
+## Speech-to-Text (STT)
 
-| Rank | Model | Provider | Platform | Accuracy | Speed | Cost | Best For |
-|------|-------|----------|----------|----------|-------|------|----------|
-| 🥇 | **Whisper Large V3** | OpenAI | HuggingFace/Replicate | ⭐⭐⭐⭐⭐ | Medium | Free/$0.006/min | Best accuracy |
-| 🥈 | **Whisper Large V3 Turbo** | OpenAI | Replicate | ⭐⭐⭐⭐⭐ | Fast | $0.003/min | Speed + accuracy |
-| 🥉 | **Deepgram Nova-2** | Deepgram | API | ⭐⭐⭐⭐⭐ | ⚡ Real-time | $0.0043/min | Production |
-| 4 | **AssemblyAI** | AssemblyAI | API | ⭐⭐⭐⭐ | Fast | $0.01/min | Features |
+| Rank | Model | Provider | Platform | Cost | Accuracy | Latency |
+|------|-------|----------|----------|------|----------|---------|
+| 🥇 | **GPT-4o-transcribe** | OpenAI | API | $0.006/min | ⭐⭐⭐⭐⭐ | Low |
+| 🥈 | **Deepgram Nova-3** | Deepgram | API | $0.0077/min | ⭐⭐⭐⭐⭐ | ⚡ Very Low |
+| 🥉 | **Deepgram Flux** | Deepgram | API | $0.0077/min | ⭐⭐⭐⭐⭐ | ⚡ Ultra-low |
+| 4 | **Whisper Large V3 Turbo** | OpenAI | HuggingFace | FREE | ⭐⭐⭐⭐⭐ | Medium |
+| 5 | **AssemblyAI Universal-3 Pro** | AssemblyAI | API | $0.21/hr | ⭐⭐⭐⭐⭐ | Low |
+| 6 | **NVIDIA Parakeet TDT V3** | NVIDIA | HuggingFace | FREE | ⭐⭐⭐⭐⭐ | Low |
+| 7 | **Voxtral Mini 4B** | Mistral | HuggingFace | FREE | ⭐⭐⭐⭐ | Low |
 
-### Music Generation
+## Music Generation
 
-| Rank | Model | Provider | Platform | Quality | Duration | Cost | Best For |
-|------|-------|----------|----------|---------|----------|------|----------|
-| 🥇 | **Suno V4** | Suno | API | ⭐⭐⭐⭐⭐ | 4 min | $0.05/song | Full songs |
-| 🥈 | **Udio** | Udio | API | ⭐⭐⭐⭐⭐ | 2 min | $0.05/song | Vocals |
-| 🥉 | **MusicGen Large** | Meta | HuggingFace | ⭐⭐⭐⭐ | 30s | Free | Instrumental |
-| 4 | **Riffusion** | Riffusion | Replicate | ⭐⭐⭐ | 5s | $0.01 | Quick loops |
-| 5 | **AudioCraft** | Meta | HuggingFace | ⭐⭐⭐⭐ | 30s | Free | Sound effects |
+| Rank | Model | Provider | Platform | Cost | Duration | Quality |
+|------|-------|----------|----------|------|----------|---------|
+| 🥇 | **Suno V4** | Suno | Web/API | $10-30/mo | 4 min | ⭐⭐⭐⭐⭐ |
+| 🥈 | **Udio** | Udio | Web | $10-30/mo | 4 min | ⭐⭐⭐⭐⭐ |
+| 🥉 | **ACE-Step 1.5** | ACE-Step | HuggingFace | FREE | Variable | ⭐⭐⭐⭐ |
+| 4 | **HeartMuLa 3B** | HeartMuLa | HuggingFace | FREE | Variable | ⭐⭐⭐⭐ |
+| 5 | **Stable Audio Open** | Stability | HuggingFace | FREE | 45 sec | ⭐⭐⭐½ |
 
----
+## Voice Cloning
 
-## 🧊 3D GENERATION
-
-### Text-to-3D
-
-| Rank | Model | Provider | Platform | Quality | Speed | Cost | Output |
-|------|-------|----------|----------|---------|-------|------|--------|
-| 🥇 | **Meshy V4** | Meshy | API | ⭐⭐⭐⭐⭐ | 2 min | $0.20 | GLB/FBX |
-| 🥈 | **Rodin Gen-1** | Rodin | Replicate | ⭐⭐⭐⭐⭐ | 1 min | $0.15 | GLB |
-| 🥉 | **Shap-E** | OpenAI | Replicate | ⭐⭐⭐ | 30s | $0.02 | PLY/GLB |
-| 4 | **Point-E** | OpenAI | HuggingFace | ⭐⭐ | 20s | Free | PLY |
-| 5 | **DreamFusion** | Google | - | ⭐⭐⭐⭐ | 30 min | GPU | NeRF |
-
-### Image-to-3D
-
-| Rank | Model | Provider | Platform | Quality | Speed | Cost | Output |
-|------|-------|----------|----------|---------|-------|------|--------|
-| 🥇 | **TripoSR** | Stability/Tripo | Replicate | ⭐⭐⭐⭐⭐ | 10s | $0.05 | GLB |
-| 🥈 | **InstantMesh** | TencentARC | Replicate | ⭐⭐⭐⭐ | 30s | $0.03 | GLB |
-| 🥉 | **Zero123++** | Stability | HuggingFace | ⭐⭐⭐⭐ | 20s | Free | Multi-view |
-| 4 | **LGM** | Various | Replicate | ⭐⭐⭐⭐ | 15s | $0.04 | GLB |
-| 5 | **Wonder3D** | Various | HuggingFace | ⭐⭐⭐ | 1 min | Free | Mesh |
+| Model | Provider | Platform | Cost | Clone Quality |
+|-------|----------|----------|------|---------------|
+| **ElevenLabs Pro Clone** | ElevenLabs | API | $22+/mo | ⭐⭐⭐⭐⭐ |
+| **Fish Audio S1-Mini** | FishAudio | API/HF | $4.49+/mo | ⭐⭐⭐⭐ |
+| **Chatterbox** | ResembleAI | HuggingFace | FREE | ⭐⭐⭐⭐ |
+| **IndexTTS-2** | IndexTeam | HuggingFace | FREE | ⭐⭐⭐⭐ |
 
 ---
 
-## 📊 EMBEDDINGS
+# 🧊 3D GENERATION
 
-| Rank | Model | Provider | Platform | Dimensions | Quality | Cost |
-|------|-------|----------|----------|------------|---------|------|
-| 🥇 | **text-embedding-3-large** | OpenAI | OpenRouter | 3072 | ⭐⭐⭐⭐⭐ | $0.00013/1K |
-| 🥈 | **voyage-3** | Voyage AI | API | 1024 | ⭐⭐⭐⭐⭐ | $0.00006/1K |
-| 🥉 | **E5-Large-V2** | Microsoft | HuggingFace | 1024 | ⭐⭐⭐⭐ | Free |
-| 4 | **BGE-Large** | BAAI | HuggingFace | 1024 | ⭐⭐⭐⭐ | Free |
-| 5 | **all-MiniLM-L6-v2** | Sentence-Trans | HuggingFace | 384 | ⭐⭐⭐ | Free |
-| 6 | **Multilingual-E5** | Microsoft | Replicate | 1024 | ⭐⭐⭐⭐ | $0.0001/1K |
+## Image-to-3D (Recommended)
+
+| Rank | Model | Provider | Platform | Cost | Speed | Quality | Output |
+|------|-------|----------|----------|------|-------|---------|--------|
+| 🥇 | **TRELLIS** | Microsoft | Replicate | $0.046 | 33 sec | ⭐⭐⭐⭐⭐ | GLB, OBJ |
+| 🥈 | **Hunyuan3D-2** | Tencent | Replicate/HF | $0.17 | 3 min | ⭐⭐⭐⭐⭐ | GLB, OBJ |
+| 🥉 | **Rodin Gen-2** | Hyper3D | Replicate | $0.15 | 1-2 min | ⭐⭐⭐⭐⭐ | GLB, FBX |
+| 4 | **Wonder3D** | adirik | Replicate | $0.10 | 2-3 min | ⭐⭐⭐⭐ | GLB |
+| 5 | **Stable Fast 3D** | Stability | HuggingFace | FREE | <1 sec | ⭐⭐⭐⭐ | GLB, OBJ |
+| 6 | **TripoSR** | Stability/Tripo | Replicate | $0.05 | 5 sec | ⭐⭐⭐ | OBJ, GLB |
+
+## Text-to-3D
+
+| Rank | Model | Provider | Platform | Cost | Speed | Quality |
+|------|-------|----------|----------|------|-------|---------|
+| 🥇 | **MVDream** | ByteDance | Replicate | $3.24 | 56 min | ⭐⭐⭐⭐ |
+| 🥈 | **TRELLIS-text** | Microsoft | HuggingFace | FREE | 1 min | ⭐⭐⭐⭐ |
+| 🥉 | **Shap-E** | OpenAI | Replicate/HF | $0.09 | 7 min | ⭐⭐⭐ |
+| 4 | **LGM** | ashawkey | HuggingFace | FREE | 30 sec | ⭐⭐⭐ |
+
+## 3D Platforms
+
+| Platform | Pricing | Features |
+|----------|---------|----------|
+| **Meshy** | Free: 100 credits/mo, Pro: $20/mo | Text-to-3D, Image-to-3D, Texturing, Animation |
+| **Meshy API** | ~10 credits/asset | Full API, batch processing |
 
 ---
 
-## 💬 CHAT/LLM (via OpenRouter)
+# 🎯 RECOMMENDED SETUP FOR INNOVATEHUB
 
-| Rank | Model | Provider | Context | Quality | Cost/1M tokens |
-|------|-------|----------|---------|---------|----------------|
-| 🥇 | **Claude 4 Opus** | Anthropic | 200K | ⭐⭐⭐⭐⭐ | $15/$75 |
-| 🥈 | **GPT-4o** | OpenAI | 128K | ⭐⭐⭐⭐⭐ | $2.50/$10 |
-| 🥉 | **Claude 4 Sonnet** | Anthropic | 200K | ⭐⭐⭐⭐⭐ | $3/$15 |
-| 4 | **Gemini 2 Pro** | Google | 2M | ⭐⭐⭐⭐ | $1.25/$5 |
-| 5 | **DeepSeek V3** | DeepSeek | 64K | ⭐⭐⭐⭐ | $0.27/$1.10 |
-| 6 | **Llama 3.3 70B** | Meta | 128K | ⭐⭐⭐⭐ | Free-$0.50 |
-| 7 | **Qwen 2.5 72B** | Alibaba | 128K | ⭐⭐⭐⭐ | $0.35/$0.40 |
-| 8 | **Mistral Large** | Mistral | 128K | ⭐⭐⭐⭐ | $2/$6 |
+## Current Setup (Update These!)
 
----
+| Capability | Current | Recommended Upgrade | Why |
+|------------|---------|---------------------|-----|
+| **Image** | FLUX.1-schnell | Z-Image-Turbo or Nano Banana Pro | Faster + better quality |
+| **Video** | None | Runway Gen-4.5 or Kling V3 | Industry best |
+| **TTS** | MMS-TTS | MOSS-TTS 8B (free) or ElevenLabs | Much better quality |
+| **STT** | Whisper | Deepgram Nova-3 or Whisper V3 Turbo | Faster + more accurate |
+| **3D** | Shap-E (not working) | TRELLIS ($0.046) or TripoSR | Actually works! |
 
-## 🎯 RECOMMENDED SETUP FOR INNOVATEHUB
+## Budget Setup (Mostly Free)
 
-### Budget-Conscious (Free/Low Cost)
 ```
-Image: FLUX.1-schnell (HuggingFace) - FREE
-Video: CogVideoX (HuggingFace Spaces) - FREE
-Audio: Whisper + MMS-TTS (HuggingFace) - FREE
-3D: Point-E (HuggingFace) - FREE
-Chat: Llama 3.3 via OpenRouter - FREE tier
-Embeddings: all-MiniLM-L6-v2 - FREE
+Image: Z-Image-Turbo (HuggingFace) - FREE
+Video: Wan2.2-T2V-A14B (HuggingFace) - FREE  
+TTS: MOSS-TTS 8B (HuggingFace) - FREE
+STT: Whisper V3 Turbo (HuggingFace) - FREE
+3D: Stable Fast 3D (HuggingFace) - FREE
+Music: ACE-Step 1.5 (HuggingFace) - FREE
 ```
 
-### Production Quality (Paid)
+## Production Setup (Best Quality)
+
 ```
-Image: FLUX.2-pro (Replicate) - $0.05/img
+Image: Nano Banana Pro (Replicate) - $0.05/img
 Video: Runway Gen-4.5 (Replicate) - $0.50/5s
-Audio: OpenAI TTS + Whisper (OpenRouter) - $0.015/1K
-3D: TripoSR (Replicate) - $0.05/model
-Chat: Claude 4 Sonnet (OpenRouter) - $3/$15
-Embeddings: text-embedding-3-large - $0.00013/1K
+TTS: ElevenLabs Multilingual V3 - $0.15/min
+STT: Deepgram Nova-3 - $0.0077/min
+3D: TRELLIS (Replicate) - $0.046/model
+Music: Suno V4 - $20/mo
 ```
 
-### Best Value Mix
+## Best Value Mix
+
 ```
 Image: FLUX.1-schnell (Replicate) - $0.003/img
-Video: Minimax (Replicate) - $0.15/vid
-Audio: Whisper V3 Turbo + StyleTTS - $0.005/min
-3D: Shap-E (Replicate) - $0.02/model
-Chat: DeepSeek V3 (OpenRouter) - $0.27/1M
-Embeddings: E5-Large-V2 (HuggingFace) - FREE
+Video: Kling V3 (Replicate) - $0.20/sec
+TTS: Fish Speech 1.5 - $4.49/mo
+STT: Whisper V3 Turbo (free) + Deepgram backup
+3D: TripoSR (Replicate) - $0.05/model
 ```
 
 ---
 
-## 🔧 Integration Guide
+# 🔧 API KEYS NEEDED
 
-### Add to InnovateHub AI Gateway
-
-1. **OpenRouter** (for chat models):
-   ```bash
-   echo 'OPENROUTER_API_KEY=sk-or-...' >> .env
-   ```
-
-2. **Replicate** (for image/video/3D):
-   ```bash
-   echo 'REPLICATE_API_KEY=r8_...' >> .env
-   ```
-
-3. **HuggingFace** (for free models):
-   ```bash
-   echo 'HF_API_KEY=hf_...' >> .env
-   ```
+| Provider | Get Key At | Used For |
+|----------|------------|----------|
+| **Replicate** | replicate.com/account | Images, Video, 3D, Audio |
+| **HuggingFace** | huggingface.co/settings/tokens | Free models, Inference API |
+| **OpenRouter** | openrouter.ai/keys | LLM routing, some vision |
+| **ElevenLabs** | elevenlabs.io/api | Premium TTS |
+| **Deepgram** | deepgram.com/dashboard | Real-time STT |
 
 ---
 
-*Last Updated: February 2026*
-*Prices subject to change - check provider websites for current pricing*
+*Researched by AI Agent Swarm - February 20, 2026*
+*Sources: Replicate, HuggingFace, OpenRouter, fal.ai, provider websites*
