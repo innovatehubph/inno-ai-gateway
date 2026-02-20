@@ -30,6 +30,15 @@ const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || '';
 const MOONSHOT_API_KEY = process.env.MOONSHOT_API_KEY || '';
 const MOONSHOT_API_URL = 'https://api.moonshot.cn/v1/chat/completions';
 
+// Antigravity/OpenCode configuration
+const ANTIGRAVITY_ENABLED = process.env.ANTIGRAVITY_ENABLED === 'true' || true;
+const ANTIGRAVITY_AUTH_PROFILE = process.env.ANTIGRAVITY_AUTH_PROFILE || 'google-antigravity:admin@tmapp.live';
+const ANTIGRAVITY_ENDPOINTS = [
+  'https://daily-cloudcode-pa.sandbox.googleapis.com',
+  'https://cloudcode-pa.googleapis.com'
+];
+const ANTIGRAVITY_VERSION = process.env.ANTIGRAVITY_VERSION || '1.15.8';
+
 // Replicate client for 3D models
 let replicate = null;
 if (REPLICATE_API_KEY) {
@@ -690,6 +699,158 @@ async function callMoonshotChat(modelId, messages, temperature = 0.7, max_tokens
   return response.data;
 }
 
+// Antigravity/OpenCode API - Uses OAuth credentials from auth-profiles.json
+function loadAntigravityCredentials() {
+  try {
+    const authPath = process.env.AUTH_PROFILES_PATH || '/root/.openclaw/agents/main/agent/auth-profiles.json';
+    if (!fs.existsSync(authPath)) {
+      console.log('[ANTIGRAVITY] Auth profiles not found at:', authPath);
+      return null;
+    }
+    
+    const data = JSON.parse(fs.readFileSync(authPath, 'utf8'));
+    const profile = data.profiles?.[ANTIGRAVITY_AUTH_PROFILE];
+    
+    if (!profile || !profile.access) {
+      console.log('[ANTIGRAVITY] Profile not found or no access token');
+      return null;
+    }
+    
+    // Check if token is expired
+    if (profile.expires && profile.expires < Date.now()) {
+      console.log('[ANTIGRAVITY] Token expired');
+      return null;
+    }
+    
+    return {
+      accessToken: profile.access,
+      refreshToken: profile.refresh,
+      projectId: profile.projectId,
+      email: profile.email,
+      expires: profile.expires
+    };
+  } catch (e) {
+    console.error('[ANTIGRAVITY] Error loading credentials:', e.message);
+    return null;
+  }
+}
+
+async function callAntigravityChat(modelId, messages, temperature = 0.7, max_tokens = 4096) {
+  const creds = loadAntigravityCredentials();
+  if (!creds) {
+    throw new Error('Antigravity credentials not found. Please authenticate with openclaw or check AUTH_PROFILES_PATH.');
+  }
+  
+  // Convert messages to Antigravity format
+  const contents = [];
+  let systemInstruction = null;
+  
+  for (const msg of messages) {
+    if (msg.role === 'system') {
+      systemInstruction = msg.content;
+    } else {
+      contents.push({
+        role: msg.role === 'assistant' ? 'model' : 'user',
+        parts: [{ text: msg.content }]
+      });
+    }
+  }
+  
+  // Build request
+  const requestBody = {
+    project: creds.projectId,
+    model: modelId,
+    request: {
+      contents: contents,
+      generationConfig: {
+        temperature: temperature,
+        maxOutputTokens: max_tokens
+      }
+    },
+    requestType: 'agent',
+    userAgent: 'antigravity',
+    requestId: `agent-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+  };
+  
+  if (systemInstruction) {
+    requestBody.request.systemInstruction = {
+      role: 'user',
+      parts: [{ text: systemInstruction }]
+    };
+  }
+  
+  // Try both endpoints
+  let lastError = null;
+  for (const endpoint of ANTIGRAVITY_ENDPOINTS) {
+    try {
+      const response = await axios.post(
+        `${endpoint}/v1internal:streamGenerateContent?alt=sse`,
+        requestBody,
+        {
+          headers: {
+            'Authorization': `Bearer ${creds.accessToken}`,
+            'Content-Type': 'application/json',
+            'User-Agent': `antigravity/${ANTIGRAVITY_VERSION} darwin/arm64`,
+            'X-Goog-Api-Client': 'google-cloud-sdk vscode_cloudshelleditor/0.1',
+            'Accept': 'text/event-stream'
+          },
+          timeout: 120000,
+          responseType: 'text'
+        }
+      );
+      
+      // Parse SSE response
+      const lines = response.data.split('\n');
+      let fullText = '';
+      
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          const data = line.slice(6).trim();
+          if (data && data !== '[DONE]') {
+            try {
+              const parsed = JSON.parse(data);
+              const responseData = parsed.response || parsed;
+              const candidates = responseData.candidates || [];
+              if (candidates.length > 0) {
+                const parts = candidates[0].content?.parts || [];
+                for (const part of parts) {
+                  if (part.text) {
+                    fullText += part.text;
+                  }
+                }
+              }
+            } catch (e) {
+              // Ignore parse errors for individual lines
+            }
+          }
+        }
+      }
+      
+      return {
+        choices: [{
+          message: {
+            role: 'assistant',
+            content: fullText
+          },
+          finish_reason: 'stop'
+        }],
+        usage: {
+          prompt_tokens: 0,
+          completion_tokens: 0,
+          total_tokens: 0
+        }
+      };
+      
+    } catch (e) {
+      lastError = e;
+      console.log(`[ANTIGRAVITY] Endpoint ${endpoint} failed:`, e.message);
+      continue;
+    }
+  }
+  
+  throw new Error(`All Antigravity endpoints failed. Last error: ${lastError?.message}`);
+}
+
 // API key authentication
 function authenticate(req, res, next) {
   const authHeader = req.headers.authorization;
@@ -765,6 +926,10 @@ app.get('/health', (req, res) => {
       moonshotai: {
         configured: !!MOONSHOT_API_KEY,
         description: 'MoonshotAI (Kimi) - use kimi-{model_id} prefix'
+      },
+      antigravity: {
+        configured: ANTIGRAVITY_ENABLED && !!loadAntigravityCredentials(),
+        description: 'Google Antigravity/OpenCode - use antigravity-{model_id} prefix (OAuth via OpenClaw)'
       },
       replicate: {
         configured: !!REPLICATE_API_KEY,
@@ -1114,6 +1279,57 @@ app.post('/v1/chat/completions', authenticate, async (req, res) => {
         error: e.message, latency: Date.now() - startTime, status: 'error'
       });
       return res.status(500).json({ error: 'MoonshotAI API error', message: e.message });
+    }
+  }
+
+  // --- Antigravity/OpenCode Models (antigravity- prefix) ---
+  if (requestedModel.startsWith('antigravity-')) {
+    const antigravityModelId = requestedModel.substring(12); // Remove 'antigravity-' prefix
+    
+    try {
+      console.log(`[ANTIGRAVITY] Request: ${antigravityModelId}, messages: ${messages.length}`);
+      const antigravityResponse = await callAntigravityChat(
+        antigravityModelId,
+        messages,
+        temperature || 0.7,
+        max_tokens || 4096
+      );
+      
+      const latency = Date.now() - startTime;
+      const responseText = antigravityResponse.choices?.[0]?.message?.content || '';
+      const usage = antigravityResponse.usage || { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 };
+      
+      logRequest({
+        id: requestId, model: requestedModel, source: 'api', apiKey: req.apiKey,
+        promptPreview: messages[messages.length - 1]?.content?.substring(0, 100) || '',
+        responsePreview: responseText.substring(0, 100),
+        promptTokens: usage.prompt_tokens, completionTokens: usage.completion_tokens,
+        totalTokens: usage.total_tokens, latency, status: 'success'
+      });
+      
+      console.log(`[ANTIGRAVITY] Response: ${responseText.substring(0, 100)}... (${latency}ms)`);
+      
+      return res.json({
+        id: `chatcmpl-${requestId}`,
+        object: 'chat.completion',
+        created: Math.floor(Date.now() / 1000),
+        model: requestedModel,
+        choices: [{
+          index: 0,
+          message: { role: 'assistant', content: responseText.trim() },
+          finish_reason: 'stop'
+        }],
+        usage
+      });
+      
+    } catch (e) {
+      console.error('[ANTIGRAVITY] Error:', e.message);
+      logRequest({
+        id: requestId, model: requestedModel, source: 'api', apiKey: req.apiKey,
+        promptPreview: messages[messages.length - 1]?.content?.substring(0, 100) || '',
+        error: e.message, latency: Date.now() - startTime, status: 'error'
+      });
+      return res.status(500).json({ error: 'Antigravity API error', message: e.message });
     }
   }
 
@@ -2041,6 +2257,23 @@ app.get('/v1/models', authenticate, async (req, res) => {
       { id: 'kimi-k2.5', object: 'model', owned_by: 'moonshotai', capabilities: ['chat', 'vision'], description: 'Kimi K2.5 - Most capable model with 256K context' },
       { id: 'kimi-k2', object: 'model', owned_by: 'moonshotai', capabilities: ['chat', 'vision'], description: 'Kimi K2 - Balanced performance and cost' },
       { id: 'kimi-k1.5', object: 'model', owned_by: 'moonshotai', capabilities: ['chat'], description: 'Kimi K1.5 - Fast and cost-effective' }
+    );
+  }
+
+  // Add Google Antigravity/OpenCode models (via OpenClaw OAuth)
+  const antigravityCreds = loadAntigravityCredentials();
+  if (antigravityCreds) {
+    models.push(
+      { id: 'antigravity-gemini-2.5-pro', object: 'model', owned_by: 'google-antigravity', capabilities: ['chat', 'vision'], description: '🔥 Google Gemini 2.5 Pro via Antigravity (FREE via OpenClaw OAuth)' },
+      { id: 'antigravity-gemini-2.0-flash', object: 'model', owned_by: 'google-antigravity', capabilities: ['chat', 'vision'], description: '🔥 Google Gemini 2.0 Flash via Antigravity (FREE via OpenClaw OAuth)' },
+      { id: 'antigravity-gemini-1.5-pro', object: 'model', owned_by: 'google-antigravity', capabilities: ['chat', 'vision'], description: 'Google Gemini 1.5 Pro via Antigravity (FREE via OpenClaw OAuth)' },
+      { id: 'antigravity-claude-opus-4-5-thinking', object: 'model', owned_by: 'google-antigravity', capabilities: ['chat'], description: 'Claude Opus 4.5 Thinking via Antigravity (FREE via OpenClaw OAuth)' },
+      { id: 'antigravity-claude-sonnet-4-5', object: 'model', owned_by: 'google-antigravity', capabilities: ['chat'], description: 'Claude Sonnet 4.5 via Antigravity (FREE via OpenClaw OAuth)' }
+    );
+  } else {
+    // Add placeholder if not configured
+    models.push(
+      { id: 'antigravity-setup-required', object: 'model', owned_by: 'google-antigravity', capabilities: ['chat'], description: '⚠️ Google Antigravity models available - authenticate with openclaw first' }
     );
   }
 

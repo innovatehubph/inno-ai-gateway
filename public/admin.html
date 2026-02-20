@@ -431,6 +431,16 @@
                 </div>
                 <span id="kimiStatus" class="text-xs bg-gray-700 text-gray-400 px-2 py-1 rounded-full">Checking...</span>
               </div>
+              <div class="flex items-center justify-between p-3 bg-white/5 rounded-xl">
+                <div class="flex items-center gap-3">
+                  <div class="w-8 h-8 rounded-lg bg-red-500/20 flex items-center justify-center text-lg">🔥</div>
+                  <div>
+                    <p class="font-medium text-sm">Google Antigravity</p>
+                    <p class="text-xs text-gray-500">FREE via OpenClaw OAuth</p>
+                  </div>
+                </div>
+                <span id="antigravityStatus" class="text-xs bg-gray-700 text-gray-400 px-2 py-1 rounded-full">Checking...</span>
+              </div>
             </div>
           </div>
           
@@ -496,6 +506,13 @@
                   <option value="or-openai/gpt-4o">🌐 GPT-4o</option>
                   <option value="or-openai/gpt-4-turbo">🌐 GPT-4 Turbo</option>
                   <option value="or-google/gemini-pro">🌐 Gemini Pro</option>
+                </optgroup>
+                <optgroup label="🔥 Google Antigravity (prefix: antigravity-, FREE via OAuth)">
+                  <option value="antigravity-gemini-2.5-pro">🔥 Gemini 2.5 Pro (FREE)</option>
+                  <option value="antigravity-gemini-2.0-flash">🔥 Gemini 2.0 Flash (FREE)</option>
+                  <option value="antigravity-gemini-1.5-pro">🔥 Gemini 1.5 Pro (FREE)</option>
+                  <option value="antigravity-claude-opus-4-5-thinking">🔥 Claude Opus 4.5 Thinking (FREE)</option>
+                  <option value="antigravity-claude-sonnet-4-5">🔥 Claude Sonnet 4.5 (FREE)</option>
                 </optgroup>
               </select>
             </div>
@@ -1049,6 +1066,17 @@
             } else {
               kimiStatus.textContent = 'Not Configured';
               kimiStatus.className = 'text-xs bg-gray-700 text-gray-400 px-2 py-1 rounded-full';
+            }
+          }
+
+          const antigravityStatus = document.getElementById('antigravityStatus');
+          if (antigravityStatus) {
+            if (data.providers.antigravity?.configured) {
+              antigravityStatus.textContent = 'Active';
+              antigravityStatus.className = 'text-xs bg-success/20 text-success px-2 py-1 rounded-full';
+            } else {
+              antigravityStatus.textContent = 'Setup Required';
+              antigravityStatus.className = 'text-xs bg-warning/20 text-warning px-2 py-1 rounded-full';
             }
           }
         }
