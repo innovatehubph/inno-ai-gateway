@@ -1,1 +1,38 @@
-[]
+[
+  {
+    "id": "95c27a59-4694-4a52-9f50-6fc2cdb8fd98",
+    "model": "inno-ai-boyong-4.5",
+    "promptPreview": "Say hello in 5 words",
+    "responsePreview": "Hello Boss Marc, what's up? 👋",
+    "promptTokens": 10,
+    "completionTokens": 41,
+    "totalTokens": 20751,
+    "latency": 4518,
+    "status": "success",
+    "timestamp": "2026-02-20T12:45:43.618Z"
+  },
+  {
+    "id": "6c157d26-4473-441f-a085-964b2fcf00c7",
+    "model": "inno-ai-boyong-4.5",
+    "promptPreview": "What is 10+10?",
+    "responsePreview": "20 🐜",
+    "promptTokens": 10,
+    "completionTokens": 40,
+    "totalTokens": 20750,
+    "latency": 4434,
+    "status": "success",
+    "timestamp": "2026-02-20T12:46:43.247Z"
+  },
+  {
+    "id": "ea14572a-9af5-45b8-bc17-088478938ef8",
+    "model": "inno-ai-boyong-mini",
+    "promptPreview": "Say hi",
+    "responsePreview": "Hey Boss Marc! 👋\n\nMasipag here, ready to work. What can I help you with today?",
+    "promptTokens": 10,
+    "completionTokens": 68,
+    "totalTokens": 20773,
+    "latency": 4955,
+    "status": "success",
+    "timestamp": "2026-02-20T12:46:48.217Z"
+  }
+]
