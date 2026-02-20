@@ -104,5 +104,17 @@
     "latency": 2953,
     "status": "success",
     "timestamp": "2026-02-20T13:18:44.031Z"
+  },
+  {
+    "id": "dd1e238e-5e16-42f1-a863-521b256ee034",
+    "model": "inno-ai-3d-gen",
+    "source": "api",
+    "apiKey": "masipag-ai-gateway-2026",
+    "promptPreview": "a pile of roasted coffee beans, 3d model, detailed texture",
+    "error": "3D generation failed: Not Found",
+    "latency": 649,
+    "status": "error",
+    "type": "3d_generation",
+    "timestamp": "2026-02-20T13:24:35.355Z"
   }
 ]

@@ -13,6 +13,14 @@ const app = express();
 const PORT = process.env.PORT || 8095;
 const ADMIN_KEY = process.env.ADMIN_KEY || 'inno-admin-2026';
 const HF_API_KEY = process.env.HF_API_KEY || '';
+const REPLICATE_API_KEY = process.env.REPLICATE_API_KEY || '';
+
+// Replicate client for 3D models
+let replicate = null;
+if (REPLICATE_API_KEY) {
+  const Replicate = require('replicate');
+  replicate = new Replicate({ auth: REPLICATE_API_KEY });
+}
 
 // Custom branding
 const MODEL_BRANDING = {
@@ -754,9 +762,9 @@ app.post('/v1/embeddings', authenticate, async (req, res) => {
 
 // ==================== 3D GENERATION ENDPOINTS ====================
 
-// Text to 3D
+// Text to 3D (using Replicate's Shap-E)
 app.post('/v1/3d/generations', authenticate, async (req, res) => {
-  const { prompt, format = 'glb', num_inference_steps = 64 } = req.body;
+  const { prompt, format = 'glb', guidance_scale = 15 } = req.body;
   const startTime = Date.now();
   const requestId = uuidv4();
   
@@ -764,61 +772,43 @@ app.post('/v1/3d/generations', authenticate, async (req, res) => {
     return res.status(400).json({ error: 'prompt is required' });
   }
 
+  // Check if Replicate is configured
+  if (!replicate) {
+    return res.status(503).json({ 
+      error: '3D generation not configured',
+      message: 'REPLICATE_API_KEY is required for 3D generation. Get one at replicate.com',
+      setup: 'Add REPLICATE_API_KEY to .env file'
+    });
+  }
+
   try {
     console.log(`[3D] Generating from text: ${prompt.substring(0, 50)}...`);
     
-    const hfResponse = await fetch(`https://router.huggingface.co/hf-inference/models/${HF_MODELS.text_to_3d}`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${HF_API_KEY}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ 
-        inputs: prompt,
-        parameters: { num_inference_steps }
-      })
-    });
-    
-    if (!hfResponse.ok) {
-      const errorText = await hfResponse.text();
-      // Try alternative model if primary fails
-      console.log(`[3D] Primary model failed, trying alternative...`);
-      
-      const altResponse = await fetch(`https://router.huggingface.co/hf-inference/models/${HF_MODELS.text_to_3d_alt}`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${HF_API_KEY}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ inputs: prompt })
-      });
-      
-      if (!altResponse.ok) {
-        throw new Error(`3D generation failed: ${errorText}`);
+    // Use Replicate's Shap-E model
+    const output = await replicate.run(
+      "cjwbw/shap-e:5957069d5c509126a73c7cb68abcddbb985aeefa4d318e7c63ec1352ce6da68c",
+      {
+        input: {
+          prompt: prompt,
+          guidance_scale: guidance_scale,
+          num_inference_steps: 64
+        }
       }
-      
-      const modelData = await altResponse.arrayBuffer();
-      const modelPath = path.join(DATA_DIR, `model_${requestId}.ply`);
-      fs.writeFileSync(modelPath, Buffer.from(modelData));
-      
-      logRequest({
-        id: requestId, model: 'inno-ai-3d-gen', source: 'api', apiKey: req.apiKey,
-        promptPreview: prompt.substring(0, 100), type: '3d_generation',
-        latency: Date.now() - startTime, status: 'success'
-      });
-      
-      res.json({
-        created: Math.floor(Date.now() / 1000),
-        data: [{ url: `/data/model_${requestId}.ply`, format: 'ply' }]
-      });
-      return;
-    }
-    
-    const modelData = await hfResponse.arrayBuffer();
-    const modelPath = path.join(DATA_DIR, `model_${requestId}.glb`);
-    fs.writeFileSync(modelPath, Buffer.from(modelData));
+    );
     
     const latency = Date.now() - startTime;
+    console.log(`[3D] Generated in ${latency}ms`);
+    
+    // Output is a URL to the 3D file
+    let modelUrl = output;
+    if (Array.isArray(output)) modelUrl = output[0];
+    
+    // Download and save locally
+    const modelResponse = await fetch(modelUrl);
+    const modelData = await modelResponse.arrayBuffer();
+    const ext = modelUrl.includes('.ply') ? 'ply' : 'glb';
+    const modelPath = path.join(DATA_DIR, `model_${requestId}.${ext}`);
+    fs.writeFileSync(modelPath, Buffer.from(modelData));
     
     logRequest({
       id: requestId, model: 'inno-ai-3d-gen', source: 'api', apiKey: req.apiKey,
@@ -828,7 +818,11 @@ app.post('/v1/3d/generations', authenticate, async (req, res) => {
     
     res.json({
       created: Math.floor(Date.now() / 1000),
-      data: [{ url: `/data/model_${requestId}.glb`, format: 'glb' }]
+      data: [{ 
+        url: `/data/model_${requestId}.${ext}`, 
+        format: ext,
+        external_url: modelUrl 
+      }]
     });
     
   } catch (e) {
@@ -842,9 +836,9 @@ app.post('/v1/3d/generations', authenticate, async (req, res) => {
   }
 });
 
-// Image to 3D
+// Image to 3D (using Replicate's TripoSR)
 app.post('/v1/3d/image-to-3d', authenticate, async (req, res) => {
-  const { image, format = 'glb' } = req.body;
+  const { image, format = 'glb', foreground_ratio = 0.85 } = req.body;
   const startTime = Date.now();
   const requestId = uuidv4();
   
@@ -852,74 +846,48 @@ app.post('/v1/3d/image-to-3d', authenticate, async (req, res) => {
     return res.status(400).json({ error: 'image (base64 or URL) is required' });
   }
 
+  // Check if Replicate is configured
+  if (!replicate) {
+    return res.status(503).json({ 
+      error: '3D conversion not configured',
+      message: 'REPLICATE_API_KEY is required for image-to-3D. Get one at replicate.com',
+      setup: 'Add REPLICATE_API_KEY to .env file'
+    });
+  }
+
   try {
     console.log(`[3D] Converting image to 3D...`);
     
-    // Handle base64 or URL
-    let imageData;
-    if (image.startsWith('http')) {
-      // Fetch image from URL
-      const imgResponse = await fetch(image);
-      imageData = Buffer.from(await imgResponse.arrayBuffer());
-    } else {
-      // Base64 image
-      imageData = Buffer.from(image.replace(/^data:image\/\w+;base64,/, ''), 'base64');
+    // Handle base64 - convert to data URL if needed
+    let imageInput = image;
+    if (!image.startsWith('http') && !image.startsWith('data:')) {
+      imageInput = `data:image/png;base64,${image}`;
     }
     
-    const hfResponse = await fetch(`https://router.huggingface.co/hf-inference/models/${HF_MODELS.image_to_3d}`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${HF_API_KEY}`,
-        'Content-Type': 'application/octet-stream'
-      },
-      body: imageData
-    });
-    
-    if (!hfResponse.ok) {
-      const errorText = await hfResponse.text();
-      
-      // Try alternative model
-      console.log(`[3D] Primary model failed, trying Zero123+...`);
-      
-      const altResponse = await fetch(`https://router.huggingface.co/hf-inference/models/${HF_MODELS.image_to_3d_alt}`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${HF_API_KEY}`,
-          'Content-Type': 'application/octet-stream'
-        },
-        body: imageData
-      });
-      
-      if (!altResponse.ok) {
-        throw new Error(`Image to 3D conversion failed: ${errorText}`);
+    // Use Replicate's TripoSR model
+    const output = await replicate.run(
+      "camenduru/triposr:746f7761cdf9f66776c1d0e8a1be3d12f6932f6bde53dbe94b36449b7c2c64e7",
+      {
+        input: {
+          image: imageInput,
+          foreground_ratio: foreground_ratio,
+          output_format: "glb"
+        }
       }
-      
-      // Zero123+ returns multiple view images, save them
-      const viewsData = await altResponse.arrayBuffer();
-      const viewsPath = path.join(DATA_DIR, `views_${requestId}.png`);
-      fs.writeFileSync(viewsPath, Buffer.from(viewsData));
-      
-      logRequest({
-        id: requestId, model: 'inno-ai-3d-convert', source: 'api', apiKey: req.apiKey,
-        type: 'image_to_3d', latency: Date.now() - startTime, status: 'success'
-      });
-      
-      res.json({
-        created: Math.floor(Date.now() / 1000),
-        data: [{ 
-          url: `/data/views_${requestId}.png`, 
-          format: 'multiview',
-          note: 'Multi-view images for 3D reconstruction'
-        }]
-      });
-      return;
-    }
-    
-    const modelData = await hfResponse.arrayBuffer();
-    const modelPath = path.join(DATA_DIR, `model_${requestId}.glb`);
-    fs.writeFileSync(modelPath, Buffer.from(modelData));
+    );
     
     const latency = Date.now() - startTime;
+    console.log(`[3D] Converted in ${latency}ms`);
+    
+    // Output is a URL to the 3D file
+    let modelUrl = output;
+    if (Array.isArray(output)) modelUrl = output[0];
+    
+    // Download and save locally
+    const modelResponse = await fetch(modelUrl);
+    const modelData = await modelResponse.arrayBuffer();
+    const modelPath = path.join(DATA_DIR, `model_${requestId}.glb`);
+    fs.writeFileSync(modelPath, Buffer.from(modelData));
     
     logRequest({
       id: requestId, model: 'inno-ai-3d-convert', source: 'api', apiKey: req.apiKey,
@@ -928,7 +896,11 @@ app.post('/v1/3d/image-to-3d', authenticate, async (req, res) => {
     
     res.json({
       created: Math.floor(Date.now() / 1000),
-      data: [{ url: `/data/model_${requestId}.glb`, format: 'glb' }]
+      data: [{ 
+        url: `/data/model_${requestId}.glb`, 
+        format: 'glb',
+        external_url: modelUrl
+      }]
     });
     
   } catch (e) {
@@ -1041,7 +1013,23 @@ app.get('/admin/system', adminAuth, async (req, res) => {
     const memInfo = execSync("free -m | awk 'NR==2{printf \"%s/%s\", $3, $2}'").toString().trim();
     const diskInfo = execSync("df -h / | awk 'NR==2{printf \"%s/%s\", $3, $2}'").toString().trim();
     
-    res.json({ cpu: `${cpuUsage}%`, memory: memInfo + ' MB', disk: diskInfo, nodeVersion: process.version, platform: process.platform, pid: process.pid, hfConfigured: !!HF_API_KEY });
+    res.json({ 
+      cpu: `${cpuUsage}%`, 
+      memory: memInfo + ' MB', 
+      disk: diskInfo, 
+      nodeVersion: process.version, 
+      platform: process.platform, 
+      pid: process.pid, 
+      hfConfigured: !!HF_API_KEY,
+      replicateConfigured: !!REPLICATE_API_KEY,
+      capabilities: {
+        chat: true,
+        images: !!HF_API_KEY,
+        audio: !!HF_API_KEY,
+        embeddings: !!HF_API_KEY,
+        '3d': !!REPLICATE_API_KEY
+      }
+    });
   } catch (e) {
     res.json({ error: e.message });
   }

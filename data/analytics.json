@@ -1,19 +1,20 @@
 {
-  "totalRequests": 9,
+  "totalRequests": 10,
   "totalTokens": 104630,
   "totalPromptTokens": 50,
   "totalCompletionTokens": 1077,
   "requestsByModel": {
     "inno-ai-boyong-4.5": 4,
     "inno-ai-boyong-mini": 1,
-    "inno-ai-vision-xl": 4
+    "inno-ai-vision-xl": 4,
+    "inno-ai-3d-gen": 1
   },
   "requestsByHour": {
     "2026-02-20T12": 5,
-    "2026-02-20T13": 4
+    "2026-02-20T13": 5
   },
   "requestsByDay": {
-    "2026-02-20": 9
+    "2026-02-20": 10
   },
   "startTime": 1771591312975
 }
