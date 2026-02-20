@@ -421,6 +421,16 @@
                 </div>
                 <span id="orStatus" class="text-xs bg-gray-700 text-gray-400 px-2 py-1 rounded-full">Checking...</span>
               </div>
+              <div class="flex items-center justify-between p-3 bg-white/5 rounded-xl">
+                <div class="flex items-center gap-3">
+                  <div class="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center text-lg">🌙</div>
+                  <div>
+                    <p class="font-medium text-sm">MoonshotAI (Kimi)</p>
+                    <p class="text-xs text-gray-500">Chinese AI models</p>
+                  </div>
+                </div>
+                <span id="kimiStatus" class="text-xs bg-gray-700 text-gray-400 px-2 py-1 rounded-full">Checking...</span>
+              </div>
             </div>
           </div>
           
@@ -457,16 +467,28 @@
                 </div>
               </div>
               <select id="playgroundModel" class="bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-accent/50">
+                <optgroup label="💰 FREE - Cost Effective Models (hf-)">
+                  <option value="hf-Qwen/Qwen2.5-72B-Instruct">💰 FREE - Qwen2.5 72B (Very Capable!)</option>
+                  <option value="hf-mistralai/Mistral-7B-Instruct-v0.2">💰 FREE - Mistral 7B Instruct</option>
+                  <option value="hf-HuggingFaceH4/zephyr-7b-beta">💰 FREE - Zephyr 7B (Assistant)</option>
+                  <option value="hf-tiiuae/falcon-7b-instruct">💰 FREE - Falcon 7B (Fast)</option>
+                  <option value="hf-upstage/SOLAR-10.7B-Instruct-v1.0">💰 FREE - SOLAR 10.7B</option>
+                </optgroup>
                 <optgroup label="🚀 InnovateHub Models">
                   <option value="inno-ai-boyong-4.5">🚀 inno-ai-boyong-4.5</option>
                   <option value="inno-ai-boyong-4.0">⚡ inno-ai-boyong-4.0</option>
                   <option value="inno-ai-boyong-mini">💨 inno-ai-boyong-mini</option>
                 </optgroup>
+                <optgroup label="🌙 MoonshotAI/Kimi Models (prefix: kimi-)">
+                  <option value="kimi-k2.5">🌙 Kimi K2.5 (256K context)</option>
+                  <option value="kimi-k2">🌙 Kimi K2 (Balanced)</option>
+                  <option value="kimi-k1.5">🌙 Kimi K1.5 (Fast)</option>
+                </optgroup>
                 <optgroup label="🤗 Hugging Face Models (prefix: hf-)">
-                  <option value="hf-mistralai/Mistral-7B-Instruct-v0.2">🤗 Mistral 7B Instruct</option>
                   <option value="hf-meta-llama/Llama-2-7b-chat-hf">🤗 Llama 2 7B Chat</option>
                   <option value="hf-google/gemma-7b-it">🤗 Gemma 7B</option>
                   <option value="hf-microsoft/Phi-3-mini-4k-instruct">🤗 Phi-3 Mini</option>
+                  <option value="hf-NousResearch/Nous-Hermes-2-Mistral-7B-DPO">🤗 Nous Hermes 2 7B</option>
                 </optgroup>
                 <optgroup label="🌐 OpenRouter Models (prefix: or-)">
                   <option value="or-anthropic/claude-3-opus">🌐 Claude 3 Opus</option>
@@ -1016,6 +1038,17 @@
             } else {
               orStatus.textContent = 'Not Configured';
               orStatus.className = 'text-xs bg-gray-700 text-gray-400 px-2 py-1 rounded-full';
+            }
+          }
+
+          const kimiStatus = document.getElementById('kimiStatus');
+          if (kimiStatus) {
+            if (data.providers.moonshotai?.configured) {
+              kimiStatus.textContent = 'Active';
+              kimiStatus.className = 'text-xs bg-success/20 text-success px-2 py-1 rounded-full';
+            } else {
+              kimiStatus.textContent = 'Not Configured';
+              kimiStatus.className = 'text-xs bg-gray-700 text-gray-400 px-2 py-1 rounded-full';
             }
           }
         }

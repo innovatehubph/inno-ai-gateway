@@ -27,6 +27,8 @@ const HF_API_KEY = process.env.HF_API_KEY || '';
 const HF_API_TOKEN = process.env.HF_API_TOKEN || HF_API_KEY; // HF_API_TOKEN for chat models
 const REPLICATE_API_KEY = process.env.REPLICATE_API_KEY || '';
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || '';
+const MOONSHOT_API_KEY = process.env.MOONSHOT_API_KEY || '';
+const MOONSHOT_API_URL = 'https://api.moonshot.cn/v1/chat/completions';
 
 // Replicate client for 3D models
 let replicate = null;
@@ -662,6 +664,32 @@ async function fetchOpenRouterModels() {
   }
 }
 
+// MoonshotAI (Kimi) Chat API
+async function callMoonshotChat(modelId, messages, temperature = 0.7, max_tokens = 4096) {
+  if (!MOONSHOT_API_KEY) {
+    throw new Error('Moonshot API key not configured. Set MOONSHOT_API_KEY environment variable.');
+  }
+
+  const response = await axios.post(
+    MOONSHOT_API_URL,
+    {
+      model: modelId,
+      messages: messages,
+      temperature: temperature,
+      max_tokens: max_tokens
+    },
+    {
+      headers: {
+        'Authorization': `Bearer ${MOONSHOT_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      timeout: 120000
+    }
+  );
+
+  return response.data;
+}
+
 // API key authentication
 function authenticate(req, res, next) {
   const authHeader = req.headers.authorization;
@@ -733,6 +761,10 @@ app.get('/health', (req, res) => {
       openrouter: {
         configured: !!OPENROUTER_API_KEY,
         description: 'OpenRouter API - use or-{model_id} prefix'
+      },
+      moonshotai: {
+        configured: !!MOONSHOT_API_KEY,
+        description: 'MoonshotAI (Kimi) - use kimi-{model_id} prefix'
       },
       replicate: {
         configured: !!REPLICATE_API_KEY,
@@ -1031,6 +1063,57 @@ app.post('/v1/chat/completions', authenticate, async (req, res) => {
         error: e.message, latency: Date.now() - startTime, status: 'error'
       });
       return res.status(500).json({ error: 'OpenRouter API error', message: e.message });
+    }
+  }
+
+  // --- MoonshotAI/Kimi Models (kimi- prefix) ---
+  if (requestedModel.startsWith('kimi-')) {
+    const kimiModelId = requestedModel; // Keep full ID like 'kimi-k2.5'
+
+    try {
+      console.log(`[KIMI] Request: ${kimiModelId}, messages: ${messages.length}`);
+      const kimiResponse = await callMoonshotChat(
+        kimiModelId,
+        messages,
+        temperature || 0.7,
+        max_tokens || 4096
+      );
+
+      const latency = Date.now() - startTime;
+      const responseText = kimiResponse.choices?.[0]?.message?.content || '';
+      const usage = kimiResponse.usage || { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 };
+
+      logRequest({
+        id: requestId, model: requestedModel, source: 'api', apiKey: req.apiKey,
+        promptPreview: messages[messages.length - 1]?.content?.substring(0, 100) || '',
+        responsePreview: responseText.substring(0, 100),
+        promptTokens: usage.prompt_tokens, completionTokens: usage.completion_tokens,
+        totalTokens: usage.total_tokens, latency, status: 'success'
+      });
+
+      console.log(`[KIMI] Response: ${responseText.substring(0, 100)}... (${latency}ms)`);
+
+      return res.json({
+        id: `chatcmpl-${requestId}`,
+        object: 'chat.completion',
+        created: Math.floor(Date.now() / 1000),
+        model: requestedModel,
+        choices: [{
+          index: 0,
+          message: { role: 'assistant', content: responseText.trim() },
+          finish_reason: 'stop'
+        }],
+        usage
+      });
+
+    } catch (e) {
+      console.error('[KIMI] Error:', e.message);
+      logRequest({
+        id: requestId, model: requestedModel, source: 'api', apiKey: req.apiKey,
+        promptPreview: messages[messages.length - 1]?.content?.substring(0, 100) || '',
+        error: e.message, latency: Date.now() - startTime, status: 'error'
+      });
+      return res.status(500).json({ error: 'MoonshotAI API error', message: e.message });
     }
   }
 
@@ -1951,6 +2034,24 @@ app.get('/v1/models', authenticate, async (req, res) => {
       );
     }
   }
+
+  // Add MoonshotAI/Kimi models
+  if (MOONSHOT_API_KEY) {
+    models.push(
+      { id: 'kimi-k2.5', object: 'model', owned_by: 'moonshotai', capabilities: ['chat', 'vision'], description: 'Kimi K2.5 - Most capable model with 256K context' },
+      { id: 'kimi-k2', object: 'model', owned_by: 'moonshotai', capabilities: ['chat', 'vision'], description: 'Kimi K2 - Balanced performance and cost' },
+      { id: 'kimi-k1.5', object: 'model', owned_by: 'moonshotai', capabilities: ['chat'], description: 'Kimi K1.5 - Fast and cost-effective' }
+    );
+  }
+
+  // Add free/cost-effective open source model recommendations
+  models.push(
+    { id: 'hf-Qwen/Qwen2.5-72B-Instruct', object: 'model', owned_by: 'huggingface/Qwen', capabilities: ['chat'], description: '💰 FREE - Qwen2.5 72B - Very capable open source model' },
+    { id: 'hf-upstage/SOLAR-10.7B-Instruct-v1.0', object: 'model', owned_by: 'huggingface/upstage', capabilities: ['chat'], description: '💰 FREE - SOLAR 10.7B - Efficient and fast' },
+    { id: 'hf-NousResearch/Nous-Hermes-2-Mistral-7B-DPO', object: 'model', owned_by: 'huggingface/NousResearch', capabilities: ['chat'], description: '💰 FREE - Nous Hermes 2 - Fine-tuned for helpfulness' },
+    { id: 'hf-HuggingFaceH4/zephyr-7b-beta', object: 'model', owned_by: 'huggingface/HuggingFaceH4', capabilities: ['chat'], description: '💰 FREE - Zephyr 7B - Optimized for helpful assistant behavior' },
+    { id: 'hf-tiiuae/falcon-7b-instruct', object: 'model', owned_by: 'huggingface/tiiuae', capabilities: ['chat'], description: '💰 FREE - Falcon 7B - Fast inference, good quality' }
+  );
 
   res.json({
     object: 'list',
