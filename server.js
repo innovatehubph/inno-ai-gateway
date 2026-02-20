@@ -207,6 +207,196 @@ const IMAGE_ALIASES = {
   'budget': 'image-1'
 };
 
+// ==================== 3D MODEL TIERS ====================
+const MODEL_3D_TIERS = {
+  '3d-1': {
+    name: 'Fast 3D',
+    model: 'mareksagan/dreamgaussian:d16b4890fd9d1996aa7e018c261237e3c4157d20489773f3022ef10de6c06909',
+    description: 'DreamGaussian - Fast Gaussian Splatting',
+    speed: '~30 sec',
+    cost: '~$0.05',
+    quality: '⭐⭐⭐',
+    category: 'fast'
+  },
+  '3d-2': {
+    name: 'Standard 3D',
+    model: 'tencent/hunyuan-3d-3.1:a2838628b41a2e0ee2eb19b3ea98a40d75f8d7639bf5a1ddd37ea299bb334854',
+    description: 'Tencent Hunyuan-3D 3.1 - High quality textures',
+    speed: '~2 min',
+    cost: '~$0.15',
+    quality: '⭐⭐⭐⭐⭐',
+    category: 'standard'
+  },
+  '3d-premium': {
+    name: 'Premium 3D',
+    model: 'hyper3d/rodin',
+    description: 'Rodin Gen-2 - Complex detailed models',
+    speed: '~3 min',
+    cost: '~$0.20',
+    quality: '⭐⭐⭐⭐⭐+',
+    category: 'premium'
+  }
+};
+
+const MODEL_3D_ALIASES = {
+  'fast': '3d-1',
+  'dreamgaussian': '3d-1',
+  'standard': '3d-2',
+  'hunyuan': '3d-2',
+  'default': '3d-2',
+  'premium': '3d-premium',
+  'rodin': '3d-premium',
+  'best': '3d-premium'
+};
+
+// ==================== VIDEO MODEL TIERS ====================
+const VIDEO_TIERS = {
+  // === TEXT TO VIDEO ===
+  'video-1': {
+    name: 'Fast T2V',
+    model: 'lucataco/animate-diff',
+    description: 'AnimateDiff - Animated text-to-video',
+    speed: '~30 sec',
+    cost: '~$0.05',
+    quality: '⭐⭐⭐',
+    type: 'text-to-video',
+    category: 'fast'
+  },
+  'video-2': {
+    name: 'Standard T2V',
+    model: 'minimax/video-01',
+    description: 'MiniMax/Hailuo - 6s videos from text/image',
+    speed: '~1 min',
+    cost: '~$0.15',
+    quality: '⭐⭐⭐⭐',
+    type: 'text-to-video',
+    category: 'standard'
+  },
+  'video-3': {
+    name: 'Quality T2V',
+    model: 'luma/ray',
+    description: 'Luma Dream Machine - High quality T2V',
+    speed: '~1 min',
+    cost: '~$0.25',
+    quality: '⭐⭐⭐⭐⭐',
+    type: 'text-to-video',
+    category: 'quality'
+  },
+  'video-premium': {
+    name: 'Premium T2V',
+    model: 'wan-video/wan-2.5-t2v',
+    description: 'Wan 2.5 - High quality T2V',
+    speed: '~2 min',
+    cost: '~$0.35',
+    quality: '⭐⭐⭐⭐⭐',
+    type: 'text-to-video',
+    category: 'premium'
+  },
+  'video-premium2': {
+    name: 'Premium+ T2V',
+    model: 'wan-video/wan-2.6-t2v',
+    description: 'Wan 2.6 - Latest Alibaba T2V model',
+    speed: '~2 min',
+    cost: '~$0.40',
+    quality: '⭐⭐⭐⭐⭐+',
+    type: 'text-to-video',
+    category: 'premium'
+  },
+  
+  // === IMAGE TO VIDEO ===
+  'video-i2v': {
+    name: 'Fast I2V',
+    model: 'wan-video/wan-2.2-i2v-fast',
+    description: 'Wan 2.2 Fast - Image to video',
+    speed: '~30 sec',
+    cost: '~$0.10',
+    quality: '⭐⭐⭐⭐',
+    type: 'image-to-video',
+    category: 'fast'
+  },
+  'video-i2v-kling': {
+    name: 'Premium I2V',
+    model: 'kwaivgi/kling-v2.1',
+    description: 'Kling V2.1 - 5s/10s videos from image',
+    speed: '~1 min',
+    cost: '~$0.25',
+    quality: '⭐⭐⭐⭐⭐',
+    type: 'image-to-video',
+    category: 'premium'
+  },
+  
+  // === VIDEO EDITING ===
+  'video-edit': {
+    name: 'Video Edit',
+    model: 'luma/modify-video',
+    description: 'Luma - Style transfer & prompt editing',
+    speed: '~1 min',
+    cost: '~$0.15',
+    quality: '⭐⭐⭐⭐⭐',
+    type: 'video-edit',
+    category: 'edit'
+  },
+  'video-reframe': {
+    name: 'Video Reframe',
+    model: 'luma/reframe-video',
+    description: 'Change aspect ratio (up to 30s, 720p)',
+    speed: '~20 sec',
+    cost: '~$0.05',
+    quality: '⭐⭐⭐⭐',
+    type: 'video-edit',
+    category: 'edit'
+  },
+  'video-audio': {
+    name: 'Add Audio',
+    model: 'zsxkib/mmaudio',
+    description: 'MMAudio V2 - Add sound to video',
+    speed: '~30 sec',
+    cost: '~$0.08',
+    quality: '⭐⭐⭐⭐⭐',
+    type: 'video-audio',
+    category: 'audio'
+  }
+};
+
+const VIDEO_ALIASES = {
+  // Text to Video
+  'fast': 'video-1',
+  'animatediff': 'video-1',
+  'standard': 'video-2',
+  'hailuo': 'video-2',
+  'minimax': 'video-2',
+  'default': 'video-2',
+  'quality': 'video-3',
+  'luma': 'video-3',
+  'ray': 'video-3',
+  'dream-machine': 'video-3',
+  'premium': 'video-premium',
+  'wan25': 'video-premium',
+  'premium2': 'video-premium2',
+  'wan26': 'video-premium2',
+  'best': 'video-premium2',
+  
+  // Image to Video
+  'i2v': 'video-i2v',
+  'img2vid': 'video-i2v',
+  'image-to-video': 'video-i2v',
+  'i2v-kling': 'video-i2v-kling',
+  'kling': 'video-i2v-kling',
+  
+  // Video Editing
+  'edit': 'video-edit',
+  'modify': 'video-edit',
+  'style': 'video-edit',
+  'reframe': 'video-reframe',
+  'resize': 'video-reframe',
+  'aspect': 'video-reframe',
+  
+  // Audio
+  'audio': 'video-audio',
+  'sound': 'video-audio',
+  'mmaudio': 'video-audio'
+};
+
 // Data storage
 const DATA_DIR = path.join(__dirname, 'data');
 const ANALYTICS_FILE = path.join(DATA_DIR, 'analytics.json');
@@ -1008,9 +1198,9 @@ app.post('/v1/embeddings', authenticate, async (req, res) => {
 
 // ==================== 3D GENERATION ENDPOINTS ====================
 
-// Text to 3D (using Tencent Hunyuan-3D 3.1)
+// Text to 3D (with tiered models)
 app.post('/v1/3d/generations', authenticate, async (req, res) => {
-  const { prompt, format = 'glb', steps = 25 } = req.body;
+  const { prompt, model = '3d-2', format = 'glb' } = req.body;
   const startTime = Date.now();
   const requestId = uuidv4();
   
@@ -1027,21 +1217,26 @@ app.post('/v1/3d/generations', authenticate, async (req, res) => {
     });
   }
 
+  // Resolve model tier
+  let tierKey = model.toLowerCase();
+  if (MODEL_3D_ALIASES[tierKey]) tierKey = MODEL_3D_ALIASES[tierKey];
+  
+  const tier = MODEL_3D_TIERS[tierKey] || MODEL_3D_TIERS['3d-2'];
+
   try {
-    console.log(`[3D] Generating from text: ${prompt.substring(0, 50)}...`);
+    console.log(`[3D] Generating with ${tier.model.split(':')[0]}: ${prompt.substring(0, 50)}...`);
     
-    // Use Tencent Hunyuan-3D 3.1 (latest, best quality)
-    const output = await replicate.run(
-      "tencent/hunyuan-3d-3.1:a2838628b41a2e0ee2eb19b3ea98a40d75f8d7639bf5a1ddd37ea299bb334854",
-      {
-        input: {
-          prompt: prompt,
-          generate_type: "Normal",  // Normal = with textures, Geometry = white model
-          enable_pbr: true,
-          face_count: 100000
-        }
-      }
-    );
+    // Build input based on model
+    let input = { prompt };
+    
+    // Hunyuan-specific params
+    if (tier.model.includes('hunyuan')) {
+      input.generate_type = "Normal";
+      input.enable_pbr = true;
+      input.face_count = 100000;
+    }
+    
+    const output = await replicate.run(tier.model, { input });
     
     const latency = Date.now() - startTime;
     console.log(`[3D] Generated in ${latency}ms`);
@@ -1050,6 +1245,7 @@ app.post('/v1/3d/generations', authenticate, async (req, res) => {
     let modelUrl = output;
     if (Array.isArray(output)) modelUrl = output[0];
     if (typeof output === 'object' && output.mesh) modelUrl = output.mesh;
+    if (typeof output === 'object' && output.glb) modelUrl = output.glb;
     
     // Download and save locally
     const modelResponse = await fetch(modelUrl);
@@ -1059,13 +1255,15 @@ app.post('/v1/3d/generations', authenticate, async (req, res) => {
     fs.writeFileSync(modelPath, Buffer.from(modelData));
     
     logRequest({
-      id: requestId, model: 'inno-ai-3d-gen', source: 'api', apiKey: req.apiKey,
+      id: requestId, model: `inno-ai-${tierKey}`, source: 'api', apiKey: req.apiKey,
       promptPreview: prompt.substring(0, 100), type: '3d_generation',
-      latency, status: 'success'
+      tier: tier.name, latency, status: 'success'
     });
     
     res.json({
       created: Math.floor(Date.now() / 1000),
+      model: tierKey,
+      tier: tier.name,
       data: [{ 
         url: `/data/model_${requestId}.${ext}`, 
         format: ext,
@@ -1076,7 +1274,7 @@ app.post('/v1/3d/generations', authenticate, async (req, res) => {
   } catch (e) {
     console.error(`[3D] Error: ${e.message}`);
     logRequest({
-      id: requestId, model: 'inno-ai-3d-gen', source: 'api', apiKey: req.apiKey,
+      id: requestId, model: `inno-ai-${tierKey}`, source: 'api', apiKey: req.apiKey,
       promptPreview: prompt?.substring(0, 100), error: e.message,
       latency: Date.now() - startTime, status: 'error', type: '3d_generation'
     });
@@ -1163,6 +1361,266 @@ app.post('/v1/3d/image-to-3d', authenticate, async (req, res) => {
     });
     res.status(500).json({ error: 'Image to 3D conversion failed', message: e.message });
   }
+});
+
+// List available 3D models
+app.get('/v1/3d/models', (req, res) => {
+  const models = Object.entries(MODEL_3D_TIERS).map(([key, tier]) => ({
+    id: key,
+    name: tier.name,
+    description: tier.description,
+    speed: tier.speed,
+    cost: tier.cost,
+    quality: tier.quality,
+    replicate_model: tier.model.split(':')[0]
+  }));
+  
+  res.json({
+    object: 'list',
+    data: models,
+    aliases: MODEL_3D_ALIASES,
+    default: '3d-2',
+    replicate_configured: !!replicate
+  });
+});
+
+// ==================== VIDEO GENERATION ====================
+
+// Text/Image to Video
+app.post('/v1/video/generations', authenticate, async (req, res) => {
+  const { prompt, image, model = 'video-2', duration = 5 } = req.body;
+  const startTime = Date.now();
+  const requestId = uuidv4();
+  
+  if (!prompt && !image) {
+    return res.status(400).json({ error: 'prompt or image is required' });
+  }
+
+  // Check if Replicate is configured
+  if (!replicate) {
+    return res.status(503).json({ 
+      error: 'Video generation not configured',
+      message: 'REPLICATE_API_KEY is required for video generation',
+      setup: 'Add REPLICATE_API_KEY to .env file'
+    });
+  }
+
+  // Resolve model tier
+  let tierKey = model.toLowerCase();
+  if (VIDEO_ALIASES[tierKey]) tierKey = VIDEO_ALIASES[tierKey];
+  
+  const tier = VIDEO_TIERS[tierKey];
+  if (!tier) {
+    return res.status(400).json({ 
+      error: 'Invalid video model',
+      available: Object.keys(VIDEO_TIERS),
+      aliases: VIDEO_ALIASES
+    });
+  }
+
+  try {
+    console.log(`[VIDEO] Generating with ${tier.model}: ${(prompt || 'image-to-video').substring(0, 50)}...`);
+    
+    // Build input based on model
+    let input = {};
+    if (prompt) input.prompt = prompt;
+    if (image) input.image = image;
+    if (duration) input.duration = duration;
+    
+    const output = await replicate.run(tier.model, { input });
+    
+    const latency = Date.now() - startTime;
+    console.log(`[VIDEO] Generated in ${latency}ms`);
+    
+    // Output is URL to video
+    let videoUrl = output;
+    if (Array.isArray(output)) videoUrl = output[0];
+    if (typeof output === 'object' && output.video) videoUrl = output.video;
+    
+    // Download and save locally
+    const videoResponse = await fetch(videoUrl);
+    const videoData = await videoResponse.arrayBuffer();
+    const videoPath = path.join(DATA_DIR, `video_${requestId}.mp4`);
+    fs.writeFileSync(videoPath, Buffer.from(videoData));
+    
+    logRequest({
+      id: requestId, model: `inno-ai-${tierKey}`, source: 'api', apiKey: req.apiKey,
+      promptPreview: (prompt || 'image-to-video').substring(0, 100), type: 'video_generation',
+      tier: tier.name, latency, status: 'success'
+    });
+    
+    res.json({
+      created: Math.floor(Date.now() / 1000),
+      model: tierKey,
+      tier: tier.name,
+      data: [{ 
+        url: `/data/video_${requestId}.mp4`,
+        external_url: videoUrl,
+        duration: duration
+      }]
+    });
+    
+  } catch (e) {
+    console.error(`[VIDEO] Error: ${e.message}`);
+    logRequest({
+      id: requestId, model: `inno-ai-${tierKey}`, source: 'api', apiKey: req.apiKey,
+      promptPreview: prompt?.substring(0, 100), error: e.message,
+      latency: Date.now() - startTime, status: 'error', type: 'video_generation'
+    });
+    res.status(500).json({ error: 'Video generation failed', message: e.message });
+  }
+});
+
+// Video Editing
+app.post('/v1/video/edit', authenticate, async (req, res) => {
+  const { video, prompt, model = 'video-edit', aspect_ratio } = req.body;
+  const startTime = Date.now();
+  const requestId = uuidv4();
+  
+  if (!video) {
+    return res.status(400).json({ error: 'video URL is required' });
+  }
+
+  if (!replicate) {
+    return res.status(503).json({ 
+      error: 'Video editing not configured',
+      message: 'REPLICATE_API_KEY is required'
+    });
+  }
+
+  // Resolve model tier
+  let tierKey = model.toLowerCase();
+  if (VIDEO_ALIASES[tierKey]) tierKey = VIDEO_ALIASES[tierKey];
+  
+  const tier = VIDEO_TIERS[tierKey];
+  if (!tier || tier.type !== 'video-edit') {
+    return res.status(400).json({ 
+      error: 'Invalid video edit model',
+      available: Object.entries(VIDEO_TIERS)
+        .filter(([_, t]) => t.type === 'video-edit')
+        .map(([k, _]) => k)
+    });
+  }
+
+  try {
+    console.log(`[VIDEO-EDIT] Editing with ${tier.model}...`);
+    
+    let input = { video };
+    if (prompt) input.prompt = prompt;
+    if (aspect_ratio) input.aspect_ratio = aspect_ratio;
+    
+    const output = await replicate.run(tier.model, { input });
+    
+    const latency = Date.now() - startTime;
+    console.log(`[VIDEO-EDIT] Completed in ${latency}ms`);
+    
+    let videoUrl = output;
+    if (typeof output === 'object' && output.video) videoUrl = output.video;
+    
+    // Download and save
+    const videoResponse = await fetch(videoUrl);
+    const videoData = await videoResponse.arrayBuffer();
+    const videoPath = path.join(DATA_DIR, `video_edit_${requestId}.mp4`);
+    fs.writeFileSync(videoPath, Buffer.from(videoData));
+    
+    logRequest({
+      id: requestId, model: `inno-ai-${tierKey}`, source: 'api', apiKey: req.apiKey,
+      type: 'video_edit', tier: tier.name, latency, status: 'success'
+    });
+    
+    res.json({
+      created: Math.floor(Date.now() / 1000),
+      model: tierKey,
+      tier: tier.name,
+      data: [{ 
+        url: `/data/video_edit_${requestId}.mp4`,
+        external_url: videoUrl
+      }]
+    });
+    
+  } catch (e) {
+    console.error(`[VIDEO-EDIT] Error: ${e.message}`);
+    logRequest({
+      id: requestId, model: `inno-ai-${tierKey}`, source: 'api', apiKey: req.apiKey,
+      error: e.message, latency: Date.now() - startTime, status: 'error', type: 'video_edit'
+    });
+    res.status(500).json({ error: 'Video editing failed', message: e.message });
+  }
+});
+
+// Add Audio to Video
+app.post('/v1/video/add-audio', authenticate, async (req, res) => {
+  const { video, prompt } = req.body;
+  const startTime = Date.now();
+  const requestId = uuidv4();
+  
+  if (!video) {
+    return res.status(400).json({ error: 'video URL is required' });
+  }
+
+  if (!replicate) {
+    return res.status(503).json({ error: 'Audio generation not configured' });
+  }
+
+  try {
+    console.log(`[VIDEO-AUDIO] Adding audio to video...`);
+    
+    const output = await replicate.run('zsxkib/mmaudio', {
+      input: { video, prompt: prompt || '' }
+    });
+    
+    const latency = Date.now() - startTime;
+    console.log(`[VIDEO-AUDIO] Completed in ${latency}ms`);
+    
+    let videoUrl = output;
+    if (typeof output === 'object' && output.video) videoUrl = output.video;
+    
+    // Download and save
+    const videoResponse = await fetch(videoUrl);
+    const videoData = await videoResponse.arrayBuffer();
+    const videoPath = path.join(DATA_DIR, `video_audio_${requestId}.mp4`);
+    fs.writeFileSync(videoPath, Buffer.from(videoData));
+    
+    logRequest({
+      id: requestId, model: 'inno-ai-video-audio', source: 'api', apiKey: req.apiKey,
+      type: 'video_audio', latency, status: 'success'
+    });
+    
+    res.json({
+      created: Math.floor(Date.now() / 1000),
+      model: 'video-audio',
+      data: [{ 
+        url: `/data/video_audio_${requestId}.mp4`,
+        external_url: videoUrl
+      }]
+    });
+    
+  } catch (e) {
+    console.error(`[VIDEO-AUDIO] Error: ${e.message}`);
+    res.status(500).json({ error: 'Audio generation failed', message: e.message });
+  }
+});
+
+// List available video models
+app.get('/v1/video/models', (req, res) => {
+  const models = Object.entries(VIDEO_TIERS).map(([key, tier]) => ({
+    id: key,
+    name: tier.name,
+    description: tier.description,
+    type: tier.type,
+    speed: tier.speed,
+    cost: tier.cost,
+    quality: tier.quality,
+    replicate_model: tier.model
+  }));
+  
+  res.json({
+    object: 'list',
+    data: models,
+    aliases: VIDEO_ALIASES,
+    default: 'video-2',
+    replicate_configured: !!replicate
+  });
 });
 
 // ==================== USAGE & MODELS ====================

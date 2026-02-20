@@ -334,5 +334,161 @@
     "latency": 46025,
     "status": "success",
     "timestamp": "2026-02-20T14:31:53.159Z"
+  },
+  {
+    "id": "e8443c4c-53c5-4bf8-bbe4-980f729e1bf3",
+    "model": "inno-ai-boyong-4.5",
+    "source": "api",
+    "apiKey": "masipag-ai-gateway-2026",
+    "promptPreview": "\nGenerate a detailed requirements specification document for the following project:\n\nPROJECT NAME: M",
+    "error": "Command failed: openclaw agent --session-id api-e8443c4c --message '\nGenerate a detailed requirements specification document for the following project:\n\nPROJECT NAME: ModernTodo\nDESCRIPTION: A sleek, modern todo web app with task management, categories, priorities, due dates, dark mode, and responsive design. Built with React and Tailwind CSS.\nTECH STACK: React, TypeScript, Tailwind CSS, Vite\nSTATUS: active\n\nThe document should be in Markdown format and include the following sections:\n1. Introduction - Project background and purpose\n2. Stakeholder Needs - What different stakeholders need from this project\n3. Functional Requirements - Detailed list of all functional requirements, well categorized\n4. Non-Functional Requirements - Performance, security, usability, maintainability, etc.\n5. User Stories - At least 10 key user stories with detailed acceptance criteria\n6. Data Requirements - Data entities, relationships, and storage needs with examples\n7. Integration Requirements - External systems and APIs to integrate with\n8. Constraints and Assumptions - Known limitations and assumptions\n9. Prioritization - Critical vs. nice-to-have features\n10. Approval Process - How requirements will be validated and approved\n\nMake the content extremely detailed, realistic, and tailored to the specific project information provided.\nIf the project description is minimal, extrapolate sensible requirements based on the project name and tech stack.\nFormat the document with proper Markdown including tables, lists, and emphasis where appropriate.\n' --json\n",
+    "latency": 180005,
+    "status": "error",
+    "timestamp": "2026-02-20T14:33:36.611Z"
+  },
+  {
+    "id": "4e4f091e-535a-4d51-9744-b4cc7cc0d015",
+    "model": "inno-ai-boyong-4.5",
+    "source": "api",
+    "apiKey": "masipag-ai-gateway-2026",
+    "promptPreview": "\nGenerate a comprehensive technical architecture document for the following project:\n\nPROJECT NAME: ",
+    "error": "Command failed: openclaw agent --session-id api-4e4f091e --message '\nGenerate a comprehensive technical architecture document for the following project:\n\nPROJECT NAME: ModernTodo\nDESCRIPTION: A sleek, modern todo web app with task management, categories, priorities, due dates, dark mode, and responsive design. Built with React and Tailwind CSS.\nTECH STACK: React, TypeScript, Tailwind CSS, Vite\nSTATUS: active\n\nThe document should be in Markdown format and include the following sections:\n1. Architecture Overview - High-level description with a diagram (described in text)\n2. Architectural Patterns - The patterns and principles being applied (e.g., microservices, CQRS)\n3. Component Design - Detailed breakdown of all major components and their responsibilities\n4. Data Model - Complete database schema, entities, relationships, and example data\n5. API Design - All endpoints, payloads, responses, and error handling strategies\n6. Security Architecture - Authentication, authorization, data protection, audit trails\n7. Infrastructure - Cloud/on-premise resources, networking, and deployment considerations\n8. Scalability and Performance - How the system handles increased load and maintains performance\n9. Development Environment - Tools, languages, frameworks, and development workflow\n10. Monitoring and Observability - Logging, metrics, and alerting strategies\n11. Disaster Recovery - Backup, restore, and business continuity approaches\n12. Technical Debt Management - How to address and prevent technical debt\n\nMake the architecture sophisticated, modern, and aligned with the tech stack specified.\nInclude code snippets where appropriate to illustrate key concepts.\nIf tech stack details are minimal, recommend sensible modern technologies that would work well together.\nFormat with clear headings, code blocks, and conceptual diagrams described in text.\n' --json\n",
+    "latency": 180006,
+    "status": "error",
+    "timestamp": "2026-02-20T14:33:36.642Z"
+  },
+  {
+    "id": "492b80b2-e284-47c4-accf-21c705b0ebd1",
+    "model": "inno-ai-boyong-4.5",
+    "source": "api",
+    "apiKey": "masipag-ai-gateway-2026",
+    "promptPreview": "\nGenerate a comprehensive technical architecture document for the following project:\n\nPROJECT NAME: ",
+    "error": "Command failed: openclaw agent --session-id api-492b80b2 --message '\nGenerate a comprehensive technical architecture document for the following project:\n\nPROJECT NAME: ModernTodo\nDESCRIPTION: A sleek, modern todo web app with task management, categories, priorities, due dates, dark mode, and responsive design. Built with React and Tailwind CSS.\nTECH STACK: React, TypeScript, Tailwind CSS, Vite\nSTATUS: active\n\nThe document should be in Markdown format and include the following sections:\n1. Architecture Overview - High-level description with a diagram (described in text)\n2. Architectural Patterns - The patterns and principles being applied (e.g., microservices, CQRS)\n3. Component Design - Detailed breakdown of all major components and their responsibilities\n4. Data Model - Complete database schema, entities, relationships, and example data\n5. API Design - All endpoints, payloads, responses, and error handling strategies\n6. Security Architecture - Authentication, authorization, data protection, audit trails\n7. Infrastructure - Cloud/on-premise resources, networking, and deployment considerations\n8. Scalability and Performance - How the system handles increased load and maintains performance\n9. Development Environment - Tools, languages, frameworks, and development workflow\n10. Monitoring and Observability - Logging, metrics, and alerting strategies\n11. Disaster Recovery - Backup, restore, and business continuity approaches\n12. Technical Debt Management - How to address and prevent technical debt\n\nMake the architecture sophisticated, modern, and aligned with the tech stack specified.\nInclude code snippets where appropriate to illustrate key concepts.\nIf tech stack details are minimal, recommend sensible modern technologies that would work well together.\nFormat with clear headings, code blocks, and conceptual diagrams described in text.\n' --json\n",
+    "latency": 180005,
+    "status": "error",
+    "timestamp": "2026-02-20T14:36:37.552Z"
+  },
+  {
+    "id": "c62abe61-949a-4a8f-8b32-3c922193e09f",
+    "model": "inno-ai-boyong-4.5",
+    "source": "api",
+    "apiKey": "masipag-ai-gateway-2026",
+    "promptPreview": "\nGenerate a detailed requirements specification document for the following project:\n\nPROJECT NAME: M",
+    "error": "Command failed: openclaw agent --session-id api-c62abe61 --message '\nGenerate a detailed requirements specification document for the following project:\n\nPROJECT NAME: ModernTodo\nDESCRIPTION: A sleek, modern todo web app with task management, categories, priorities, due dates, dark mode, and responsive design. Built with React and Tailwind CSS.\nTECH STACK: React, TypeScript, Tailwind CSS, Vite\nSTATUS: active\n\nThe document should be in Markdown format and include the following sections:\n1. Introduction - Project background and purpose\n2. Stakeholder Needs - What different stakeholders need from this project\n3. Functional Requirements - Detailed list of all functional requirements, well categorized\n4. Non-Functional Requirements - Performance, security, usability, maintainability, etc.\n5. User Stories - At least 10 key user stories with detailed acceptance criteria\n6. Data Requirements - Data entities, relationships, and storage needs with examples\n7. Integration Requirements - External systems and APIs to integrate with\n8. Constraints and Assumptions - Known limitations and assumptions\n9. Prioritization - Critical vs. nice-to-have features\n10. Approval Process - How requirements will be validated and approved\n\nMake the content extremely detailed, realistic, and tailored to the specific project information provided.\nIf the project description is minimal, extrapolate sensible requirements based on the project name and tech stack.\nFormat the document with proper Markdown including tables, lists, and emphasis where appropriate.\n' --json\n",
+    "latency": 180010,
+    "status": "error",
+    "timestamp": "2026-02-20T14:36:37.597Z"
+  },
+  {
+    "id": "1b0f09ad-e366-461c-a8ae-9ad2f6edba2e",
+    "model": "inno-ai-boyong-4.5",
+    "source": "api",
+    "apiKey": "masipag-ai-gateway-2026",
+    "promptPreview": "\nGenerate a detailed implementation plan for the following project:\n\nPROJECT NAME: ModernTodo\nDESCRI",
+    "error": "Command failed: openclaw agent --session-id api-1b0f09ad --message '\nGenerate a detailed implementation plan for the following project:\n\nPROJECT NAME: ModernTodo\nDESCRIPTION: A sleek, modern todo web app with task management, categories, priorities, due dates, dark mode, and responsive design. Built with React and Tailwind CSS.\nTECH STACK: React, TypeScript, Tailwind CSS, Vite\nSTATUS: active\n\nThe document should be in Markdown format and include the following sections:\n1. Implementation Approach - Overall strategy and methodology (Agile, Waterfall, etc.)\n2. Development Phases - Detailed breakdown of phases with clear objectives for each\n3. Sprint Planning - Specific sprint plans with goals and deliverables\n4. Task Breakdown - Comprehensive list of implementation tasks with estimates and assignments\n5. Technical Dependencies - All dependencies, their relationships, and critical path analysis\n6. Resource Allocation - Team structure, roles, responsibilities, and time commitments\n7. Development Standards - Coding standards, review processes, and quality gates\n8. Build and Release Process - CI/CD pipeline, environment strategy, and release procedures\n9. Quality Assurance - Testing strategy integrated with implementation timeline\n10. Risk Management - Implementation-specific risks and mitigation plans\n11. Milestone Tracking - Key milestones with acceptance criteria\n12. Post-Implementation Activities - Handover, training, and support plans\n\nMake the plan extremely detailed, realistic, and tailored to the specific project information provided.\nIf details are minimal, infer a sensible implementation approach based on the project name and context.\nUse tables and lists to organize information clearly, and provide Gantt chart-like timelines in text format.\n' --json\n",
+    "latency": 180003,
+    "status": "error",
+    "timestamp": "2026-02-20T14:39:37.617Z"
+  },
+  {
+    "id": "62eb5146-c598-4cf2-a315-af2ab5f7780c",
+    "model": "inno-ai-boyong-4.5",
+    "source": "api",
+    "apiKey": "masipag-ai-gateway-2026",
+    "promptPreview": "\nGenerate comprehensive API documentation for the following project:\n\nPROJECT NAME: ModernTodo\nDESCR",
+    "error": "Command failed: openclaw agent --session-id api-62eb5146 --message '\nGenerate comprehensive API documentation for the following project:\n\nPROJECT NAME: ModernTodo\nDESCRIPTION: A sleek, modern todo web app with task management, categories, priorities, due dates, dark mode, and responsive design. Built with React and Tailwind CSS.\nTECH STACK: React, TypeScript, Tailwind CSS, Vite\nSTATUS: active\n\nThe document should be in Markdown format and include the following sections:\n1. API Overview - Purpose, standards (REST/GraphQL), and general patterns\n2. Authentication and Authorization - Security mechanisms and token handling\n3. Base URL and Versioning - Endpoint structure and version management\n4. Resource Endpoints - Complete list of endpoints with detailed documentation\n5. Request/Response Formats - Data structures, status codes, and error handling\n6. Pagination and Filtering - How to handle large datasets and filter results\n7. Rate Limiting - Limits, headers, and handling of rate limit errors\n8. Webhooks - Event notifications and integration points (if applicable)\n9. SDK/Client Libraries - Available client libraries and usage examples\n10. Example Workflows - Common API usage patterns and sequences\n11. API Versioning Strategy - How breaking changes will be managed\n12. Best Practices - Recommended patterns for efficient API use\n\nFor each endpoint, include:\n- HTTP method and complete path\n- URL parameters, query parameters, and request body schema\n- Response body schema with all possible fields\n- Status codes and error responses\n- Example requests and responses in code blocks\n- Rate limit information specific to the endpoint\n- Required permissions and scopes\n\nFormat with clear hierarchical structure, tables for parameters, and code blocks for examples.\nUse appropriate HTTP methods, status codes, and REST/GraphQL conventions.\n' --json\n",
+    "latency": 180003,
+    "status": "error",
+    "timestamp": "2026-02-20T14:39:37.619Z"
+  },
+  {
+    "id": "a3c749f8-76ed-42df-8b7c-9163013b5b09",
+    "model": "inno-ai-boyong-4.5",
+    "source": "api",
+    "apiKey": "masipag-ai-gateway-2026",
+    "promptPreview": "\nGenerate a detailed implementation plan for the following project:\n\nPROJECT NAME: ModernTodo\nDESCRI",
+    "error": "Command failed: openclaw agent --session-id api-a3c749f8 --message '\nGenerate a detailed implementation plan for the following project:\n\nPROJECT NAME: ModernTodo\nDESCRIPTION: A sleek, modern todo web app with task management, categories, priorities, due dates, dark mode, and responsive design. Built with React and Tailwind CSS.\nTECH STACK: React, TypeScript, Tailwind CSS, Vite\nSTATUS: active\n\nThe document should be in Markdown format and include the following sections:\n1. Implementation Approach - Overall strategy and methodology (Agile, Waterfall, etc.)\n2. Development Phases - Detailed breakdown of phases with clear objectives for each\n3. Sprint Planning - Specific sprint plans with goals and deliverables\n4. Task Breakdown - Comprehensive list of implementation tasks with estimates and assignments\n5. Technical Dependencies - All dependencies, their relationships, and critical path analysis\n6. Resource Allocation - Team structure, roles, responsibilities, and time commitments\n7. Development Standards - Coding standards, review processes, and quality gates\n8. Build and Release Process - CI/CD pipeline, environment strategy, and release procedures\n9. Quality Assurance - Testing strategy integrated with implementation timeline\n10. Risk Management - Implementation-specific risks and mitigation plans\n11. Milestone Tracking - Key milestones with acceptance criteria\n12. Post-Implementation Activities - Handover, training, and support plans\n\nMake the plan extremely detailed, realistic, and tailored to the specific project information provided.\nIf details are minimal, infer a sensible implementation approach based on the project name and context.\nUse tables and lists to organize information clearly, and provide Gantt chart-like timelines in text format.\n' --json\n",
+    "latency": 180004,
+    "status": "error",
+    "timestamp": "2026-02-20T14:42:38.036Z"
+  },
+  {
+    "id": "594eaf6e-e7d1-405e-a354-d3ffb05674fe",
+    "model": "inno-ai-boyong-4.5",
+    "source": "api",
+    "apiKey": "masipag-ai-gateway-2026",
+    "promptPreview": "\nGenerate comprehensive API documentation for the following project:\n\nPROJECT NAME: ModernTodo\nDESCR",
+    "error": "Command failed: openclaw agent --session-id api-594eaf6e --message '\nGenerate comprehensive API documentation for the following project:\n\nPROJECT NAME: ModernTodo\nDESCRIPTION: A sleek, modern todo web app with task management, categories, priorities, due dates, dark mode, and responsive design. Built with React and Tailwind CSS.\nTECH STACK: React, TypeScript, Tailwind CSS, Vite\nSTATUS: active\n\nThe document should be in Markdown format and include the following sections:\n1. API Overview - Purpose, standards (REST/GraphQL), and general patterns\n2. Authentication and Authorization - Security mechanisms and token handling\n3. Base URL and Versioning - Endpoint structure and version management\n4. Resource Endpoints - Complete list of endpoints with detailed documentation\n5. Request/Response Formats - Data structures, status codes, and error handling\n6. Pagination and Filtering - How to handle large datasets and filter results\n7. Rate Limiting - Limits, headers, and handling of rate limit errors\n8. Webhooks - Event notifications and integration points (if applicable)\n9. SDK/Client Libraries - Available client libraries and usage examples\n10. Example Workflows - Common API usage patterns and sequences\n11. API Versioning Strategy - How breaking changes will be managed\n12. Best Practices - Recommended patterns for efficient API use\n\nFor each endpoint, include:\n- HTTP method and complete path\n- URL parameters, query parameters, and request body schema\n- Response body schema with all possible fields\n- Status codes and error responses\n- Example requests and responses in code blocks\n- Rate limit information specific to the endpoint\n- Required permissions and scopes\n\nFormat with clear hierarchical structure, tables for parameters, and code blocks for examples.\nUse appropriate HTTP methods, status codes, and REST/GraphQL conventions.\n' --json\n",
+    "latency": 180006,
+    "status": "error",
+    "timestamp": "2026-02-20T14:42:38.083Z"
+  },
+  {
+    "id": "0c58f79d-1504-4e22-afe7-4c2b3e8b0013",
+    "model": "inno-ai-boyong-4.5",
+    "source": "api",
+    "apiKey": "masipag-ai-gateway-2026",
+    "promptPreview": "\nGenerate a detailed implementation plan for the following project:\n\nPROJECT NAME: ModernTodo\nDESCRI",
+    "error": "Command failed: openclaw agent --session-id api-0c58f79d --message '\nGenerate a detailed implementation plan for the following project:\n\nPROJECT NAME: ModernTodo\nDESCRIPTION: A sleek, modern todo web app with task management, categories, priorities, due dates, dark mode, and responsive design. Built with React and Tailwind CSS.\nTECH STACK: React, TypeScript, Tailwind CSS, Vite\nSTATUS: active\n\nThe document should be in Markdown format and include the following sections:\n1. Implementation Approach - Overall strategy and methodology (Agile, Waterfall, etc.)\n2. Development Phases - Detailed breakdown of phases with clear objectives for each\n3. Sprint Planning - Specific sprint plans with goals and deliverables\n4. Task Breakdown - Comprehensive list of implementation tasks with estimates and assignments\n5. Technical Dependencies - All dependencies, their relationships, and critical path analysis\n6. Resource Allocation - Team structure, roles, responsibilities, and time commitments\n7. Development Standards - Coding standards, review processes, and quality gates\n8. Build and Release Process - CI/CD pipeline, environment strategy, and release procedures\n9. Quality Assurance - Testing strategy integrated with implementation timeline\n10. Risk Management - Implementation-specific risks and mitigation plans\n11. Milestone Tracking - Key milestones with acceptance criteria\n12. Post-Implementation Activities - Handover, training, and support plans\n\nMake the plan extremely detailed, realistic, and tailored to the specific project information provided.\nIf details are minimal, infer a sensible implementation approach based on the project name and context.\nUse tables and lists to organize information clearly, and provide Gantt chart-like timelines in text format.\n' --json\n",
+    "latency": 180005,
+    "status": "error",
+    "timestamp": "2026-02-20T14:45:38.854Z"
+  },
+  {
+    "id": "2a8050d8-43b6-4b60-ade6-3107a4fe696d",
+    "model": "inno-ai-boyong-4.5",
+    "source": "api",
+    "apiKey": "masipag-ai-gateway-2026",
+    "promptPreview": "\nGenerate comprehensive API documentation for the following project:\n\nPROJECT NAME: ModernTodo\nDESCR",
+    "error": "Command failed: openclaw agent --session-id api-2a8050d8 --message '\nGenerate comprehensive API documentation for the following project:\n\nPROJECT NAME: ModernTodo\nDESCRIPTION: A sleek, modern todo web app with task management, categories, priorities, due dates, dark mode, and responsive design. Built with React and Tailwind CSS.\nTECH STACK: React, TypeScript, Tailwind CSS, Vite\nSTATUS: active\n\nThe document should be in Markdown format and include the following sections:\n1. API Overview - Purpose, standards (REST/GraphQL), and general patterns\n2. Authentication and Authorization - Security mechanisms and token handling\n3. Base URL and Versioning - Endpoint structure and version management\n4. Resource Endpoints - Complete list of endpoints with detailed documentation\n5. Request/Response Formats - Data structures, status codes, and error handling\n6. Pagination and Filtering - How to handle large datasets and filter results\n7. Rate Limiting - Limits, headers, and handling of rate limit errors\n8. Webhooks - Event notifications and integration points (if applicable)\n9. SDK/Client Libraries - Available client libraries and usage examples\n10. Example Workflows - Common API usage patterns and sequences\n11. API Versioning Strategy - How breaking changes will be managed\n12. Best Practices - Recommended patterns for efficient API use\n\nFor each endpoint, include:\n- HTTP method and complete path\n- URL parameters, query parameters, and request body schema\n- Response body schema with all possible fields\n- Status codes and error responses\n- Example requests and responses in code blocks\n- Rate limit information specific to the endpoint\n- Required permissions and scopes\n\nFormat with clear hierarchical structure, tables for parameters, and code blocks for examples.\nUse appropriate HTTP methods, status codes, and REST/GraphQL conventions.\n' --json\n",
+    "latency": 180004,
+    "status": "error",
+    "timestamp": "2026-02-20T14:45:38.928Z"
+  },
+  {
+    "id": "05593475-df4e-466b-8193-2ed7810441c1",
+    "model": "inno-ai-boyong-4.5",
+    "source": "api",
+    "apiKey": "masipag-ai-gateway-2026",
+    "promptPreview": "\nGenerate a detailed implementation plan for the following project:\n\nPROJECT NAME: ModernTodo\nDESCRI",
+    "error": "Command failed: openclaw agent --session-id api-05593475 --message '\nGenerate a detailed implementation plan for the following project:\n\nPROJECT NAME: ModernTodo\nDESCRIPTION: A sleek, modern todo web app with task management, categories, priorities, due dates, dark mode, and responsive design. Built with React and Tailwind CSS.\nTECH STACK: React, TypeScript, Tailwind CSS, Vite\nSTATUS: active\n\nThe document should be in Markdown format and include the following sections:\n1. Implementation Approach - Overall strategy and methodology (Agile, Waterfall, etc.)\n2. Development Phases - Detailed breakdown of phases with clear objectives for each\n3. Sprint Planning - Specific sprint plans with goals and deliverables\n4. Task Breakdown - Comprehensive list of implementation tasks with estimates and assignments\n5. Technical Dependencies - All dependencies, their relationships, and critical path analysis\n6. Resource Allocation - Team structure, roles, responsibilities, and time commitments\n7. Development Standards - Coding standards, review processes, and quality gates\n8. Build and Release Process - CI/CD pipeline, environment strategy, and release procedures\n9. Quality Assurance - Testing strategy integrated with implementation timeline\n10. Risk Management - Implementation-specific risks and mitigation plans\n11. Milestone Tracking - Key milestones with acceptance criteria\n12. Post-Implementation Activities - Handover, training, and support plans\n\nMake the plan extremely detailed, realistic, and tailored to the specific project information provided.\nIf details are minimal, infer a sensible implementation approach based on the project name and context.\nUse tables and lists to organize information clearly, and provide Gantt chart-like timelines in text format.\n' --json\n",
+    "latency": 180004,
+    "status": "error",
+    "timestamp": "2026-02-20T14:48:38.873Z"
+  },
+  {
+    "id": "56d047ba-faa6-4af4-9675-1f7fe63b4db4",
+    "model": "inno-ai-boyong-4.5",
+    "source": "api",
+    "apiKey": "masipag-ai-gateway-2026",
+    "promptPreview": "\nGenerate comprehensive API documentation for the following project:\n\nPROJECT NAME: ModernTodo\nDESCR",
+    "error": "Command failed: openclaw agent --session-id api-56d047ba --message '\nGenerate comprehensive API documentation for the following project:\n\nPROJECT NAME: ModernTodo\nDESCRIPTION: A sleek, modern todo web app with task management, categories, priorities, due dates, dark mode, and responsive design. Built with React and Tailwind CSS.\nTECH STACK: React, TypeScript, Tailwind CSS, Vite\nSTATUS: active\n\nThe document should be in Markdown format and include the following sections:\n1. API Overview - Purpose, standards (REST/GraphQL), and general patterns\n2. Authentication and Authorization - Security mechanisms and token handling\n3. Base URL and Versioning - Endpoint structure and version management\n4. Resource Endpoints - Complete list of endpoints with detailed documentation\n5. Request/Response Formats - Data structures, status codes, and error handling\n6. Pagination and Filtering - How to handle large datasets and filter results\n7. Rate Limiting - Limits, headers, and handling of rate limit errors\n8. Webhooks - Event notifications and integration points (if applicable)\n9. SDK/Client Libraries - Available client libraries and usage examples\n10. Example Workflows - Common API usage patterns and sequences\n11. API Versioning Strategy - How breaking changes will be managed\n12. Best Practices - Recommended patterns for efficient API use\n\nFor each endpoint, include:\n- HTTP method and complete path\n- URL parameters, query parameters, and request body schema\n- Response body schema with all possible fields\n- Status codes and error responses\n- Example requests and responses in code blocks\n- Rate limit information specific to the endpoint\n- Required permissions and scopes\n\nFormat with clear hierarchical structure, tables for parameters, and code blocks for examples.\nUse appropriate HTTP methods, status codes, and REST/GraphQL conventions.\n' --json\n",
+    "latency": 180006,
+    "status": "error",
+    "timestamp": "2026-02-20T14:48:38.948Z"
+  },
+  {
+    "id": "70fc809f-d440-4dea-a6cc-72d65ddc9356",
+    "model": "inno-ai-video-1",
+    "source": "api",
+    "apiKey": "masipag-ai-gateway-2026",
+    "promptPreview": "A cat playing piano, cute animation",
+    "error": "Request to https://api.replicate.com/v1/models/wan-video/wan-2.2-i2v-fast/predictions failed with status 422 Unprocessable Entity: {\"detail\":\"- input: image is required\\n\",\"status\":422,\"title\":\"Input validation failed\",\"invalid_fields\":[{\"type\":\"required\",\"field\":\"input\",\"description\":\"image is required\"}]}\n.",
+    "latency": 451,
+    "status": "error",
+    "type": "video_generation",
+    "timestamp": "2026-02-20T14:50:45.121Z"
+  },
+  {
+    "id": "28deec7b-1dce-4c6e-894f-a74c2cfb0e8c",
+    "model": "inno-ai-video-1",
+    "source": "api",
+    "apiKey": "masipag-ai-gateway-2026",
+    "promptPreview": "A cat playing piano, cute animation",
+    "error": "Request to https://api.replicate.com/v1/models/kwaivgi/kling-v2.1/predictions failed with status 422 Unprocessable Entity: {\"detail\":\"- input: start_image is required\\n\",\"status\":422,\"title\":\"Input validation failed\",\"invalid_fields\":[{\"type\":\"required\",\"field\":\"input\",\"description\":\"start_image is required\"}]}\n.",
+    "latency": 547,
+    "status": "error",
+    "type": "video_generation",
+    "timestamp": "2026-02-20T14:51:24.875Z"
   }
 ]
