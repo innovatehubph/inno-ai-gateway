@@ -156,5 +156,29 @@
     "status": "error",
     "type": "3d_generation",
     "timestamp": "2026-02-20T14:05:31.606Z"
+  },
+  {
+    "id": "fb40e723-c426-431c-8af7-679751b8e59d",
+    "model": "inno-ai-image-1",
+    "source": "api",
+    "apiKey": "masipag-ai-gateway-2026",
+    "promptPreview": "a golden retriever puppy playing in a field of flowers",
+    "type": "image_generation",
+    "tier": "Fast",
+    "latency": 5567,
+    "status": "success",
+    "timestamp": "2026-02-20T14:12:30.339Z"
+  },
+  {
+    "id": "b81c24a3-9d62-437f-86e0-f06031500828",
+    "model": "inno-ai-image-6",
+    "source": "api",
+    "apiKey": "masipag-ai-gateway-2026",
+    "promptPreview": "a golden retriever puppy playing in a field of flowers, professional photo, 8k, detailed",
+    "type": "image_generation",
+    "tier": "Ultra",
+    "latency": 44341,
+    "status": "success",
+    "timestamp": "2026-02-20T14:13:21.137Z"
   }
 ]

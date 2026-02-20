@@ -52,6 +52,71 @@ const HF_MODELS = {
   image_to_3d_alt: 'sudo-ai/zero123plus-v1.2'
 };
 
+// Tiered Image Models (Replicate) - from fastest/cheapest to best quality
+const IMAGE_TIERS = {
+  'image-1': {
+    name: 'Fast',
+    model: 'prunaai/p-image',
+    description: 'Sub-second generation, budget-friendly',
+    speed: '< 1 sec',
+    cost: '~$0.001',
+    quality: '⭐⭐⭐'
+  },
+  'image-2': {
+    name: 'Turbo',
+    model: 'prunaai/z-image-turbo',
+    description: 'Fast with better quality, 6B params',
+    speed: '~1 sec',
+    cost: '~$0.003',
+    quality: '⭐⭐⭐⭐'
+  },
+  'image-3': {
+    name: 'Standard',
+    model: 'black-forest-labs/flux-schnell',
+    description: 'Great balance of speed and quality',
+    speed: '~3 sec',
+    cost: '~$0.003',
+    quality: '⭐⭐⭐⭐'
+  },
+  'image-4': {
+    name: 'Quality',
+    model: 'black-forest-labs/flux-dev',
+    description: 'High quality, detailed outputs',
+    speed: '~10 sec',
+    cost: '~$0.03',
+    quality: '⭐⭐⭐⭐⭐'
+  },
+  'image-5': {
+    name: 'Premium',
+    model: 'black-forest-labs/flux-pro',
+    description: 'Professional quality, best prompt following',
+    speed: '~8 sec',
+    cost: '~$0.05',
+    quality: '⭐⭐⭐⭐⭐'
+  },
+  'image-6': {
+    name: 'Ultra',
+    model: 'google/nano-banana-pro',
+    description: 'State-of-the-art, text rendering, editing',
+    speed: '~15 sec',
+    cost: '~$0.08',
+    quality: '⭐⭐⭐⭐⭐+'
+  }
+};
+
+// Model aliases for convenience
+const IMAGE_ALIASES = {
+  'fast': 'image-1',
+  'turbo': 'image-2',
+  'standard': 'image-3',
+  'quality': 'image-4',
+  'premium': 'image-5',
+  'ultra': 'image-6',
+  'best': 'image-6',
+  'cheap': 'image-1',
+  'default': 'image-3'
+};
+
 // Data storage
 const DATA_DIR = path.join(__dirname, 'data');
 const ANALYTICS_FILE = path.join(DATA_DIR, 'analytics.json');
@@ -572,7 +637,7 @@ app.post('/v1/chat/completions', authenticate, async (req, res) => {
 
 // Image Generation
 app.post('/v1/images/generations', authenticate, async (req, res) => {
-  const { prompt, n = 1, size = '1024x1024', response_format = 'url' } = req.body;
+  const { prompt, n = 1, size = '1024x1024', response_format = 'url', model = 'image-3' } = req.body;
   const startTime = Date.now();
   const requestId = uuidv4();
   
@@ -580,23 +645,91 @@ app.post('/v1/images/generations', authenticate, async (req, res) => {
     return res.status(400).json({ error: 'prompt is required' });
   }
 
-  console.log(`[IMG] Generating image: ${prompt.substring(0, 50)}...`);
+  // Resolve model tier
+  let tierKey = model.toLowerCase();
+  if (IMAGE_ALIASES[tierKey]) tierKey = IMAGE_ALIASES[tierKey];
+  
+  const tier = IMAGE_TIERS[tierKey];
+  const useReplicate = tier && replicate;
+  
+  console.log(`[IMG] Generating image: ${prompt.substring(0, 50)}... (model: ${tierKey})`);
 
-  // Try primary model, then fallback
+  // If Replicate is configured and tier selected, use tiered models
+  if (useReplicate) {
+    try {
+      console.log(`[IMG] Using Replicate: ${tier.model} (${tier.name})`);
+      
+      // Parse size
+      const [width, height] = size.split('x').map(Number);
+      
+      const output = await replicate.run(tier.model, {
+        input: {
+          prompt: prompt,
+          width: width || 1024,
+          height: height || 1024,
+          num_outputs: n
+        }
+      });
+      
+      const latency = Date.now() - startTime;
+      console.log(`[IMG] Success with ${tier.model} in ${latency}ms`);
+      
+      // Output can be array of URLs or single URL
+      let imageUrls = Array.isArray(output) ? output : [output];
+      
+      // Download and save images locally
+      const results = [];
+      for (let i = 0; i < imageUrls.length; i++) {
+        const imageUrl = imageUrls[i];
+        const imageResponse = await fetch(imageUrl);
+        const imageBuffer = await imageResponse.arrayBuffer();
+        
+        if (response_format === 'b64_json') {
+          results.push({ b64_json: Buffer.from(imageBuffer).toString('base64') });
+        } else {
+          const imagePath = path.join(DATA_DIR, `image_${requestId}_${i}.png`);
+          fs.writeFileSync(imagePath, Buffer.from(imageBuffer));
+          results.push({ 
+            url: `/data/image_${requestId}_${i}.png`,
+            external_url: imageUrl
+          });
+        }
+      }
+      
+      logRequest({
+        id: requestId, model: `inno-ai-${tierKey}`, source: 'api', apiKey: req.apiKey,
+        promptPreview: prompt.substring(0, 100), type: 'image_generation',
+        tier: tier.name, latency, status: 'success'
+      });
+      
+      return res.json({
+        created: Math.floor(Date.now() / 1000),
+        model: tierKey,
+        tier: tier.name,
+        data: results
+      });
+      
+    } catch (e) {
+      console.log(`[IMG] Replicate ${tier.model} failed: ${e.message}`);
+      // Fall through to HuggingFace fallback
+    }
+  }
+
+  // Fallback to HuggingFace (free)
   const models = [HF_MODELS.image, HF_MODELS.image_alt];
   let lastError = null;
   
-  for (const model of models) {
+  for (const hfModel of models) {
     try {
-      console.log(`[IMG] Trying model: ${model}`);
-      const hfResponse = await callHuggingFace(model, prompt);
+      console.log(`[IMG] Fallback to HuggingFace: ${hfModel}`);
+      const hfResponse = await callHuggingFace(hfModel, prompt);
       const imageBuffer = await hfResponse.arrayBuffer();
       
       // Check if we got a valid image (not an error JSON)
       if (imageBuffer.byteLength < 1000) {
         const text = new TextDecoder().decode(imageBuffer);
         if (text.includes('error') || text.includes('loading')) {
-          console.log(`[IMG] Model ${model} not ready: ${text.substring(0, 100)}`);
+          console.log(`[IMG] Model ${hfModel} not ready: ${text.substring(0, 100)}`);
           lastError = text;
           continue;
         }
@@ -605,17 +738,18 @@ app.post('/v1/images/generations', authenticate, async (req, res) => {
       const latency = Date.now() - startTime;
       
       logRequest({
-        id: requestId, model: 'inno-ai-vision-xl', source: 'api', apiKey: req.apiKey,
+        id: requestId, model: 'inno-ai-image-free', source: 'api', apiKey: req.apiKey,
         promptPreview: prompt.substring(0, 100), type: 'image_generation',
         latency, status: 'success'
       });
       
-      console.log(`[IMG] Success with ${model} in ${latency}ms`);
+      console.log(`[IMG] Success with HuggingFace ${hfModel} in ${latency}ms`);
       
       if (response_format === 'b64_json') {
         const base64Image = Buffer.from(imageBuffer).toString('base64');
         return res.json({
           created: Math.floor(Date.now() / 1000),
+          model: 'image-free',
           data: [{ b64_json: base64Image }]
         });
       } else {
@@ -624,12 +758,13 @@ app.post('/v1/images/generations', authenticate, async (req, res) => {
         
         return res.json({
           created: Math.floor(Date.now() / 1000),
+          model: 'image-free',
           data: [{ url: `/data/image_${requestId}.png` }]
         });
       }
       
     } catch (e) {
-      console.log(`[IMG] Model ${model} failed: ${e.message}`);
+      console.log(`[IMG] Model ${hfModel} failed: ${e.message}`);
       lastError = e.message;
       continue;
     }
@@ -637,11 +772,32 @@ app.post('/v1/images/generations', authenticate, async (req, res) => {
   
   // All models failed
   logRequest({
-    id: requestId, model: 'inno-ai-vision-xl', source: 'api', apiKey: req.apiKey,
+    id: requestId, model: 'inno-ai-image', source: 'api', apiKey: req.apiKey,
     promptPreview: prompt?.substring(0, 100), error: lastError,
     latency: Date.now() - startTime, status: 'error', type: 'image_generation'
   });
   res.status(500).json({ error: 'Image generation failed', message: lastError });
+});
+
+// List available image tiers
+app.get('/v1/images/models', (req, res) => {
+  const models = Object.entries(IMAGE_TIERS).map(([key, tier]) => ({
+    id: key,
+    name: tier.name,
+    description: tier.description,
+    speed: tier.speed,
+    cost: tier.cost,
+    quality: tier.quality,
+    replicate_model: tier.model
+  }));
+  
+  res.json({
+    object: 'list',
+    data: models,
+    aliases: IMAGE_ALIASES,
+    default: 'image-3',
+    replicate_configured: !!replicate
+  });
 });
 
 // Text to Speech
@@ -946,6 +1102,18 @@ app.get('/v1/usage', authenticate, (req, res) => {
 
 // List models
 app.get('/v1/models', authenticate, (req, res) => {
+  // Build image tier models dynamically
+  const imageModels = Object.entries(IMAGE_TIERS).map(([key, tier]) => ({
+    id: key,
+    object: 'model',
+    owned_by: 'innovatehub',
+    capabilities: ['image_generation'],
+    description: `${tier.name}: ${tier.description}`,
+    speed: tier.speed,
+    cost: tier.cost,
+    quality: tier.quality
+  }));
+
   res.json({
     object: 'list',
     data: [
@@ -953,16 +1121,17 @@ app.get('/v1/models', authenticate, (req, res) => {
       { id: 'inno-ai-boyong-4.5', object: 'model', owned_by: 'innovatehub', capabilities: ['chat', 'function_calling'], description: 'Most capable chat model' },
       { id: 'inno-ai-boyong-4.0', object: 'model', owned_by: 'innovatehub', capabilities: ['chat'], description: 'Balanced chat model' },
       { id: 'inno-ai-boyong-mini', object: 'model', owned_by: 'innovatehub', capabilities: ['chat'], description: 'Fast chat model' },
-      // Image models
-      { id: 'inno-ai-vision-xl', object: 'model', owned_by: 'innovatehub', capabilities: ['image_generation'], description: 'Stable Diffusion XL for image generation' },
+      // Image models (tiered)
+      ...imageModels,
+      { id: 'image-free', object: 'model', owned_by: 'innovatehub', capabilities: ['image_generation'], description: 'Free tier via HuggingFace (FLUX.1-schnell)', cost: 'FREE' },
       // Audio models
       { id: 'inno-ai-voice-1', object: 'model', owned_by: 'innovatehub', capabilities: ['text_to_speech'], description: 'Neural text-to-speech' },
       { id: 'inno-ai-whisper-1', object: 'model', owned_by: 'innovatehub', capabilities: ['speech_to_text'], description: 'Whisper for transcription' },
       // Embedding models
       { id: 'inno-ai-embed-1', object: 'model', owned_by: 'innovatehub', capabilities: ['embeddings'], description: 'Text embeddings for RAG/search' },
       // 3D models
-      { id: 'inno-ai-3d-gen', object: 'model', owned_by: 'innovatehub', capabilities: ['text_to_3d'], description: 'Generate 3D models from text (Shap-E)' },
-      { id: 'inno-ai-3d-convert', object: 'model', owned_by: 'innovatehub', capabilities: ['image_to_3d'], description: 'Convert 2D images to 3D models (TripoSR)' }
+      { id: 'inno-ai-3d-gen', object: 'model', owned_by: 'innovatehub', capabilities: ['text_to_3d'], description: 'Generate 3D models from text (Hunyuan-3D 3.1)' },
+      { id: 'inno-ai-3d-convert', object: 'model', owned_by: 'innovatehub', capabilities: ['image_to_3d'], description: 'Convert images to 3D (Hunyuan-3D 3.1)' }
     ]
   });
 });
