@@ -27,16 +27,19 @@ const MODEL_BRANDING = {
   'inno-ai-boyong-mini': 'inno-ai-boyong-mini'
 };
 
-// HuggingFace model mappings
+// HuggingFace model mappings - using faster/serverless models
 const HF_MODELS = {
-  image: 'stabilityai/stable-diffusion-xl-base-1.0',
+  // Image - using FLUX Schnell (fast) or SD 1.5 as fallback
+  image: 'black-forest-labs/FLUX.1-schnell',
+  image_alt: 'runwayml/stable-diffusion-v1-5',
+  // Audio
   tts: 'facebook/mms-tts-eng',
   stt: 'openai/whisper-large-v3',
+  // Embeddings
   embeddings: 'sentence-transformers/all-MiniLM-L6-v2',
   // 3D Models
   text_to_3d: 'openai/shap-e',
   image_to_3d: 'stabilityai/TripoSR',
-  // Alternative 3D models
   text_to_3d_alt: 'openai/point-e',
   image_to_3d_alt: 'sudo-ai/zero123plus-v1.2'
 };
@@ -165,13 +168,14 @@ function runOpenClaw(args, timeout = 180000) {
   });
 }
 
-// HuggingFace API caller
+// HuggingFace API caller - using new router endpoint
 async function callHuggingFace(model, inputs, options = {}) {
   if (!HF_API_KEY) {
     throw new Error('HuggingFace API key not configured. Set HF_API_KEY environment variable.');
   }
   
-  const response = await fetch(`https://api-inference.huggingface.co/models/${model}`, {
+  // Use the new HuggingFace router endpoint
+  const response = await fetch(`https://router.huggingface.co/hf-inference/models/${model}`, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${HF_API_KEY}`,
@@ -568,43 +572,68 @@ app.post('/v1/images/generations', authenticate, async (req, res) => {
     return res.status(400).json({ error: 'prompt is required' });
   }
 
-  try {
-    const hfResponse = await callHuggingFace(HF_MODELS.image, prompt);
-    const imageBuffer = await hfResponse.arrayBuffer();
-    const base64Image = Buffer.from(imageBuffer).toString('base64');
-    
-    const latency = Date.now() - startTime;
-    
-    logRequest({
-      id: requestId, model: 'inno-ai-vision-xl', source: 'api', apiKey: req.apiKey,
-      promptPreview: prompt.substring(0, 100), type: 'image_generation',
-      latency, status: 'success'
-    });
-    
-    if (response_format === 'b64_json') {
-      res.json({
-        created: Math.floor(Date.now() / 1000),
-        data: [{ b64_json: base64Image }]
-      });
-    } else {
-      // Save image and return URL
-      const imagePath = path.join(DATA_DIR, `image_${requestId}.png`);
-      fs.writeFileSync(imagePath, Buffer.from(imageBuffer));
+  console.log(`[IMG] Generating image: ${prompt.substring(0, 50)}...`);
+
+  // Try primary model, then fallback
+  const models = [HF_MODELS.image, HF_MODELS.image_alt];
+  let lastError = null;
+  
+  for (const model of models) {
+    try {
+      console.log(`[IMG] Trying model: ${model}`);
+      const hfResponse = await callHuggingFace(model, prompt);
+      const imageBuffer = await hfResponse.arrayBuffer();
       
-      res.json({
-        created: Math.floor(Date.now() / 1000),
-        data: [{ url: `/data/image_${requestId}.png` }]
+      // Check if we got a valid image (not an error JSON)
+      if (imageBuffer.byteLength < 1000) {
+        const text = new TextDecoder().decode(imageBuffer);
+        if (text.includes('error') || text.includes('loading')) {
+          console.log(`[IMG] Model ${model} not ready: ${text.substring(0, 100)}`);
+          lastError = text;
+          continue;
+        }
+      }
+      
+      const latency = Date.now() - startTime;
+      
+      logRequest({
+        id: requestId, model: 'inno-ai-vision-xl', source: 'api', apiKey: req.apiKey,
+        promptPreview: prompt.substring(0, 100), type: 'image_generation',
+        latency, status: 'success'
       });
+      
+      console.log(`[IMG] Success with ${model} in ${latency}ms`);
+      
+      if (response_format === 'b64_json') {
+        const base64Image = Buffer.from(imageBuffer).toString('base64');
+        return res.json({
+          created: Math.floor(Date.now() / 1000),
+          data: [{ b64_json: base64Image }]
+        });
+      } else {
+        const imagePath = path.join(DATA_DIR, `image_${requestId}.png`);
+        fs.writeFileSync(imagePath, Buffer.from(imageBuffer));
+        
+        return res.json({
+          created: Math.floor(Date.now() / 1000),
+          data: [{ url: `/data/image_${requestId}.png` }]
+        });
+      }
+      
+    } catch (e) {
+      console.log(`[IMG] Model ${model} failed: ${e.message}`);
+      lastError = e.message;
+      continue;
     }
-    
-  } catch (e) {
-    logRequest({
-      id: requestId, model: 'inno-ai-vision-xl', source: 'api', apiKey: req.apiKey,
-      promptPreview: prompt?.substring(0, 100), error: e.message,
-      latency: Date.now() - startTime, status: 'error', type: 'image_generation'
-    });
-    res.status(500).json({ error: 'Image generation failed', message: e.message });
   }
+  
+  // All models failed
+  logRequest({
+    id: requestId, model: 'inno-ai-vision-xl', source: 'api', apiKey: req.apiKey,
+    promptPreview: prompt?.substring(0, 100), error: lastError,
+    latency: Date.now() - startTime, status: 'error', type: 'image_generation'
+  });
+  res.status(500).json({ error: 'Image generation failed', message: lastError });
 });
 
 // Text to Speech
@@ -655,7 +684,7 @@ app.post('/v1/audio/transcriptions', authenticate, async (req, res) => {
   try {
     const audioBuffer = Buffer.isBuffer(audioData) ? audioData : Buffer.from(audioData, 'base64');
     
-    const hfResponse = await fetch(`https://api-inference.huggingface.co/models/${HF_MODELS.stt}`, {
+    const hfResponse = await fetch(`https://router.huggingface.co/hf-inference/models/${HF_MODELS.stt}`, {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${HF_API_KEY}` },
       body: audioBuffer
@@ -738,7 +767,7 @@ app.post('/v1/3d/generations', authenticate, async (req, res) => {
   try {
     console.log(`[3D] Generating from text: ${prompt.substring(0, 50)}...`);
     
-    const hfResponse = await fetch(`https://api-inference.huggingface.co/models/${HF_MODELS.text_to_3d}`, {
+    const hfResponse = await fetch(`https://router.huggingface.co/hf-inference/models/${HF_MODELS.text_to_3d}`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${HF_API_KEY}`,
@@ -755,7 +784,7 @@ app.post('/v1/3d/generations', authenticate, async (req, res) => {
       // Try alternative model if primary fails
       console.log(`[3D] Primary model failed, trying alternative...`);
       
-      const altResponse = await fetch(`https://api-inference.huggingface.co/models/${HF_MODELS.text_to_3d_alt}`, {
+      const altResponse = await fetch(`https://router.huggingface.co/hf-inference/models/${HF_MODELS.text_to_3d_alt}`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${HF_API_KEY}`,
@@ -837,7 +866,7 @@ app.post('/v1/3d/image-to-3d', authenticate, async (req, res) => {
       imageData = Buffer.from(image.replace(/^data:image\/\w+;base64,/, ''), 'base64');
     }
     
-    const hfResponse = await fetch(`https://api-inference.huggingface.co/models/${HF_MODELS.image_to_3d}`, {
+    const hfResponse = await fetch(`https://router.huggingface.co/hf-inference/models/${HF_MODELS.image_to_3d}`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${HF_API_KEY}`,
@@ -852,7 +881,7 @@ app.post('/v1/3d/image-to-3d', authenticate, async (req, res) => {
       // Try alternative model
       console.log(`[3D] Primary model failed, trying Zero123+...`);
       
-      const altResponse = await fetch(`https://api-inference.huggingface.co/models/${HF_MODELS.image_to_3d_alt}`, {
+      const altResponse = await fetch(`https://router.huggingface.co/hf-inference/models/${HF_MODELS.image_to_3d_alt}`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${HF_API_KEY}`,
