@@ -352,9 +352,10 @@ app.get('/admin/system', adminAuth, async (req, res) => {
   }
 });
 
-// Admin: Playground (test endpoint without logging)
+// Admin: Playground (test endpoint - also logs with 'playground' source)
 app.post('/admin/playground', adminAuth, async (req, res) => {
   const { messages, model } = req.body;
+  const startTime = Date.now();
   
   if (!messages || !Array.isArray(messages)) {
     return res.status(400).json({ error: 'messages array required' });
@@ -388,6 +389,21 @@ app.post('/admin/playground', adminAuth, async (req, res) => {
     }
     
     const brandedModel = MODEL_BRANDING[model] || 'inno-ai-boyong-4.5';
+    const latency = Date.now() - startTime;
+    
+    // Log playground requests too
+    logRequest({
+      id: requestId,
+      model: brandedModel,
+      source: 'playground',
+      promptPreview: prompt.substring(0, 100),
+      responsePreview: responseText.substring(0, 100),
+      promptTokens: usage.prompt_tokens,
+      completionTokens: usage.completion_tokens,
+      totalTokens: usage.total_tokens,
+      latency,
+      status: 'success'
+    });
     
     res.json({
       model: brandedModel,
@@ -396,6 +412,16 @@ app.post('/admin/playground', adminAuth, async (req, res) => {
     });
     
   } catch (e) {
+    const latency = Date.now() - startTime;
+    logRequest({
+      id: uuidv4(),
+      model: model || 'unknown',
+      source: 'playground',
+      promptPreview: messages[0]?.content?.substring(0, 100) || '',
+      error: e.message,
+      latency,
+      status: 'error'
+    });
     res.status(500).json({ error: e.message });
   }
 });

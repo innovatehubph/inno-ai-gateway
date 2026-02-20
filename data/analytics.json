@@ -1,17 +1,17 @@
 {
-  "totalRequests": 3,
-  "totalTokens": 62274,
-  "totalPromptTokens": 30,
-  "totalCompletionTokens": 149,
+  "totalRequests": 4,
+  "totalTokens": 83422,
+  "totalPromptTokens": 40,
+  "totalCompletionTokens": 583,
   "requestsByModel": {
-    "inno-ai-boyong-4.5": 2,
+    "inno-ai-boyong-4.5": 3,
     "inno-ai-boyong-mini": 1
   },
   "requestsByHour": {
-    "2026-02-20T12": 3
+    "2026-02-20T12": 4
   },
   "requestsByDay": {
-    "2026-02-20": 3
+    "2026-02-20": 4
   },
   "startTime": 1771591312975
 }
