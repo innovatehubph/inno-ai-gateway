@@ -384,6 +384,45 @@
               </div>
             </div>
           </div>
+
+          <!-- AI Providers -->
+          <div class="glass rounded-2xl p-5">
+            <h3 class="font-semibold mb-4 flex items-center gap-2">
+              <i class="fas fa-plug text-success"></i>AI Providers
+            </h3>
+            <div class="space-y-3" id="providersStatus">
+              <div class="flex items-center justify-between p-3 bg-white/5 rounded-xl">
+                <div class="flex items-center gap-3">
+                  <div class="w-8 h-8 rounded-lg bg-accent/20 flex items-center justify-center text-lg">🚀</div>
+                  <div>
+                    <p class="font-medium text-sm">InnovateHub</p>
+                    <p class="text-xs text-gray-500">Primary models</p>
+                  </div>
+                </div>
+                <span class="text-xs bg-success/20 text-success px-2 py-1 rounded-full">Active</span>
+              </div>
+              <div class="flex items-center justify-between p-3 bg-white/5 rounded-xl">
+                <div class="flex items-center gap-3">
+                  <div class="w-8 h-8 rounded-lg bg-yellow-500/20 flex items-center justify-center text-lg">🤗</div>
+                  <div>
+                    <p class="font-medium text-sm">Hugging Face</p>
+                    <p class="text-xs text-gray-500">Inference API</p>
+                  </div>
+                </div>
+                <span id="hfStatus" class="text-xs bg-gray-700 text-gray-400 px-2 py-1 rounded-full">Checking...</span>
+              </div>
+              <div class="flex items-center justify-between p-3 bg-white/5 rounded-xl">
+                <div class="flex items-center gap-3">
+                  <div class="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center text-lg">🌐</div>
+                  <div>
+                    <p class="font-medium text-sm">OpenRouter</p>
+                    <p class="text-xs text-gray-500">Multi-provider API</p>
+                  </div>
+                </div>
+                <span id="orStatus" class="text-xs bg-gray-700 text-gray-400 px-2 py-1 rounded-full">Checking...</span>
+              </div>
+            </div>
+          </div>
           
           <!-- Recent Activity -->
           <div class="lg:col-span-2 glass rounded-2xl p-5">
@@ -418,9 +457,24 @@
                 </div>
               </div>
               <select id="playgroundModel" class="bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-accent/50">
-                <option value="inno-ai-boyong-4.5">🚀 inno-ai-boyong-4.5</option>
-                <option value="inno-ai-boyong-4.0">⚡ inno-ai-boyong-4.0</option>
-                <option value="inno-ai-boyong-mini">💨 inno-ai-boyong-mini</option>
+                <optgroup label="🚀 InnovateHub Models">
+                  <option value="inno-ai-boyong-4.5">🚀 inno-ai-boyong-4.5</option>
+                  <option value="inno-ai-boyong-4.0">⚡ inno-ai-boyong-4.0</option>
+                  <option value="inno-ai-boyong-mini">💨 inno-ai-boyong-mini</option>
+                </optgroup>
+                <optgroup label="🤗 Hugging Face Models (prefix: hf-)">
+                  <option value="hf-mistralai/Mistral-7B-Instruct-v0.2">🤗 Mistral 7B Instruct</option>
+                  <option value="hf-meta-llama/Llama-2-7b-chat-hf">🤗 Llama 2 7B Chat</option>
+                  <option value="hf-google/gemma-7b-it">🤗 Gemma 7B</option>
+                  <option value="hf-microsoft/Phi-3-mini-4k-instruct">🤗 Phi-3 Mini</option>
+                </optgroup>
+                <optgroup label="🌐 OpenRouter Models (prefix: or-)">
+                  <option value="or-anthropic/claude-3-opus">🌐 Claude 3 Opus</option>
+                  <option value="or-anthropic/claude-3-sonnet">🌐 Claude 3 Sonnet</option>
+                  <option value="or-openai/gpt-4o">🌐 GPT-4o</option>
+                  <option value="or-openai/gpt-4-turbo">🌐 GPT-4 Turbo</option>
+                  <option value="or-google/gemini-pro">🌐 Gemini Pro</option>
+                </optgroup>
               </select>
             </div>
           </div>
@@ -783,9 +837,10 @@
     }
 
     async function initDashboard() {
-      await Promise.all([loadAnalytics(), loadSystemInfo(), loadRecentActivity()]);
+      await Promise.all([loadAnalytics(), loadSystemInfo(), loadRecentActivity(), loadProviderStatus()]);
       setInterval(loadAnalytics, 30000);
       setInterval(loadSystemInfo, 60000);
+      setInterval(loadProviderStatus, 60000);
     }
 
     async function loadAnalytics() {
@@ -914,16 +969,16 @@
       try {
         const res = await fetch('/admin/system', { headers: { 'X-Admin-Key': adminKey } });
         const data = await res.json();
-        
+
         const cpuVal = parseFloat(data.cpu) || 0;
         document.getElementById('sysCpu').textContent = data.cpu || '-';
         document.getElementById('sysCpuBar').style.width = cpuVal + '%';
-        
+
         const memParts = (data.memory || '').split('/');
         const memPercent = memParts.length === 2 ? (parseInt(memParts[0]) / parseInt(memParts[1]) * 100) : 0;
         document.getElementById('sysMemory').textContent = data.memory || '-';
         document.getElementById('sysMemoryBar').style.width = memPercent + '%';
-        
+
         const diskParts = (data.disk || '').split('/');
         const diskUsed = parseFloat(diskParts[0]) || 0;
         const diskTotal = parseFloat(diskParts[1]) || 1;
@@ -932,6 +987,40 @@
         document.getElementById('sysDiskBar').style.width = diskPercent + '%';
       } catch (e) {
         console.error('Failed to load system info', e);
+      }
+    }
+
+    async function loadProviderStatus() {
+      try {
+        const res = await fetch('/health');
+        const data = await res.json();
+
+        if (data.providers) {
+          const hfStatus = document.getElementById('hfStatus');
+          const orStatus = document.getElementById('orStatus');
+
+          if (hfStatus) {
+            if (data.providers.huggingface?.configured) {
+              hfStatus.textContent = 'Active';
+              hfStatus.className = 'text-xs bg-success/20 text-success px-2 py-1 rounded-full';
+            } else {
+              hfStatus.textContent = 'Not Configured';
+              hfStatus.className = 'text-xs bg-gray-700 text-gray-400 px-2 py-1 rounded-full';
+            }
+          }
+
+          if (orStatus) {
+            if (data.providers.openrouter?.configured) {
+              orStatus.textContent = 'Active';
+              orStatus.className = 'text-xs bg-success/20 text-success px-2 py-1 rounded-full';
+            } else {
+              orStatus.textContent = 'Not Configured';
+              orStatus.className = 'text-xs bg-gray-700 text-gray-400 px-2 py-1 rounded-full';
+            }
+          }
+        }
+      } catch (e) {
+        console.error('Failed to load provider status', e);
       }
     }
 

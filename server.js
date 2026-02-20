@@ -7,6 +7,7 @@ const path = require('path');
 const crypto = require('crypto');
 const swaggerUi = require('swagger-ui-express');
 const YAML = require('yamljs');
+const axios = require('axios');
 
 // Load environment variables
 require('dotenv').config();
@@ -23,7 +24,9 @@ const app = express();
 const PORT = process.env.PORT || 8095;
 const ADMIN_KEY = process.env.ADMIN_KEY || 'inno-admin-2026';
 const HF_API_KEY = process.env.HF_API_KEY || '';
+const HF_API_TOKEN = process.env.HF_API_TOKEN || HF_API_KEY; // HF_API_TOKEN for chat models
 const REPLICATE_API_KEY = process.env.REPLICATE_API_KEY || '';
+const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || '';
 
 // Replicate client for 3D models
 let replicate = null;
@@ -570,7 +573,7 @@ async function callHuggingFace(model, inputs, options = {}) {
   if (!HF_API_KEY) {
     throw new Error('HuggingFace API key not configured. Set HF_API_KEY environment variable.');
   }
-  
+
   // Use the new HuggingFace router endpoint
   const response = await fetch(`https://router.huggingface.co/hf-inference/models/${model}`, {
     method: 'POST',
@@ -580,13 +583,83 @@ async function callHuggingFace(model, inputs, options = {}) {
     },
     body: JSON.stringify({ inputs, ...options })
   });
-  
+
   if (!response.ok) {
     const error = await response.text();
     throw new Error(`HuggingFace API error: ${error}`);
   }
-  
+
   return response;
+}
+
+// HuggingFace Chat API - OpenAI-compatible endpoint
+async function callHuggingFaceChat(modelId, messages, temperature = 0.7, max_tokens = 4096) {
+  if (!HF_API_TOKEN) {
+    throw new Error('HuggingFace API token not configured. Set HF_API_TOKEN environment variable.');
+  }
+
+  const response = await axios.post(
+    'https://router.huggingface.co/v1/chat/completions',
+    {
+      model: modelId,
+      messages: messages,
+      temperature: temperature,
+      max_tokens: max_tokens
+    },
+    {
+      headers: {
+        'Authorization': `Bearer ${HF_API_TOKEN}`,
+        'Content-Type': 'application/json'
+      },
+      timeout: 120000
+    }
+  );
+
+  return response.data;
+}
+
+// OpenRouter Chat API - OpenAI-compatible endpoint
+async function callOpenRouterChat(modelId, messages, temperature = 0.7, max_tokens = 4096) {
+  if (!OPENROUTER_API_KEY) {
+    throw new Error('OpenRouter API key not configured. Set OPENROUTER_API_KEY environment variable.');
+  }
+
+  const response = await axios.post(
+    'https://openrouter.ai/api/v1/chat/completions',
+    {
+      model: modelId,
+      messages: messages,
+      temperature: temperature,
+      max_tokens: max_tokens
+    },
+    {
+      headers: {
+        'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+        'Content-Type': 'application/json',
+        'HTTP-Referer': 'https://ai-gateway.innoserver.cloud',
+        'X-Title': 'InnovateHub AI Gateway'
+      },
+      timeout: 120000
+    }
+  );
+
+  return response.data;
+}
+
+// Fetch OpenRouter models
+async function fetchOpenRouterModels() {
+  if (!OPENROUTER_API_KEY) return [];
+
+  try {
+    const response = await axios.get('https://openrouter.ai/api/v1/models', {
+      headers: { 'Authorization': `Bearer ${OPENROUTER_API_KEY}` },
+      timeout: 10000
+    });
+    return response.data.data || [];
+  } catch (e) {
+    console.error('Failed to fetch OpenRouter models:', e.message);
+    return [];
+  }
 }
 
 // API key authentication
@@ -651,7 +724,21 @@ app.get('/health', (req, res) => {
     powered_by: 'InnovateHub Philippines',
     uptime_ms: uptime,
     uptime_human: formatUptime(uptime),
-    timestamp: new Date().toISOString() 
+    timestamp: new Date().toISOString(),
+    providers: {
+      huggingface: {
+        configured: !!HF_API_TOKEN,
+        description: 'Hugging Face Inference API - use hf-{model_id} prefix'
+      },
+      openrouter: {
+        configured: !!OPENROUTER_API_KEY,
+        description: 'OpenRouter API - use or-{model_id} prefix'
+      },
+      replicate: {
+        configured: !!REPLICATE_API_KEY,
+        description: 'Replicate - Image and 3D generation'
+      }
+    }
   });
 });
 
@@ -838,14 +925,118 @@ app.post('/v1/chat/completions', authenticate, async (req, res) => {
   const { messages, model, stream = false, temperature, max_tokens } = req.body;
   const startTime = Date.now();
   const requestId = uuidv4();
-  
+
   if (!messages || !Array.isArray(messages)) {
     return res.status(400).json({ error: 'messages array required' });
   }
 
+  const requestedModel = model || 'inno-ai-boyong-4.5';
+
+  // --- Hugging Face Models (hf- prefix) ---
+  if (requestedModel.startsWith('hf-')) {
+    const hfModelId = requestedModel.substring(3); // Remove 'hf-' prefix
+
+    try {
+      console.log(`[HF] Request: ${hfModelId}, messages: ${messages.length}`);
+      const hfResponse = await callHuggingFaceChat(
+        hfModelId,
+        messages,
+        temperature || 0.7,
+        max_tokens || 4096
+      );
+
+      const latency = Date.now() - startTime;
+      const responseText = hfResponse.choices?.[0]?.message?.content || '';
+      const usage = hfResponse.usage || { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 };
+
+      logRequest({
+        id: requestId, model: requestedModel, source: 'api', apiKey: req.apiKey,
+        promptPreview: messages[messages.length - 1]?.content?.substring(0, 100) || '',
+        responsePreview: responseText.substring(0, 100),
+        promptTokens: usage.prompt_tokens, completionTokens: usage.completion_tokens,
+        totalTokens: usage.total_tokens, latency, status: 'success'
+      });
+
+      console.log(`[HF] Response: ${responseText.substring(0, 100)}... (${latency}ms)`);
+
+      return res.json({
+        id: `chatcmpl-${requestId}`,
+        object: 'chat.completion',
+        created: Math.floor(Date.now() / 1000),
+        model: requestedModel,
+        choices: [{
+          index: 0,
+          message: { role: 'assistant', content: responseText.trim() },
+          finish_reason: 'stop'
+        }],
+        usage
+      });
+
+    } catch (e) {
+      console.error('[HF] Error:', e.message);
+      logRequest({
+        id: requestId, model: requestedModel, source: 'api', apiKey: req.apiKey,
+        promptPreview: messages[messages.length - 1]?.content?.substring(0, 100) || '',
+        error: e.message, latency: Date.now() - startTime, status: 'error'
+      });
+      return res.status(500).json({ error: 'HuggingFace API error', message: e.message });
+    }
+  }
+
+  // --- OpenRouter Models (or- prefix) ---
+  if (requestedModel.startsWith('or-')) {
+    const orModelId = requestedModel.substring(3); // Remove 'or-' prefix
+
+    try {
+      console.log(`[OR] Request: ${orModelId}, messages: ${messages.length}`);
+      const orResponse = await callOpenRouterChat(
+        orModelId,
+        messages,
+        temperature || 0.7,
+        max_tokens || 4096
+      );
+
+      const latency = Date.now() - startTime;
+      const responseText = orResponse.choices?.[0]?.message?.content || '';
+      const usage = orResponse.usage || { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 };
+
+      logRequest({
+        id: requestId, model: requestedModel, source: 'api', apiKey: req.apiKey,
+        promptPreview: messages[messages.length - 1]?.content?.substring(0, 100) || '',
+        responsePreview: responseText.substring(0, 100),
+        promptTokens: usage.prompt_tokens, completionTokens: usage.completion_tokens,
+        totalTokens: usage.total_tokens, latency, status: 'success'
+      });
+
+      console.log(`[OR] Response: ${responseText.substring(0, 100)}... (${latency}ms)`);
+
+      return res.json({
+        id: `chatcmpl-${requestId}`,
+        object: 'chat.completion',
+        created: Math.floor(Date.now() / 1000),
+        model: requestedModel,
+        choices: [{
+          index: 0,
+          message: { role: 'assistant', content: responseText.trim() },
+          finish_reason: 'stop'
+        }],
+        usage
+      });
+
+    } catch (e) {
+      console.error('[OR] Error:', e.message);
+      logRequest({
+        id: requestId, model: requestedModel, source: 'api', apiKey: req.apiKey,
+        promptPreview: messages[messages.length - 1]?.content?.substring(0, 100) || '',
+        error: e.message, latency: Date.now() - startTime, status: 'error'
+      });
+      return res.status(500).json({ error: 'OpenRouter API error', message: e.message });
+    }
+  }
+
+  // --- Default: OpenClaw/Claude ---
   const lastUserMessage = messages.filter(m => m.role === 'user').pop();
   const prompt = lastUserMessage?.content || '';
-  const requestedModel = model || 'inno-ai-boyong-4.5';
   const brandedModel = MODEL_BRANDING[requestedModel] || 'inno-ai-boyong-4.5';
 
   // Handle streaming
@@ -853,15 +1044,15 @@ app.post('/v1/chat/completions', authenticate, async (req, res) => {
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
-    
+
     try {
       const escapedPrompt = prompt.replace(/'/g, "'\\''");
       const cmd = `agent --session-id api-${requestId.substring(0,8)} --message '${escapedPrompt}' --json`;
       const output = await runOpenClaw(cmd, 180000);
-      
+
       let responseText = '';
       let usage = { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 };
-      
+
       try {
         const jsonResponse = JSON.parse(output);
         responseText = jsonResponse.result?.payloads?.[0]?.text || output;
@@ -870,7 +1061,7 @@ app.post('/v1/chat/completions', authenticate, async (req, res) => {
           usage = { prompt_tokens: u.input || 0, completion_tokens: u.output || 0, total_tokens: u.total || 0 };
         }
       } catch { responseText = output; }
-      
+
       // Simulate streaming by sending chunks
       const words = responseText.split(' ');
       for (let i = 0; i < words.length; i++) {
@@ -887,10 +1078,10 @@ app.post('/v1/chat/completions', authenticate, async (req, res) => {
         };
         res.write(`data: ${JSON.stringify(chunk)}\n\n`);
       }
-      
+
       res.write('data: [DONE]\n\n');
       res.end();
-      
+
       logRequest({
         id: requestId, model: brandedModel, source: 'api', apiKey: req.apiKey,
         promptPreview: prompt.substring(0, 100), responsePreview: responseText.substring(0, 100),
@@ -898,7 +1089,7 @@ app.post('/v1/chat/completions', authenticate, async (req, res) => {
         totalTokens: usage.total_tokens, latency: Date.now() - startTime, status: 'success',
         fullPrompt: prompt, fullResponse: responseText
       });
-      
+
     } catch (e) {
       res.write(`data: ${JSON.stringify({ error: e.message })}\n\n`);
       res.end();
@@ -910,13 +1101,13 @@ app.post('/v1/chat/completions', authenticate, async (req, res) => {
   try {
     const escapedPrompt = prompt.replace(/'/g, "'\\''");
     const cmd = `agent --session-id api-${requestId.substring(0,8)} --message '${escapedPrompt}' --json`;
-    
+
     console.log(`[API] Request: ${prompt.substring(0, 100)}...`);
     const output = await runOpenClaw(cmd, 180000);
-    
+
     let responseText = '';
     let usage = { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 };
-    
+
     try {
       const jsonResponse = JSON.parse(output);
       responseText = jsonResponse.result?.payloads?.[0]?.text || jsonResponse.reply || output;
@@ -925,9 +1116,9 @@ app.post('/v1/chat/completions', authenticate, async (req, res) => {
         usage = { prompt_tokens: u.input || 0, completion_tokens: u.output || 0, total_tokens: u.total || 0 };
       }
     } catch { responseText = output; }
-    
+
     const latency = Date.now() - startTime;
-    
+
     logRequest({
       id: requestId, model: brandedModel, source: 'api', apiKey: req.apiKey,
       promptPreview: prompt.substring(0, 100), responsePreview: responseText.substring(0, 100),
@@ -935,9 +1126,9 @@ app.post('/v1/chat/completions', authenticate, async (req, res) => {
       totalTokens: usage.total_tokens, latency, status: 'success',
       fullPrompt: prompt, fullResponse: responseText
     });
-    
+
     console.log(`[API] Response: ${responseText.substring(0, 100)}... (${latency}ms)`);
-    
+
     res.json({
       id: `chatcmpl-${requestId}`,
       object: 'chat.completion',
@@ -946,7 +1137,7 @@ app.post('/v1/chat/completions', authenticate, async (req, res) => {
       choices: [{ index: 0, message: { role: 'assistant', content: responseText.trim() }, finish_reason: 'stop' }],
       usage
     });
-    
+
   } catch (e) {
     logRequest({
       id: requestId, model: brandedModel, source: 'api', apiKey: req.apiKey,
@@ -1693,7 +1884,7 @@ app.get('/v1/usage', authenticate, (req, res) => {
 });
 
 // List models
-app.get('/v1/models', authenticate, (req, res) => {
+app.get('/v1/models', authenticate, async (req, res) => {
   // Build image tier models dynamically
   const imageModels = Object.entries(IMAGE_TIERS).map(([key, tier]) => ({
     id: key,
@@ -1706,25 +1897,64 @@ app.get('/v1/models', authenticate, (req, res) => {
     quality: tier.quality
   }));
 
+  // Base models array
+  const models = [
+    // Chat models
+    { id: 'inno-ai-boyong-4.5', object: 'model', owned_by: 'innovatehub', capabilities: ['chat', 'function_calling'], description: 'Most capable chat model' },
+    { id: 'inno-ai-boyong-4.0', object: 'model', owned_by: 'innovatehub', capabilities: ['chat'], description: 'Balanced chat model' },
+    { id: 'inno-ai-boyong-mini', object: 'model', owned_by: 'innovatehub', capabilities: ['chat'], description: 'Fast chat model' },
+    // Image models (tiered)
+    ...imageModels,
+    { id: 'image-free', object: 'model', owned_by: 'innovatehub', capabilities: ['image_generation'], description: 'Free tier via HuggingFace (FLUX.1-schnell)', cost: 'FREE' },
+    // Audio models
+    { id: 'inno-ai-voice-1', object: 'model', owned_by: 'innovatehub', capabilities: ['text_to_speech'], description: 'Neural text-to-speech' },
+    { id: 'inno-ai-whisper-1', object: 'model', owned_by: 'innovatehub', capabilities: ['speech_to_text'], description: 'Whisper for transcription' },
+    // Embedding models
+    { id: 'inno-ai-embed-1', object: 'model', owned_by: 'innovatehub', capabilities: ['embeddings'], description: 'Text embeddings for RAG/search' },
+    // 3D models
+    { id: 'inno-ai-3d-gen', object: 'model', owned_by: 'innovatehub', capabilities: ['text_to_3d'], description: 'Generate 3D models from text (Hunyuan-3D 3.1)' },
+    { id: 'inno-ai-3d-convert', object: 'model', owned_by: 'innovatehub', capabilities: ['image_to_3d'], description: 'Convert images to 3D (Hunyuan-3D 3.1)' }
+  ];
+
+  // Add Hugging Face models (examples)
+  if (HF_API_TOKEN) {
+    models.push(
+      { id: 'hf-mistralai/Mistral-7B-Instruct-v0.2', object: 'model', owned_by: 'huggingface/mistralai', capabilities: ['chat'], description: 'Mistral 7B Instruct - Fast and capable (prefix: hf-)' },
+      { id: 'hf-meta-llama/Llama-2-7b-chat-hf', object: 'model', owned_by: 'huggingface/meta', capabilities: ['chat'], description: 'Llama 2 7B Chat - Meta open source model (prefix: hf-)' },
+      { id: 'hf-google/gemma-7b-it', object: 'model', owned_by: 'huggingface/google', capabilities: ['chat'], description: 'Gemma 7B - Google open model (prefix: hf-)' },
+      { id: 'hf-any-model-id', object: 'model', owned_by: 'huggingface', capabilities: ['chat'], description: 'Use any Hugging Face model by prefixing with hf-' }
+    );
+  }
+
+  // Fetch and add OpenRouter models
+  if (OPENROUTER_API_KEY) {
+    try {
+      const orModels = await fetchOpenRouterModels();
+      orModels.forEach(orModel => {
+        if (orModel.id && (orModel.id.includes('chat') || orModel.id.includes('instruct') || orModel.id.includes('claude') || orModel.id.includes('gpt'))) {
+          models.push({
+            id: `or-${orModel.id}`,
+            object: 'model',
+            owned_by: `openrouter/${orModel.id.split('/')[0] || 'unknown'}`,
+            capabilities: ['chat'],
+            description: `${orModel.name || orModel.id} (prefix: or-)`
+          });
+        }
+      });
+    } catch (e) {
+      console.error('Failed to fetch OpenRouter models for /v1/models:', e.message);
+      // Add some popular OpenRouter examples
+      models.push(
+        { id: 'or-anthropic/claude-3-opus', object: 'model', owned_by: 'openrouter/anthropic', capabilities: ['chat'], description: 'Claude 3 Opus via OpenRouter (prefix: or-)' },
+        { id: 'or-openai/gpt-4o', object: 'model', owned_by: 'openrouter/openai', capabilities: ['chat'], description: 'GPT-4o via OpenRouter (prefix: or-)' },
+        { id: 'or-any-model-id', object: 'model', owned_by: 'openrouter', capabilities: ['chat'], description: 'Use any OpenRouter model by prefixing with or-' }
+      );
+    }
+  }
+
   res.json({
     object: 'list',
-    data: [
-      // Chat models
-      { id: 'inno-ai-boyong-4.5', object: 'model', owned_by: 'innovatehub', capabilities: ['chat', 'function_calling'], description: 'Most capable chat model' },
-      { id: 'inno-ai-boyong-4.0', object: 'model', owned_by: 'innovatehub', capabilities: ['chat'], description: 'Balanced chat model' },
-      { id: 'inno-ai-boyong-mini', object: 'model', owned_by: 'innovatehub', capabilities: ['chat'], description: 'Fast chat model' },
-      // Image models (tiered)
-      ...imageModels,
-      { id: 'image-free', object: 'model', owned_by: 'innovatehub', capabilities: ['image_generation'], description: 'Free tier via HuggingFace (FLUX.1-schnell)', cost: 'FREE' },
-      // Audio models
-      { id: 'inno-ai-voice-1', object: 'model', owned_by: 'innovatehub', capabilities: ['text_to_speech'], description: 'Neural text-to-speech' },
-      { id: 'inno-ai-whisper-1', object: 'model', owned_by: 'innovatehub', capabilities: ['speech_to_text'], description: 'Whisper for transcription' },
-      // Embedding models
-      { id: 'inno-ai-embed-1', object: 'model', owned_by: 'innovatehub', capabilities: ['embeddings'], description: 'Text embeddings for RAG/search' },
-      // 3D models
-      { id: 'inno-ai-3d-gen', object: 'model', owned_by: 'innovatehub', capabilities: ['text_to_3d'], description: 'Generate 3D models from text (Hunyuan-3D 3.1)' },
-      { id: 'inno-ai-3d-convert', object: 'model', owned_by: 'innovatehub', capabilities: ['image_to_3d'], description: 'Convert images to 3D (Hunyuan-3D 3.1)' }
-    ]
+    data: models
   });
 });
 
