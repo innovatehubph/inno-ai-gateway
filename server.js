@@ -6,10 +6,13 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 
+// Load environment variables
+require('dotenv').config();
+
 const app = express();
 const PORT = process.env.PORT || 8095;
 const ADMIN_KEY = process.env.ADMIN_KEY || 'inno-admin-2026';
-const HF_API_KEY = process.env.HF_API_KEY || ''; // Hugging Face API key
+const HF_API_KEY = process.env.HF_API_KEY || '';
 
 // Custom branding
 const MODEL_BRANDING = {
@@ -29,7 +32,13 @@ const HF_MODELS = {
   image: 'stabilityai/stable-diffusion-xl-base-1.0',
   tts: 'facebook/mms-tts-eng',
   stt: 'openai/whisper-large-v3',
-  embeddings: 'sentence-transformers/all-MiniLM-L6-v2'
+  embeddings: 'sentence-transformers/all-MiniLM-L6-v2',
+  // 3D Models
+  text_to_3d: 'openai/shap-e',
+  image_to_3d: 'stabilityai/TripoSR',
+  // Alternative 3D models
+  text_to_3d_alt: 'openai/point-e',
+  image_to_3d_alt: 'sudo-ai/zero123plus-v1.2'
 };
 
 // Data storage
@@ -229,14 +238,15 @@ app.get('/health', (req, res) => {
   res.json({ 
     status: 'ok', 
     service: 'InnovateHub AI Gateway', 
-    version: '3.0.0',
+    version: '3.1.0',
     models: {
       chat: ['inno-ai-boyong-4.5', 'inno-ai-boyong-4.0', 'inno-ai-boyong-mini'],
       image: ['inno-ai-vision-xl'],
-      audio: ['inno-ai-voice-1'],
-      embeddings: ['inno-ai-embed-1']
+      audio: ['inno-ai-voice-1', 'inno-ai-whisper-1'],
+      embeddings: ['inno-ai-embed-1'],
+      '3d': ['inno-ai-3d-gen', 'inno-ai-3d-convert']
     },
-    capabilities: ['chat', 'streaming', 'images', 'audio', 'embeddings'],
+    capabilities: ['chat', 'streaming', 'images', 'audio', 'embeddings', '3d_generation', 'image_to_3d'],
     powered_by: 'InnovateHub Philippines',
     uptime_ms: uptime,
     uptime_human: formatUptime(uptime),
@@ -367,6 +377,48 @@ app.get('/openapi.json', (req, res) => {
           summary: 'List available models',
           security: [{ ApiKeyAuth: [] }],
           responses: { '200': { description: 'List of models' } }
+        }
+      },
+      '/v1/3d/generations': {
+        post: {
+          summary: 'Generate 3D model from text',
+          security: [{ ApiKeyAuth: [] }],
+          requestBody: {
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  required: ['prompt'],
+                  properties: {
+                    prompt: { type: 'string', description: 'Text description of 3D object' },
+                    format: { type: 'string', default: 'glb', description: 'Output format (glb, ply)' }
+                  }
+                }
+              }
+            }
+          },
+          responses: { '200': { description: '3D model file URL' } }
+        }
+      },
+      '/v1/3d/image-to-3d': {
+        post: {
+          summary: 'Convert 2D image to 3D model',
+          security: [{ ApiKeyAuth: [] }],
+          requestBody: {
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  required: ['image'],
+                  properties: {
+                    image: { type: 'string', description: 'Base64 encoded image or URL' },
+                    format: { type: 'string', default: 'glb', description: 'Output format' }
+                  }
+                }
+              }
+            }
+          },
+          responses: { '200': { description: '3D model file URL' } }
         }
       }
     },
@@ -671,6 +723,195 @@ app.post('/v1/embeddings', authenticate, async (req, res) => {
   }
 });
 
+// ==================== 3D GENERATION ENDPOINTS ====================
+
+// Text to 3D
+app.post('/v1/3d/generations', authenticate, async (req, res) => {
+  const { prompt, format = 'glb', num_inference_steps = 64 } = req.body;
+  const startTime = Date.now();
+  const requestId = uuidv4();
+  
+  if (!prompt) {
+    return res.status(400).json({ error: 'prompt is required' });
+  }
+
+  try {
+    console.log(`[3D] Generating from text: ${prompt.substring(0, 50)}...`);
+    
+    const hfResponse = await fetch(`https://api-inference.huggingface.co/models/${HF_MODELS.text_to_3d}`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${HF_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ 
+        inputs: prompt,
+        parameters: { num_inference_steps }
+      })
+    });
+    
+    if (!hfResponse.ok) {
+      const errorText = await hfResponse.text();
+      // Try alternative model if primary fails
+      console.log(`[3D] Primary model failed, trying alternative...`);
+      
+      const altResponse = await fetch(`https://api-inference.huggingface.co/models/${HF_MODELS.text_to_3d_alt}`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${HF_API_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ inputs: prompt })
+      });
+      
+      if (!altResponse.ok) {
+        throw new Error(`3D generation failed: ${errorText}`);
+      }
+      
+      const modelData = await altResponse.arrayBuffer();
+      const modelPath = path.join(DATA_DIR, `model_${requestId}.ply`);
+      fs.writeFileSync(modelPath, Buffer.from(modelData));
+      
+      logRequest({
+        id: requestId, model: 'inno-ai-3d-gen', source: 'api', apiKey: req.apiKey,
+        promptPreview: prompt.substring(0, 100), type: '3d_generation',
+        latency: Date.now() - startTime, status: 'success'
+      });
+      
+      res.json({
+        created: Math.floor(Date.now() / 1000),
+        data: [{ url: `/data/model_${requestId}.ply`, format: 'ply' }]
+      });
+      return;
+    }
+    
+    const modelData = await hfResponse.arrayBuffer();
+    const modelPath = path.join(DATA_DIR, `model_${requestId}.glb`);
+    fs.writeFileSync(modelPath, Buffer.from(modelData));
+    
+    const latency = Date.now() - startTime;
+    
+    logRequest({
+      id: requestId, model: 'inno-ai-3d-gen', source: 'api', apiKey: req.apiKey,
+      promptPreview: prompt.substring(0, 100), type: '3d_generation',
+      latency, status: 'success'
+    });
+    
+    res.json({
+      created: Math.floor(Date.now() / 1000),
+      data: [{ url: `/data/model_${requestId}.glb`, format: 'glb' }]
+    });
+    
+  } catch (e) {
+    console.error(`[3D] Error: ${e.message}`);
+    logRequest({
+      id: requestId, model: 'inno-ai-3d-gen', source: 'api', apiKey: req.apiKey,
+      promptPreview: prompt?.substring(0, 100), error: e.message,
+      latency: Date.now() - startTime, status: 'error', type: '3d_generation'
+    });
+    res.status(500).json({ error: '3D generation failed', message: e.message });
+  }
+});
+
+// Image to 3D
+app.post('/v1/3d/image-to-3d', authenticate, async (req, res) => {
+  const { image, format = 'glb' } = req.body;
+  const startTime = Date.now();
+  const requestId = uuidv4();
+  
+  if (!image) {
+    return res.status(400).json({ error: 'image (base64 or URL) is required' });
+  }
+
+  try {
+    console.log(`[3D] Converting image to 3D...`);
+    
+    // Handle base64 or URL
+    let imageData;
+    if (image.startsWith('http')) {
+      // Fetch image from URL
+      const imgResponse = await fetch(image);
+      imageData = Buffer.from(await imgResponse.arrayBuffer());
+    } else {
+      // Base64 image
+      imageData = Buffer.from(image.replace(/^data:image\/\w+;base64,/, ''), 'base64');
+    }
+    
+    const hfResponse = await fetch(`https://api-inference.huggingface.co/models/${HF_MODELS.image_to_3d}`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${HF_API_KEY}`,
+        'Content-Type': 'application/octet-stream'
+      },
+      body: imageData
+    });
+    
+    if (!hfResponse.ok) {
+      const errorText = await hfResponse.text();
+      
+      // Try alternative model
+      console.log(`[3D] Primary model failed, trying Zero123+...`);
+      
+      const altResponse = await fetch(`https://api-inference.huggingface.co/models/${HF_MODELS.image_to_3d_alt}`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${HF_API_KEY}`,
+          'Content-Type': 'application/octet-stream'
+        },
+        body: imageData
+      });
+      
+      if (!altResponse.ok) {
+        throw new Error(`Image to 3D conversion failed: ${errorText}`);
+      }
+      
+      // Zero123+ returns multiple view images, save them
+      const viewsData = await altResponse.arrayBuffer();
+      const viewsPath = path.join(DATA_DIR, `views_${requestId}.png`);
+      fs.writeFileSync(viewsPath, Buffer.from(viewsData));
+      
+      logRequest({
+        id: requestId, model: 'inno-ai-3d-convert', source: 'api', apiKey: req.apiKey,
+        type: 'image_to_3d', latency: Date.now() - startTime, status: 'success'
+      });
+      
+      res.json({
+        created: Math.floor(Date.now() / 1000),
+        data: [{ 
+          url: `/data/views_${requestId}.png`, 
+          format: 'multiview',
+          note: 'Multi-view images for 3D reconstruction'
+        }]
+      });
+      return;
+    }
+    
+    const modelData = await hfResponse.arrayBuffer();
+    const modelPath = path.join(DATA_DIR, `model_${requestId}.glb`);
+    fs.writeFileSync(modelPath, Buffer.from(modelData));
+    
+    const latency = Date.now() - startTime;
+    
+    logRequest({
+      id: requestId, model: 'inno-ai-3d-convert', source: 'api', apiKey: req.apiKey,
+      type: 'image_to_3d', latency, status: 'success'
+    });
+    
+    res.json({
+      created: Math.floor(Date.now() / 1000),
+      data: [{ url: `/data/model_${requestId}.glb`, format: 'glb' }]
+    });
+    
+  } catch (e) {
+    console.error(`[3D] Error: ${e.message}`);
+    logRequest({
+      id: requestId, model: 'inno-ai-3d-convert', source: 'api', apiKey: req.apiKey,
+      error: e.message, latency: Date.now() - startTime, status: 'error', type: 'image_to_3d'
+    });
+    res.status(500).json({ error: 'Image to 3D conversion failed', message: e.message });
+  }
+});
+
 // ==================== USAGE & MODELS ====================
 
 // Get usage for API key
@@ -701,13 +942,20 @@ app.get('/v1/models', authenticate, (req, res) => {
   res.json({
     object: 'list',
     data: [
-      { id: 'inno-ai-boyong-4.5', object: 'model', owned_by: 'innovatehub', capabilities: ['chat', 'function_calling'] },
-      { id: 'inno-ai-boyong-4.0', object: 'model', owned_by: 'innovatehub', capabilities: ['chat'] },
-      { id: 'inno-ai-boyong-mini', object: 'model', owned_by: 'innovatehub', capabilities: ['chat'] },
-      { id: 'inno-ai-vision-xl', object: 'model', owned_by: 'innovatehub', capabilities: ['image_generation'] },
-      { id: 'inno-ai-voice-1', object: 'model', owned_by: 'innovatehub', capabilities: ['text_to_speech'] },
-      { id: 'inno-ai-whisper-1', object: 'model', owned_by: 'innovatehub', capabilities: ['speech_to_text'] },
-      { id: 'inno-ai-embed-1', object: 'model', owned_by: 'innovatehub', capabilities: ['embeddings'] }
+      // Chat models
+      { id: 'inno-ai-boyong-4.5', object: 'model', owned_by: 'innovatehub', capabilities: ['chat', 'function_calling'], description: 'Most capable chat model' },
+      { id: 'inno-ai-boyong-4.0', object: 'model', owned_by: 'innovatehub', capabilities: ['chat'], description: 'Balanced chat model' },
+      { id: 'inno-ai-boyong-mini', object: 'model', owned_by: 'innovatehub', capabilities: ['chat'], description: 'Fast chat model' },
+      // Image models
+      { id: 'inno-ai-vision-xl', object: 'model', owned_by: 'innovatehub', capabilities: ['image_generation'], description: 'Stable Diffusion XL for image generation' },
+      // Audio models
+      { id: 'inno-ai-voice-1', object: 'model', owned_by: 'innovatehub', capabilities: ['text_to_speech'], description: 'Neural text-to-speech' },
+      { id: 'inno-ai-whisper-1', object: 'model', owned_by: 'innovatehub', capabilities: ['speech_to_text'], description: 'Whisper for transcription' },
+      // Embedding models
+      { id: 'inno-ai-embed-1', object: 'model', owned_by: 'innovatehub', capabilities: ['embeddings'], description: 'Text embeddings for RAG/search' },
+      // 3D models
+      { id: 'inno-ai-3d-gen', object: 'model', owned_by: 'innovatehub', capabilities: ['text_to_3d'], description: 'Generate 3D models from text (Shap-E)' },
+      { id: 'inno-ai-3d-convert', object: 'model', owned_by: 'innovatehub', capabilities: ['image_to_3d'], description: 'Convert 2D images to 3D models (TripoSR)' }
     ]
   });
 });

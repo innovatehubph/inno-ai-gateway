@@ -79,6 +79,13 @@
             <li>• <code>inno-ai-embed-1</code> - Embeddings</li>
           </ul>
         </div>
+        <div class="bg-white/5 rounded-xl p-4 md:col-span-2">
+          <h3 class="font-medium text-pink-400">3D Models</h3>
+          <ul class="mt-2 space-y-1 text-sm text-gray-400">
+            <li>• <code>inno-ai-3d-gen</code> - Text to 3D (Shap-E)</li>
+            <li>• <code>inno-ai-3d-convert</code> - Image to 3D (TripoSR)</li>
+          </ul>
+        </div>
       </div>
     </section>
 
@@ -204,6 +211,50 @@
         </div>
         <div class="p-4">
           <p class="text-gray-400 text-sm">List all available models and their capabilities.</p>
+        </div>
+      </div>
+
+      <!-- Text to 3D -->
+      <div class="glass rounded-2xl overflow-hidden">
+        <div class="flex items-center gap-3 p-4 border-b border-white/5">
+          <span class="method-post px-3 py-1 rounded-lg text-xs font-bold">POST</span>
+          <code class="text-sm">/v1/3d/generations</code>
+          <span class="text-gray-500 text-sm ml-auto">Text to 3D</span>
+        </div>
+        <div class="p-4">
+          <p class="text-gray-400 text-sm mb-4">Generate 3D models from text descriptions using Shap-E.</p>
+          <pre class="bg-black/30 rounded-xl p-4 text-sm overflow-x-auto"><code class="text-gray-300">{
+  "prompt": "a cute robot character",
+  "format": "glb"
+}</code></pre>
+          <h4 class="text-sm font-medium mt-4 mb-2">Example (cURL)</h4>
+          <pre class="bg-black/30 rounded-xl p-4 text-sm overflow-x-auto"><code class="text-green-400">curl -X POST https://ai-gateway.innoserver.cloud/v1/3d/generations \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -d '{"prompt": "a medieval sword"}'</code></pre>
+          <p class="text-gray-500 text-xs mt-4">Returns URL to downloadable .glb file</p>
+        </div>
+      </div>
+
+      <!-- Image to 3D -->
+      <div class="glass rounded-2xl overflow-hidden">
+        <div class="flex items-center gap-3 p-4 border-b border-white/5">
+          <span class="method-post px-3 py-1 rounded-lg text-xs font-bold">POST</span>
+          <code class="text-sm">/v1/3d/image-to-3d</code>
+          <span class="text-gray-500 text-sm ml-auto">Image to 3D</span>
+        </div>
+        <div class="p-4">
+          <p class="text-gray-400 text-sm mb-4">Convert 2D images to 3D models using TripoSR.</p>
+          <pre class="bg-black/30 rounded-xl p-4 text-sm overflow-x-auto"><code class="text-gray-300">{
+  "image": "https://example.com/image.png",  // or base64
+  "format": "glb"
+}</code></pre>
+          <h4 class="text-sm font-medium mt-4 mb-2">Example with Base64</h4>
+          <pre class="bg-black/30 rounded-xl p-4 text-sm overflow-x-auto"><code class="text-green-400">curl -X POST https://ai-gateway.innoserver.cloud/v1/3d/image-to-3d \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -d '{"image": "data:image/png;base64,iVBORw0KGgo..."}'</code></pre>
+          <p class="text-gray-500 text-xs mt-4">Best results with single-object images on clean backgrounds</p>
         </div>
       </div>
     </section>
