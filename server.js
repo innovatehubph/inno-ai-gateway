@@ -762,9 +762,9 @@ app.post('/v1/embeddings', authenticate, async (req, res) => {
 
 // ==================== 3D GENERATION ENDPOINTS ====================
 
-// Text to 3D (using Replicate's Shap-E)
+// Text to 3D (using Tencent Hunyuan-3D 3.1)
 app.post('/v1/3d/generations', authenticate, async (req, res) => {
-  const { prompt, format = 'glb', guidance_scale = 15 } = req.body;
+  const { prompt, format = 'glb', steps = 25 } = req.body;
   const startTime = Date.now();
   const requestId = uuidv4();
   
@@ -784,14 +784,15 @@ app.post('/v1/3d/generations', authenticate, async (req, res) => {
   try {
     console.log(`[3D] Generating from text: ${prompt.substring(0, 50)}...`);
     
-    // Use Replicate's Shap-E model
+    // Use Tencent Hunyuan-3D 3.1 (latest, best quality)
     const output = await replicate.run(
-      "cjwbw/shap-e:5957069d5c509126a73c7cb68abcddbb985aeefa4d318e7c63ec1352ce6da68c",
+      "tencent/hunyuan-3d-3.1:a2838628b41a2e0ee2eb19b3ea98a40d75f8d7639bf5a1ddd37ea299bb334854",
       {
         input: {
           prompt: prompt,
-          guidance_scale: guidance_scale,
-          num_inference_steps: 64
+          generate_type: "Normal",  // Normal = with textures, Geometry = white model
+          enable_pbr: true,
+          face_count: 100000
         }
       }
     );
@@ -802,11 +803,12 @@ app.post('/v1/3d/generations', authenticate, async (req, res) => {
     // Output is a URL to the 3D file
     let modelUrl = output;
     if (Array.isArray(output)) modelUrl = output[0];
+    if (typeof output === 'object' && output.mesh) modelUrl = output.mesh;
     
     // Download and save locally
     const modelResponse = await fetch(modelUrl);
     const modelData = await modelResponse.arrayBuffer();
-    const ext = modelUrl.includes('.ply') ? 'ply' : 'glb';
+    const ext = modelUrl.includes('.obj') ? 'obj' : modelUrl.includes('.ply') ? 'ply' : 'glb';
     const modelPath = path.join(DATA_DIR, `model_${requestId}.${ext}`);
     fs.writeFileSync(modelPath, Buffer.from(modelData));
     
@@ -836,9 +838,9 @@ app.post('/v1/3d/generations', authenticate, async (req, res) => {
   }
 });
 
-// Image to 3D (using Replicate's TripoSR)
+// Image to 3D (using Tencent Hunyuan-3D 3.1)
 app.post('/v1/3d/image-to-3d', authenticate, async (req, res) => {
-  const { image, format = 'glb', foreground_ratio = 0.85 } = req.body;
+  const { image, format = 'glb', steps = 25 } = req.body;
   const startTime = Date.now();
   const requestId = uuidv4();
   
@@ -864,14 +866,15 @@ app.post('/v1/3d/image-to-3d', authenticate, async (req, res) => {
       imageInput = `data:image/png;base64,${image}`;
     }
     
-    // Use Replicate's TripoSR model
+    // Use Tencent Hunyuan-3D 3.1 (supports image-to-3D)
     const output = await replicate.run(
-      "camenduru/triposr:746f7761cdf9f66776c1d0e8a1be3d12f6932f6bde53dbe94b36449b7c2c64e7",
+      "tencent/hunyuan-3d-3.1:a2838628b41a2e0ee2eb19b3ea98a40d75f8d7639bf5a1ddd37ea299bb334854",
       {
         input: {
           image: imageInput,
-          foreground_ratio: foreground_ratio,
-          output_format: "glb"
+          generate_type: "Normal",  // Normal = with textures
+          enable_pbr: true,
+          face_count: 100000
         }
       }
     );
@@ -879,14 +882,17 @@ app.post('/v1/3d/image-to-3d', authenticate, async (req, res) => {
     const latency = Date.now() - startTime;
     console.log(`[3D] Converted in ${latency}ms`);
     
-    // Output is a URL to the 3D file
+    // Output could be URL or object with mesh property
     let modelUrl = output;
     if (Array.isArray(output)) modelUrl = output[0];
+    if (typeof output === 'object' && output.mesh) modelUrl = output.mesh;
+    if (typeof output === 'object' && output.glb) modelUrl = output.glb;
     
     // Download and save locally
     const modelResponse = await fetch(modelUrl);
     const modelData = await modelResponse.arrayBuffer();
-    const modelPath = path.join(DATA_DIR, `model_${requestId}.glb`);
+    const ext = modelUrl.includes('.obj') ? 'obj' : modelUrl.includes('.ply') ? 'ply' : 'glb';
+    const modelPath = path.join(DATA_DIR, `model_${requestId}.${ext}`);
     fs.writeFileSync(modelPath, Buffer.from(modelData));
     
     logRequest({
@@ -897,8 +903,8 @@ app.post('/v1/3d/image-to-3d', authenticate, async (req, res) => {
     res.json({
       created: Math.floor(Date.now() / 1000),
       data: [{ 
-        url: `/data/model_${requestId}.glb`, 
-        format: 'glb',
+        url: `/data/model_${requestId}.${ext}`, 
+        format: ext,
         external_url: modelUrl
       }]
     });

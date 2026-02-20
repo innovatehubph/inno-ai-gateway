@@ -116,5 +116,45 @@
     "status": "error",
     "type": "3d_generation",
     "timestamp": "2026-02-20T13:24:35.355Z"
+  },
+  {
+    "id": "9a966ac4-2284-4a89-8512-c2e83aefa1f5",
+    "model": "inno-ai-boyong-4.5",
+    "source": "api",
+    "apiKey": "masipag-ai-gateway-2026",
+    "promptPreview": "Respond with only \"OK\" if working.",
+    "responsePreview": "OK",
+    "promptTokens": 10,
+    "completionTokens": 28,
+    "totalTokens": 20741,
+    "latency": 4290,
+    "status": "success",
+    "fullPrompt": "Respond with only \"OK\" if working.",
+    "fullResponse": "OK",
+    "timestamp": "2026-02-20T13:54:02.655Z"
+  },
+  {
+    "id": "65c5d283-dc06-4716-8c2f-ecff6dbac5f4",
+    "model": "inno-ai-3d-gen",
+    "source": "api",
+    "apiKey": "masipag-ai-gateway-2026",
+    "promptPreview": "coffee beans pile",
+    "error": "Request to https://api.replicate.com/v1/predictions failed with status 422 Unprocessable Entity: {\"detail\":\"- input.generate_type: generate_type must be one of the following: \\\"Normal\\\", \\\"Geometry\\\"\\n\",\"status\":422,\"title\":\"Input validation failed\",\"invalid_fields\":[{\"type\":\"enum\",\"field\":\"input.generate_type\",\"description\":\"generate_type must be one of the following: \\\"Normal\\\", \\\"Geometry\\\"\"}]}\n.",
+    "latency": 746,
+    "status": "error",
+    "type": "3d_generation",
+    "timestamp": "2026-02-20T14:01:44.509Z"
+  },
+  {
+    "id": "a7ce9b7c-1be3-4905-91eb-07975e6d6f17",
+    "model": "inno-ai-3d-gen",
+    "source": "api",
+    "apiKey": "masipag-ai-gateway-2026",
+    "promptPreview": "a pile of roasted coffee beans",
+    "error": "modelUrl.includes is not a function",
+    "latency": 178086,
+    "status": "error",
+    "type": "3d_generation",
+    "timestamp": "2026-02-20T14:05:31.606Z"
   }
 ]

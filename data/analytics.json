@@ -1,20 +1,21 @@
 {
-  "totalRequests": 10,
-  "totalTokens": 104630,
-  "totalPromptTokens": 50,
-  "totalCompletionTokens": 1077,
+  "totalRequests": 13,
+  "totalTokens": 125371,
+  "totalPromptTokens": 60,
+  "totalCompletionTokens": 1105,
   "requestsByModel": {
-    "inno-ai-boyong-4.5": 4,
+    "inno-ai-boyong-4.5": 5,
     "inno-ai-boyong-mini": 1,
     "inno-ai-vision-xl": 4,
-    "inno-ai-3d-gen": 1
+    "inno-ai-3d-gen": 3
   },
   "requestsByHour": {
     "2026-02-20T12": 5,
-    "2026-02-20T13": 5
+    "2026-02-20T13": 6,
+    "2026-02-20T14": 2
   },
   "requestsByDay": {
-    "2026-02-20": 10
+    "2026-02-20": 13
   },
   "startTime": 1771591312975
 }
