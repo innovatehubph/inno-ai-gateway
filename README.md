@@ -1,6 +1,6 @@
-# 🚀 InnovateHub AI Gateway v3.3
+# 🚀 InnoAI Platform v3.3
 
-> Universal AI Gateway with OAuth-based authentication and Philippine-market pricing for cost-effective AI model access. Similar to Replicate and Fal.ai, built for the Philippine market.
+> InnoAI - The Philippine AI Model Marketplace with OAuth-based authentication and Philippine-market pricing for cost-effective AI model access. Similar to Replicate and Fal.ai, built for the Philippine market.
 
 [![Status](https://img.shields.io/badge/status-production-green.svg)]()
 [![Version](https://img.shields.io/badge/version-3.3.0-blue.svg)]()
@@ -269,7 +269,7 @@ npm run format
 
 ## 📝 Changelog
 
-### v3.3.0 (2026-02-21) - MAJOR RELEASE
+### v4.0.0 (2026-02-21) - MAJOR RELEASE
 - ✨ **Customer Platform** - Full customer auth, dashboard, and API management
 - ✨ **Philippine Market Pricing** - PHP-based pricing, competitive with Replicate/Fal.ai
 - ✨ **JWT Authentication** - Secure customer authentication system
