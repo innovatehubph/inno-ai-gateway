@@ -302,6 +302,66 @@
       mask-composite: exclude;
     }
     
+    /* Rotating Shiny Silver Border */
+    .silver-border {
+      position: relative;
+      border-radius: 16px;
+      overflow: hidden;
+    }
+    
+    .silver-border::before {
+      content: '';
+      position: absolute;
+      inset: -2px;
+      background: conic-gradient(
+        from 0deg,
+        #C0C0C0,
+        #E8E8E8,
+        #FFFFFF,
+        #E8E8E8,
+        #C0C0C0,
+        #A0A0A0,
+        #C0C0C0
+      );
+      border-radius: 18px;
+      z-index: -1;
+      animation: rotate-silver 4s linear infinite;
+    }
+    
+    .silver-border::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(192, 192, 192, 0.1), transparent);
+      border-radius: 16px;
+      pointer-events: none;
+    }
+    
+    @keyframes rotate-silver {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    
+    /* 3D Card Effect */
+    .card-3d {
+      transform-style: preserve-3d;
+      transition: transform 0.5s ease;
+    }
+    
+    .card-3d:hover {
+      transform: rotateY(10deg) rotateX(5deg) translateZ(20px);
+    }
+    
+    /* Glow Animation */
+    .glow-animate {
+      animation: glow-pulse 2s ease-in-out infinite;
+    }
+    
+    @keyframes glow-pulse {
+      0%, 100% { box-shadow: 0 0 20px rgba(87, 49, 122, 0.4), 0 0 40px rgba(87, 49, 122, 0.2); }
+      50% { box-shadow: 0 0 30px rgba(87, 49, 122, 0.6), 0 0 60px rgba(87, 49, 122, 0.3); }
+    }
+    
     /* Filipino Pride */
     .filipino-gradient {
       background: linear-gradient(135deg, #0038A8, #CE1126, #FCD116);
@@ -383,6 +443,9 @@
     <!-- Particle Canvas -->
     <canvas id="particle-canvas"></canvas>
     
+    <!-- 3D Scene Container -->
+    <div id="three-container" class="absolute inset-0 pointer-events-none z-0 opacity-60"></div>
+    
     <!-- Floating Elements -->
     <div class="absolute inset-0 pointer-events-none overflow-hidden">
       <div class="absolute top-20 left-10 w-72 h-72 bg-primary/20 rounded-full blur-3xl float-element"></div>
@@ -391,7 +454,7 @@
     </div>
     
     <!-- Hero Content -->
-    <div class="relative z-10 max-w-7xl mx-auto px-6 py-32 text-center">
+    <div class="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-32 text-center overflow-hidden">
       <!-- Badge -->
       <div class="hero-badge inline-flex items-center gap-2 px-4 py-2 rounded-full glass mb-8 opacity-0">
         <span class="w-2 h-2 bg-success rounded-full animate-pulse"></span>
@@ -503,7 +566,7 @@
       <!-- Features Grid -->
       <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
         <!-- Feature 1 -->
-        <div class="feature-card glass rounded-2xl p-8 section-reveal group cursor-pointer">
+        <div class="feature-card glass silver-border rounded-2xl p-8 section-reveal group cursor-pointer glow-animate">
           <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-accent/20 to-accent/5 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
             <i data-lucide="message-square" class="w-7 h-7 text-accent"></i>
           </div>
@@ -1178,6 +1241,148 @@
         }
       });
     });
+    
+    // Three.js 3D Scene
+    (function() {
+      const container = document.getElementById('three-container');
+      if (!container) return;
+      
+      // Scene setup
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+      const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      container.appendChild(renderer.domElement);
+      
+      // Create Neural Network Sphere
+      const group = new THREE.Group();
+      scene.add(group);
+      
+      // Core sphere
+      const coreGeometry = new THREE.IcosahedronGeometry(2, 2);
+      const coreMaterial = new THREE.MeshBasicMaterial({
+        color: 0x57317A,
+        wireframe: true,
+        transparent: true,
+        opacity: 0.6
+      });
+      const core = new THREE.Mesh(coreGeometry, coreMaterial);
+      group.add(core);
+      
+      // Outer sphere
+      const outerGeometry = new THREE.IcosahedronGeometry(3.5, 1);
+      const outerMaterial = new THREE.MeshBasicMaterial({
+        color: 0x00D9FF,
+        wireframe: true,
+        transparent: true,
+        opacity: 0.3
+      });
+      const outer = new THREE.Mesh(outerGeometry, outerMaterial);
+      group.add(outer);
+      
+      // Nodes (particles)
+      const nodesGeometry = new THREE.BufferGeometry();
+      const nodeCount = 50;
+      const positions = new Float32Array(nodeCount * 3);
+      
+      for (let i = 0; i < nodeCount * 3; i += 3) {
+        const theta = Math.random() * Math.PI * 2;
+        const phi = Math.acos((Math.random() * 2) - 1);
+        const radius = 2.5 + Math.random() * 2;
+        
+        positions[i] = radius * Math.sin(phi) * Math.cos(theta);
+        positions[i + 1] = radius * Math.sin(phi) * Math.sin(theta);
+        positions[i + 2] = radius * Math.cos(phi);
+      }
+      
+      nodesGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      
+      const nodesMaterial = new THREE.PointsMaterial({
+        color: 0xFFFFFF,
+        size: 0.08,
+        transparent: true,
+        opacity: 0.8
+      });
+      
+      const nodes = new THREE.Points(nodesGeometry, nodesMaterial);
+      group.add(nodes);
+      
+      // Lines connecting nodes
+      const linesMaterial = new THREE.LineBasicMaterial({
+        color: 0x57317A,
+        transparent: true,
+        opacity: 0.2
+      });
+      
+      for (let i = 0; i < nodeCount; i++) {
+        for (let j = i + 1; j < nodeCount; j++) {
+          const distance = Math.sqrt(
+            Math.pow(positions[i * 3] - positions[j * 3], 2) +
+            Math.pow(positions[i * 3 + 1] - positions[j * 3 + 1], 2) +
+            Math.pow(positions[i * 3 + 2] - positions[j * 3 + 2], 2)
+          );
+          
+          if (distance < 2) {
+            const lineGeometry = new THREE.BufferGeometry().setFromPoints([
+              new THREE.Vector3(positions[i * 3], positions[i * 3 + 1], positions[i * 3 + 2]),
+              new THREE.Vector3(positions[j * 3], positions[j * 3 + 1], positions[j * 3 + 2])
+            ]);
+            const line = new THREE.Line(lineGeometry, linesMaterial);
+            group.add(line);
+          }
+        }
+      }
+      
+      // Lighting
+      const ambientLight = new THREE.AmbientLight(0x404040, 2);
+      scene.add(ambientLight);
+      
+      const pointLight = new THREE.PointLight(0x57317A, 2, 100);
+      pointLight.position.set(10, 10, 10);
+      scene.add(pointLight);
+      
+      camera.position.z = 8;
+      
+      // Animation
+      let mouseX = 0;
+      let mouseY = 0;
+      
+      document.addEventListener('mousemove', (e) => {
+        mouseX = (e.clientX / window.innerWidth) * 2 - 1;
+        mouseY = -(e.clientY / window.innerHeight) * 2 + 1;
+      });
+      
+      function animate() {
+        requestAnimationFrame(animate);
+        
+        // Rotate core
+        core.rotation.x += 0.003;
+        core.rotation.y += 0.005;
+        
+        // Rotate outer sphere in opposite direction
+        outer.rotation.x -= 0.002;
+        outer.rotation.y -= 0.003;
+        
+        // Rotate nodes
+        nodes.rotation.y += 0.001;
+        
+        // Mouse interaction
+        group.rotation.x += (mouseY * 0.2 - group.rotation.x) * 0.05;
+        group.rotation.y += (mouseX * 0.2 - group.rotation.y) * 0.05;
+        
+        renderer.render(scene, camera);
+      }
+      
+      animate();
+      
+      // Handle resize
+      window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+    })();
   </script>
 </body>
 </html>
