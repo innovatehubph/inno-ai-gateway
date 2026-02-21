@@ -59,6 +59,10 @@ tags:
     description: Admin dashboard and analytics
   - name: OAuth
     description: OAuth account management and authentication
+  - name: Billing
+    description: DirectPay payment gateway integration
+  - name: Webhooks
+    description: Webhook endpoints for payment notifications
 
 security:
   - BearerAuth: []
@@ -754,6 +758,204 @@ paths:
                   expiresAt:
                     type: integer
 
+  # ==================== BILLING ====================
+  /admin/billing/config:
+    get:
+      tags: [Billing]
+      summary: Get DirectPay configuration
+      description: Retrieve current billing configuration including environment and credentials status
+      operationId: getBillingConfig
+      security:
+        - AdminAuth: []
+      responses:
+        '200':
+          description: Billing configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BillingConfigResponse'
+
+  /admin/billing/environment:
+    post:
+      tags: [Billing]
+      summary: Set billing environment
+      description: Toggle between sandbox and production environments
+      operationId: setBillingEnvironment
+      security:
+        - AdminAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [environment]
+              properties:
+                environment:
+                  type: string
+                  enum: [sandbox, production]
+                  description: Environment to use
+      responses:
+        '200':
+          description: Environment updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BillingEnvironmentResponse'
+
+  /admin/billing/credentials:
+    post:
+      tags: [Billing]
+      summary: Save production credentials
+      description: Store production DirectPay credentials securely
+      operationId: saveBillingCredentials
+      security:
+        - AdminAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [merchantId, merchantKey]
+              properties:
+                merchantId:
+                  type: string
+                  description: DirectPay merchant ID
+                merchantKey:
+                  type: string
+                  description: DirectPay merchant key
+                apiBase:
+                  type: string
+                  description: API base URL
+                dashboard:
+                  type: string
+                  description: Dashboard URL
+      responses:
+        '200':
+          description: Credentials saved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BillingCredentialsResponse'
+
+  /admin/billing/test:
+    post:
+      tags: [Billing]
+      summary: Test DirectPay connection
+      description: Test connectivity to DirectPay API
+      operationId: testBillingConnection
+      security:
+        - AdminAuth: []
+      responses:
+        '200':
+          description: Connection test result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BillingTestResponse'
+
+  /admin/billing/payment:
+    post:
+      tags: [Billing]
+      summary: Create payment checkout
+      description: Create a new DirectPay checkout session
+      operationId: createBillingPayment
+      security:
+        - AdminAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [amount]
+              properties:
+                amount:
+                  type: number
+                  minimum: 100
+                  description: Payment amount in PHP (minimum ₱100)
+                description:
+                  type: string
+                  description: Payment description
+                metadata:
+                  type: object
+                  description: Additional metadata
+      responses:
+        '200':
+          description: Checkout created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BillingPaymentResponse'
+
+  /admin/billing/transactions:
+    get:
+      tags: [Billing]
+      summary: List transactions
+      description: Get recent payment transactions
+      operationId: listBillingTransactions
+      security:
+        - AdminAuth: []
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 100
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: Transaction list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BillingTransactionsResponse'
+
+  # ==================== WEBHOOKS ====================
+  /webhooks/directpay:
+    post:
+      tags: [Webhooks]
+      summary: DirectPay webhook handler
+      description: Receive payment status updates from DirectPay
+      operationId: handleDirectPayWebhook
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [event, data]
+              properties:
+                event:
+                  type: string
+                  enum: [payment.success, payment.failed, payment.cancelled, payment.refunded]
+                data:
+                  type: object
+                  properties:
+                    payment_id:
+                      type: string
+                    amount:
+                      type: number
+                    currency:
+                      type: string
+                    metadata:
+                      type: object
+      responses:
+        '200':
+          description: Webhook processed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+
 components:
   securitySchemes:
     BearerAuth:
@@ -1143,3 +1345,112 @@ components:
           type: string
         error:
           type: string
+
+    # Billing
+    BillingConfigResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        config:
+          type: object
+          properties:
+            environment:
+              type: string
+              enum: [sandbox, production]
+            apiBase:
+              type: string
+            dashboard:
+              type: string
+            merchantId:
+              type: string
+            minAmount:
+              type: integer
+            currency:
+              type: string
+            hasProductionCredentials:
+              type: boolean
+
+    BillingEnvironmentResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        config:
+          $ref: '#/components/schemas/BillingConfigResponse'
+
+    BillingCredentialsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        config:
+          $ref: '#/components/schemas/BillingConfigResponse'
+
+    BillingTestResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        status:
+          type: integer
+        environment:
+          type: string
+        message:
+          type: string
+        error:
+          type: string
+
+    BillingPaymentResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        paymentId:
+          type: string
+        checkoutUrl:
+          type: string
+        amount:
+          type: number
+        currency:
+          type: string
+        error:
+          type: string
+
+    BillingTransactionsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        transactions:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              amount:
+                type: number
+              currency:
+                type: string
+              description:
+                type: string
+              status:
+                type: string
+                enum: [pending, completed, failed, cancelled, refunded]
+              checkout_url:
+                type: string
+              created_at:
+                type: string
+              completed_at:
+                type: string
+        total:
+          type: integer
+        limit:
+          type: integer
+        offset:
+          type: integer

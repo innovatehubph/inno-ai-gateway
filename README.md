@@ -28,6 +28,18 @@
 - **Auto-refresh** - Tokens refresh automatically before expiry
 - **Admin Access** - Secure dashboard with role-based access
 
+### 💳 Billing & Payments
+- **DirectPay Integration** - Philippine payment gateway (sandbox + production)
+- **AES-256 Encryption** - Secure payment data encryption
+- **Transaction History** - Full payment tracking and receipts
+- **Webhook Support** - Real-time payment status updates
+- **Multi-environment** - Test in sandbox, deploy to production
+
+### 🎨 Branding
+- **Official Logo** - InnovateHub branded admin interface
+- **Custom Domain Support** - Deploy on your own domain
+- **White-label Ready** - Professional appearance for clients
+
 ## 🚀 Quick Start
 
 ### Prerequisites
@@ -75,6 +87,9 @@ GOOGLE_CLIENT_SECRET=your-google-client-secret
 
 # OpenClaw (optional)
 OPENCLAW_AUTH_PROFILE=anthropic:claude-cli
+
+# DirectPay Billing (optional - auto-configured in admin UI)
+# Credentials are stored in config/directpay.json
 ```
 
 ## 📚 API Documentation

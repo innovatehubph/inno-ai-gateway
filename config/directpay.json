@@ -1,0 +1,11 @@
+{
+  "environment": "sandbox",
+  "apiBase": "https://sandbox.directpayph.com/api",
+  "dashboard": "https://sandbox.directpayph.com",
+  "merchantId": "TEST5VMFBNLCWJKD",
+  "merchantKey": "KEYYS4A4OWZL4SV5",
+  "username": "test_flsz2hnw",
+  "password": "P8oGxu9k3zkxdrgQ",
+  "minAmount": 100,
+  "currency": "PHP"
+}

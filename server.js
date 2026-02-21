@@ -436,13 +436,15 @@ const oauthStates = new Map(); // Temporary storage for PKCE states
 const GOOGLE_OAUTH = {
   clientId: process.env.GOOGLE_CLIENT_ID || '',
   clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
-  redirectUri: 'http://localhost:51121/oauth/callback',
+  redirectUri: 'http://localhost:51121/oauth-callback',
   authEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
   tokenEndpoint: 'https://oauth2.googleapis.com/token',
   scopes: [
     'https://www.googleapis.com/auth/userinfo.email',
     'https://www.googleapis.com/auth/userinfo.profile',
     'https://www.googleapis.com/auth/cloud-platform',
+    'https://www.googleapis.com/auth/cclog',
+    'https://www.googleapis.com/auth/experimentsandconfigs',
     'openid'
   ]
 };
@@ -497,8 +499,13 @@ function generateCodeChallenge(verifier) {
   return crypto.createHash('sha256').update(verifier).digest('base64url');
 }
 
-function generateState() {
-  return crypto.randomBytes(16).toString('hex');
+function generateState(verifier, projectId = null) {
+  // State format: base64url(JSON.stringify({verifier, projectId}))
+  const stateObj = {
+    verifier: verifier,
+    projectId: projectId || 'antigravity-project'
+  };
+  return Buffer.from(JSON.stringify(stateObj)).toString('base64url');
 }
 
 // Load accounts from file
@@ -778,7 +785,75 @@ async function callMoonshotChat(modelId, messages, temperature = 0.7, max_tokens
 }
 
 // Antigravity/OpenCode API - Uses OAuth credentials from OpenCode config
-function loadAntigravityCredentials() {
+
+// Auto-refresh token if needed
+async function refreshAntigravityToken(account, authPath) {
+  try {
+    if (!account.refreshToken) {
+      console.log('[ANTIGRAVITY] No refresh token available');
+      return null;
+    }
+    
+    console.log(`[ANTIGRAVITY] Auto-refreshing token for ${account.email}...`);
+    
+    const refreshResponse = await axios.post(
+      GOOGLE_OAUTH.tokenEndpoint,
+      new URLSearchParams({
+        grant_type: 'refresh_token',
+        refresh_token: account.refreshToken,
+        client_id: GOOGLE_OAUTH.clientId,
+        client_secret: GOOGLE_OAUTH.clientSecret
+      }).toString(),
+      {
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+      }
+    );
+    
+    const { access_token, expires_in } = refreshResponse.data;
+    const expiresAt = Date.now() + (expires_in * 1000);
+    
+    // Update account
+    account.accessToken = access_token;
+    account.expiresAt = expiresAt;
+    account.status = 'connected';
+    account.lastRefreshed = new Date().toISOString();
+    
+    // Save back to file
+    const data = JSON.parse(fs.readFileSync(authPath, 'utf8'));
+    if (data.accounts) {
+      // Find and update the account
+      for (const [accId, acc] of Object.entries(data.accounts)) {
+        if (acc.email === account.email) {
+          data.accounts[accId] = account;
+          break;
+        }
+      }
+    } else if (Array.isArray(data)) {
+      // Array format
+      const idx = data.findIndex(a => a.email === account.email);
+      if (idx >= 0) data[idx] = account;
+    }
+    
+    fs.writeFileSync(authPath, JSON.stringify(data, null, 2));
+    console.log(`[ANTIGRAVITY] Token auto-refreshed successfully, expires at ${new Date(expiresAt).toISOString()}`);
+    
+    return {
+      accessToken: access_token,
+      refreshToken: account.refreshToken,
+      projectId: account.projectId,
+      email: account.email,
+      expires: expiresAt
+    };
+  } catch (e) {
+    console.error('[ANTIGRAVITY] Auto-refresh failed:', e.message);
+    if (e.response) {
+      console.error('[ANTIGRAVITY] Response:', e.response.data);
+    }
+    return null;
+  }
+}
+
+async function loadAntigravityCredentials() {
   try {
     const authPath = '/root/.config/opencode/antigravity-accounts.json';
     if (!fs.existsSync(authPath)) {
@@ -807,11 +882,22 @@ function loadAntigravityCredentials() {
       return null;
     }
 
-    // Check if token is expired
-    if (account.expiresAt && account.expiresAt < Date.now()) {
-      console.log('[ANTIGRAVITY] Token expired, needs refresh');
-      // Could trigger refresh here via opencode-mcp
-      return null;
+    // Check if token is expired or expiring within 5 minutes
+    const fiveMinutes = 5 * 60 * 1000;
+    const isExpiringSoon = account.expiresAt && (account.expiresAt - Date.now()) < fiveMinutes;
+    const isExpired = account.expiresAt && account.expiresAt < Date.now();
+    
+    if (isExpired) {
+      console.log('[ANTIGRAVITY] Token expired, auto-refreshing...');
+      return await refreshAntigravityToken(account, authPath);
+    }
+    
+    if (isExpiringSoon) {
+      console.log('[ANTIGRAVITY] Token expiring soon, auto-refreshing in background...');
+      // Refresh in background but return current token for immediate use
+      refreshAntigravityToken(account, authPath).catch(e => 
+        console.error('[ANTIGRAVITY] Background refresh failed:', e.message)
+      );
     }
 
     return {
@@ -828,7 +914,7 @@ function loadAntigravityCredentials() {
 }
 
 async function callAntigravityChat(modelId, messages, temperature = 0.7, max_tokens = 4096) {
-  const creds = loadAntigravityCredentials();
+  const creds = await loadAntigravityCredentials();
   if (!creds) {
     throw new Error('Antigravity credentials not found. Please authenticate with openclaw or check AUTH_PROFILES_PATH.');
   }
@@ -2611,7 +2697,7 @@ app.post('/admin/oauth/url', adminAuth, async (req, res) => {
     // Generate PKCE parameters
     const codeVerifier = generateCodeVerifier();
     const codeChallenge = generateCodeChallenge(codeVerifier);
-    const state = generateState();
+    const state = generateState(codeVerifier);
     
     // Store state with verifier (5 min TTL)
     oauthStates.set(state, {
@@ -2654,20 +2740,37 @@ app.post('/admin/oauth/url', adminAuth, async (req, res) => {
 // Exchange OAuth code for tokens
 app.post('/admin/oauth/exchange', adminAuth, async (req, res) => {
   try {
-    const { code, state, callbackUrl, accountName } = req.body;
+    let { code, state, callbackUrl, accountName } = req.body;
+    
+    // If callbackUrl is provided, parse it to extract code and state
+    if (callbackUrl) {
+      try {
+        const url = new URL(callbackUrl);
+        // Always prefer values from callback URL if available
+        code = url.searchParams.get('code') || code;
+        state = url.searchParams.get('state') || state;
+        console.log('[OAUTH] Parsed callback URL:', { code: code?.substring(0, 20) + '...', state: state?.substring(0, 30) + '...' });
+      } catch (e) {
+        return res.status(400).json({ error: 'Invalid callback URL format' });
+      }
+    }
     
     if (!code || !state) {
-      return res.status(400).json({ error: 'code and state are required' });
+      return res.status(400).json({ error: 'code and state are required (or provide callbackUrl)' });
     }
     
-    // Retrieve stored state data
-    const stateData = oauthStates.get(state);
-    if (!stateData) {
-      return res.status(400).json({ error: 'Invalid or expired state' });
+    // Decode state to get verifier
+    let stateData;
+    try {
+      const decodedState = JSON.parse(Buffer.from(state, 'base64url').toString());
+      stateData = decodedState;
+    } catch (e) {
+      return res.status(400).json({ error: 'Invalid state format' });
     }
     
-    // Clean up used state
-    oauthStates.delete(state);
+    if (!stateData.verifier) {
+      return res.status(400).json({ error: 'Invalid state - no verifier found' });
+    }
     
     // Exchange code for tokens
     const tokenResponse = await axios.post(
@@ -2720,16 +2823,25 @@ app.post('/admin/oauth/exchange', adminAuth, async (req, res) => {
       projectId = email.split('@')[0].replace(/[^a-z0-9]/g, '') + '-project';
     }
     
-    // Generate unique account ID
-    const accountId = 'acc_' + crypto.randomBytes(8).toString('hex');
-    
     // Calculate expiration time
     const expiresAt = Date.now() + (expires_in * 1000);
     
     // Load existing accounts
     const accountsData = loadAccounts();
     
-    // Create new account
+    // Check if account with same email already exists
+    let existingAccountId = null;
+    for (const [accId, acc] of Object.entries(accountsData.accounts)) {
+      if (acc.email === email && acc.provider === stateData.provider) {
+        existingAccountId = accId;
+        break;
+      }
+    }
+    
+    // Generate account ID (reuse existing if found, otherwise create new)
+    const accountId = existingAccountId || ('acc_' + crypto.randomBytes(8).toString('hex'));
+    
+    // Create or update account
     const newAccount = {
       id: accountId,
       provider: stateData.provider,
@@ -2746,6 +2858,10 @@ app.post('/admin/oauth/exchange', adminAuth, async (req, res) => {
     // Save to accounts file
     accountsData.accounts[accountId] = newAccount;
     saveAccounts(accountsData);
+    
+    if (existingAccountId) {
+      console.log(`[OAUTH] Updated existing account: ${accountName} (${email})`);
+    }
     
     console.log(`[OAUTH] Account connected: ${accountName} (${email})`);
     
@@ -2892,6 +3008,194 @@ app.use('/data', express.static(DATA_DIR));
 // Serve admin UI
 app.get('/admin', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+});
+
+// ==================== DIRECTPAY BILLING API ====================
+const directpay = require('./lib/directpay');
+
+// Get DirectPay configuration
+app.get('/admin/billing/config', adminAuth, (req, res) => {
+  try {
+    res.json({
+      success: true,
+      config: directpay.getPublicConfig()
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Set environment (sandbox/production)
+app.post('/admin/billing/environment', adminAuth, (req, res) => {
+  try {
+    const { environment } = req.body;
+    
+    if (!environment || !['sandbox', 'production'].includes(environment)) {
+      return res.status(400).json({ error: 'Environment must be "sandbox" or "production"' });
+    }
+    
+    directpay.setEnvironment(environment);
+    
+    res.json({
+      success: true,
+      message: `Environment set to ${environment}`,
+      config: directpay.getPublicConfig()
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Save production credentials
+app.post('/admin/billing/credentials', adminAuth, (req, res) => {
+  try {
+    const { merchantId, merchantKey, apiBase, dashboard, username, password } = req.body;
+    
+    if (!merchantId || !merchantKey) {
+      return res.status(400).json({ error: 'merchantId and merchantKey are required' });
+    }
+    
+    directpay.setProductionCredentials({
+      merchantId,
+      merchantKey,
+      apiBase: apiBase || 'https://api.directpayph.com/api',
+      dashboard: dashboard || 'https://dashboard.directpayph.com',
+      username,
+      password
+    });
+    
+    res.json({
+      success: true,
+      message: 'Production credentials saved',
+      config: directpay.getPublicConfig()
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Test DirectPay connection
+app.post('/admin/billing/test', adminAuth, async (req, res) => {
+  try {
+    const result = await directpay.testConnection();
+    res.json(result);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Create payment/checkout
+app.post('/admin/billing/payment', adminAuth, async (req, res) => {
+  try {
+    const { amount, description, metadata } = req.body;
+    
+    if (!amount || isNaN(amount)) {
+      return res.status(400).json({ error: 'Valid amount is required' });
+    }
+    
+    const result = await directpay.createCheckout({
+      amount: parseFloat(amount),
+      description: description || 'AI Gateway Service',
+      metadata: metadata || {},
+      successUrl: `${req.protocol}://${req.get('host')}/admin/billing/success`,
+      cancelUrl: `${req.protocol}://${req.get('host')}/admin/billing/cancel`,
+      webhookUrl: `${req.protocol}://${req.get('host')}/webhooks/directpay`
+    });
+    
+    res.json(result);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Get transactions
+app.get('/admin/billing/transactions', adminAuth, (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 100;
+    const offset = parseInt(req.query.offset) || 0;
+    
+    const result = directpay.getTransactions(limit, offset);
+    res.json({
+      success: true,
+      ...result
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// DirectPay webhook handler
+app.post('/webhooks/directpay', express.json(), (req, res) => {
+  try {
+    // Verify webhook signature if provided
+    const signature = req.headers['x-webhook-signature'];
+    if (signature && !directpay.verifyWebhookSignature(req.body, signature)) {
+      return res.status(401).json({ error: 'Invalid signature' });
+    }
+    
+    const result = directpay.handleWebhook(req.body);
+    
+    // Always return 200 to acknowledge receipt
+    res.status(200).json(result);
+  } catch (e) {
+    console.error('[DIRECTPAY WEBHOOK] Error:', e.message);
+    res.status(200).json({ success: false, error: e.message });
+  }
+});
+
+// Billing success/cancel pages
+app.get('/admin/billing/success', (req, res) => {
+  res.send(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Payment Successful</title>
+      <style>
+        body { font-family: Arial, sans-serif; background: #0f0f23; color: #e0e0e0; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
+        .container { background: #1a1a2e; border: 1px solid #333; border-radius: 10px; padding: 40px; text-align: center; max-width: 400px; }
+        .success { color: #81c784; font-size: 60px; margin-bottom: 20px; }
+        h1 { color: #4fc3f7; margin-bottom: 10px; }
+        p { color: #888; margin-bottom: 30px; }
+        .btn { display: inline-block; background: #4285f4; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="success">✓</div>
+        <h1>Payment Successful!</h1>
+        <p>Your payment has been processed successfully. You can close this window and return to the admin dashboard.</p>
+        <a href="/admin" class="btn">Return to Dashboard</a>
+      </div>
+    </body>
+    </html>
+  `);
+});
+
+app.get('/admin/billing/cancel', (req, res) => {
+  res.send(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Payment Cancelled</title>
+      <style>
+        body { font-family: Arial, sans-serif; background: #0f0f23; color: #e0e0e0; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
+        .container { background: #1a1a2e; border: 1px solid #333; border-radius: 10px; padding: 40px; text-align: center; max-width: 400px; }
+        .cancel { color: #ffb74d; font-size: 60px; margin-bottom: 20px; }
+        h1 { color: #ef5350; margin-bottom: 10px; }
+        p { color: #888; margin-bottom: 30px; }
+        .btn { display: inline-block; background: #4285f4; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="cancel">✕</div>
+        <h1>Payment Cancelled</h1>
+        <p>Your payment was cancelled. You can try again anytime from the admin dashboard.</p>
+        <a href="/admin" class="btn">Return to Dashboard</a>
+      </div>
+    </body>
+    </html>
+  `);
 });
 
 app.listen(PORT, '0.0.0.0', () => {

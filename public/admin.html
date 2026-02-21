@@ -6,6 +6,8 @@
   <meta name="theme-color" content="#0f172a">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="icon" type="image/png" href="logo.png">
+  <link rel="apple-touch-icon" href="logo.png">
   <title>InnovateHub AI Gateway</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -296,8 +298,8 @@
     <div class="glass-strong rounded-3xl p-8 w-full max-w-sm relative slide-up">
       <!-- Logo -->
       <div class="text-center mb-8">
-        <div class="w-20 h-20 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-accent to-purple-600 flex items-center justify-center glow-accent">
-          <i class="fas fa-robot text-3xl"></i>
+        <div class="w-24 h-24 mx-auto mb-4 rounded-2xl overflow-hidden glow-accent">
+          <img src="logo.png" alt="InnovateHub Logo" class="w-full h-full object-contain">
         </div>
         <h1 class="text-2xl font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">InnovateHub AI</h1>
         <p class="text-gray-500 text-sm mt-1">Admin Gateway</p>
@@ -332,8 +334,8 @@
     <!-- Desktop Header -->
     <header class="hidden md:flex glass-strong sticky top-0 z-40 px-6 py-4 items-center justify-between">
       <div class="flex items-center gap-4">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-accent to-purple-600 flex items-center justify-center">
-          <i class="fas fa-robot text-lg"></i>
+        <div class="w-10 h-10 rounded-xl overflow-hidden">
+          <img src="logo.png" alt="InnovateHub" class="w-full h-full object-contain">
         </div>
         <div>
           <h1 class="font-bold text-lg">InnovateHub AI</h1>
@@ -358,6 +360,9 @@
         <button onclick="showTab('settings')" data-tab="settings" class="nav-btn px-4 py-2 rounded-lg text-sm font-medium transition-all text-gray-400 hover:text-white hover:bg-white/5">
           <i class="fas fa-cog mr-2"></i>Settings
         </button>
+        <button onclick="showTab('billing')" data-tab="billing" class="nav-btn px-4 py-2 rounded-lg text-sm font-medium transition-all text-gray-400 hover:text-white hover:bg-white/5">
+          <i class="fas fa-credit-card mr-2"></i>Billing
+        </button>
       </nav>
       
       <div class="flex items-center gap-3">
@@ -374,8 +379,8 @@
     <!-- Mobile Header -->
     <header class="md:hidden glass-strong sticky top-0 z-40 px-4 py-3 flex items-center justify-between">
       <div class="flex items-center gap-3">
-        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-accent to-purple-600 flex items-center justify-center">
-          <i class="fas fa-robot"></i>
+        <div class="w-9 h-9 rounded-xl overflow-hidden">
+          <img src="logo.png" alt="InnovateHub" class="w-full h-full object-contain">
         </div>
         <span class="font-bold">InnovateHub AI</span>
       </div>
@@ -947,80 +952,157 @@
           </div>
         </div>
       </div>
-    </main>
 
-    <!-- Add Account Modal -->
-    <div id="addAccountModal" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-      <div class="glass-strong rounded-2xl p-6 max-w-md w-full slide-up">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="text-lg font-bold">Add OAuth Account</h3>
-          <button onclick="closeAddAccountModal()" class="text-gray-400 hover:text-white">
-            <i class="fas fa-times"></i>
-          </button>
-        </div>
-        
-        <!-- Step 1: Select Provider -->
-        <div id="accountStep1" class="space-y-4">
-          <div>
-            <label class="block text-sm text-gray-400 mb-2">Provider</label>
-            <select id="accountProvider" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-accent/50">
-              <option value="antigravity">🔥 Google Antigravity (FREE)</option>
-            </select>
-          </div>
+      <!-- Billing Tab -->
+      <div id="tab-billing" class="tab-content hidden">
+        <div class="max-w-2xl mx-auto space-y-4">
           
-          <div>
-            <label class="block text-sm text-gray-400 mb-2">Account Name</label>
-            <input type="text" id="accountName" placeholder="e.g., Personal Gmail" 
-              class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-accent/50">
-          </div>
-          
-          <button onclick="generateOAuthUrl()" class="w-full p-3 rounded-xl bg-gradient-to-r from-accent to-purple-600 hover:from-accent-light hover:to-purple-500 font-medium transition-all">
-            <i class="fas fa-external-link-alt mr-2"></i>Generate OAuth URL
-          </button>
-        </div>
-        
-        <!-- Step 2: OAuth URL -->
-        <div id="accountStep2" class="hidden space-y-4">
-          <div class="bg-accent/10 rounded-xl p-4">
-            <p class="text-sm text-gray-400 mb-2">1. Copy this URL and open in your browser:</p>
-            <div class="flex gap-2">
-              <input type="text" id="oauthUrl" readonly 
-                class="flex-1 bg-black/30 border border-white/10 rounded-xl px-3 py-2 text-sm font-mono text-xs">
-              <button onclick="copyOAuthUrl()" class="px-3 py-2 bg-accent rounded-xl hover:bg-accent-light transition-all">
-                <i class="fas fa-copy"></i>
+          <!-- Environment Toggle -->
+          <div class="glass rounded-2xl p-5 slide-up">
+            <div class="flex items-center justify-between mb-4">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center">
+                  <i id="billingEnvIcon" class="fas fa-flask text-accent"></i>
+                </div>
+                <div>
+                  <h3 class="font-semibold">Environment</h3>
+                  <p id="billingEnvStatus" class="text-xs text-gray-500">Sandbox Mode (Testing)</p>
+                </div>
+              </div>
+              <button onclick="toggleBillingEnvironment()" id="billingEnvToggle" 
+                class="px-4 py-2 rounded-xl bg-success/20 text-success text-sm font-medium hover:bg-success/30 transition-all">
+                <i class="fas fa-toggle-on mr-2"></i>Sandbox
               </button>
             </div>
+            <p class="text-xs text-gray-400">
+              <i class="fas fa-info-circle mr-1"></i>
+              Sandbox mode uses test credentials. No real money is processed.
+            </p>
           </div>
-          
-          <div class="bg-white/5 rounded-xl p-4">
-            <p class="text-sm text-gray-400 mb-2">2. After authenticating, paste the callback URL:</p>
-            <textarea id="callbackUrl" placeholder="http://localhost:51121/oauth/callback?code=..." 
-              class="w-full bg-black/30 border border-white/10 rounded-xl px-3 py-2 text-sm font-mono text-xs h-20 resize-none focus:outline-none focus:border-accent/50"></textarea>
-          </div>
-          
-          <div class="flex gap-2">
-            <button onclick="backToStep1()" class="flex-1 p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-all">
-              Back
+
+          <!-- Sandbox Credentials (Auto-populated) -->
+          <div id="sandboxCredentials" class="glass rounded-2xl p-5 slide-up" style="animation-delay: 0.1s">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="w-10 h-10 rounded-xl bg-success/10 flex items-center justify-center">
+                <i class="fas fa-vial text-success"></i>
+              </div>
+              <div>
+                <h3 class="font-semibold">Sandbox Credentials</h3>
+                <p class="text-xs text-gray-500">Pre-configured for testing</p>
+              </div>
+            </div>
+            <div class="space-y-3">
+              <div class="flex justify-between items-center p-3 rounded-xl bg-white/5">
+                <span class="text-sm text-gray-400">Merchant ID</span>
+                <span class="text-sm font-mono">TEST5VMFBNLCWJKD</span>
+              </div>
+              <div class="flex justify-between items-center p-3 rounded-xl bg-white/5">
+                <span class="text-sm text-gray-400">API Base</span>
+                <span class="text-sm font-mono text-xs">sandbox.directpayph.com</span>
+              </div>
+              <div class="flex justify-between items-center p-3 rounded-xl bg-white/5">
+                <span class="text-sm text-gray-400">Test Balance</span>
+                <span class="text-sm font-medium text-success">₱10,000.00</span>
+              </div>
+            </div>
+            <button onclick="testDirectPayConnection()" class="w-full mt-4 p-3 rounded-xl bg-success/10 hover:bg-success/20 text-success transition-all text-sm font-medium flex items-center justify-center gap-2">
+              <i class="fas fa-plug"></i>Test Connection
             </button>
-            <button onclick="connectAccount()" class="flex-1 p-3 rounded-xl bg-gradient-to-r from-success to-emerald-600 hover:from-success/80 hover:to-emerald-500 font-medium transition-all">
-              <i class="fas fa-plug mr-2"></i>Connect
+          </div>
+
+          <!-- Production Credentials (Hidden by default) -->
+          <div id="productionCredentials" class="glass rounded-2xl p-5 slide-up hidden" style="animation-delay: 0.1s">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="w-10 h-10 rounded-xl bg-warning/10 flex items-center justify-center">
+                <i class="fas fa-lock text-warning"></i>
+              </div>
+              <div>
+                <h3 class="font-semibold">Production Credentials</h3>
+                <p class="text-xs text-gray-500">Enter your live DirectPay credentials</p>
+              </div>
+            </div>
+            <div class="space-y-3">
+              <div>
+                <label class="block text-sm text-gray-400 mb-2">Merchant ID</label>
+                <input type="text" id="prodMerchantId" placeholder="LIVE1234567890" 
+                  class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-warning/50">
+              </div>
+              <div>
+                <label class="block text-sm text-gray-400 mb-2">Merchant Key</label>
+                <input type="password" id="prodMerchantKey" placeholder="••••••••••••••••" 
+                  class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-warning/50">
+              </div>
+              <div>
+                <label class="block text-sm text-gray-400 mb-2">API Base URL</label>
+                <input type="text" id="prodApiBase" value="https://api.directpayph.com/api" 
+                  class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-warning/50">
+              </div>
+              <div>
+                <label class="block text-sm text-gray-400 mb-2">Dashboard URL</label>
+                <input type="text" id="prodDashboard" value="https://dashboard.directpayph.com" 
+                  class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-warning/50">
+              </div>
+            </div>
+            <button onclick="saveProductionCredentials()" class="w-full mt-4 p-3 rounded-xl bg-warning/10 hover:bg-warning/20 text-warning transition-all text-sm font-medium flex items-center justify-center gap-2">
+              <i class="fas fa-save"></i>Save Production Credentials
             </button>
           </div>
-        </div>
-        
-        <!-- Step 3: Success -->
-        <div id="accountStep3" class="hidden text-center py-4">
-          <div class="w-16 h-16 mx-auto rounded-2xl bg-success/10 flex items-center justify-center mb-4">
-            <i class="fas fa-check text-success text-2xl"></i>
+
+          <!-- Test Payment -->
+          <div class="glass rounded-2xl p-5 slide-up" style="animation-delay: 0.2s">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center">
+                <i class="fas fa-credit-card text-purple-400"></i>
+              </div>
+              <div>
+                <h3 class="font-semibold">Test Payment</h3>
+                <p class="text-xs text-gray-500">Create a test checkout session</p>
+              </div>
+            </div>
+            <div class="space-y-3">
+              <div>
+                <label class="block text-sm text-gray-400 mb-2">Amount (₱)</label>
+                <input type="number" id="testAmount" value="100" min="100" 
+                  class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-500/50">
+                <p class="text-xs text-gray-500 mt-1">Minimum: ₱100</p>
+              </div>
+              <div>
+                <label class="block text-sm text-gray-400 mb-2">Description</label>
+                <input type="text" id="testDescription" value="AI Gateway Pro Plan - Monthly" 
+                  class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-500/50">
+              </div>
+            </div>
+            <button onclick="createTestPayment()" class="w-full mt-4 p-3 rounded-xl bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 transition-all text-sm font-medium flex items-center justify-center gap-2">
+              <i class="fas fa-shopping-cart"></i>Create Test Checkout
+            </button>
           </div>
-          <h3 class="text-xl font-bold mb-2">Account Connected!</h3>
-          <p class="text-gray-400 text-sm mb-4">Your account has been successfully added.</p>
-          <button onclick="closeAddAccountModal()" class="px-6 py-3 bg-accent rounded-xl font-medium">
-            Done
-          </button>
+
+          <!-- Recent Transactions -->
+          <div class="glass rounded-2xl p-5 slide-up" style="animation-delay: 0.3s">
+            <div class="flex items-center justify-between mb-4">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center">
+                  <i class="fas fa-receipt text-accent"></i>
+                </div>
+                <div>
+                  <h3 class="font-semibold">Recent Transactions</h3>
+                  <p class="text-xs text-gray-500">Last 100 payments</p>
+                </div>
+              </div>
+              <button onclick="loadTransactions()" class="p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-all">
+                <i class="fas fa-sync-alt text-gray-400"></i>
+              </button>
+            </div>
+            <div id="transactionsList" class="space-y-2">
+              <div class="text-center py-8 text-gray-500">
+                <i class="fas fa-spinner fa-spin mr-2"></i>Loading transactions...
+              </div>
+            </div>
+          </div>
+
         </div>
       </div>
-    </div>
+    </main>
 
     <!-- Mobile Bottom Navigation -->
     <nav class="mobile-nav">
@@ -1044,6 +1126,10 @@
         <button onclick="showTab('settings')" data-tab="settings" class="mobile-nav-btn flex flex-col items-center gap-1 px-4 py-2 text-gray-500">
           <i class="fas fa-cog text-lg"></i>
           <span class="text-xs font-medium">More</span>
+        </button>
+        <button onclick="showTab('billing')" data-tab="billing" class="mobile-nav-btn flex flex-col items-center gap-1 px-4 py-2 text-gray-500">
+          <i class="fas fa-credit-card text-lg"></i>
+          <span class="text-xs font-medium">Pay</span>
         </button>
       </div>
     </nav>
@@ -1977,6 +2063,265 @@
         loadAccounts();
       }
     }, 300000);
+
+    // ==================== BILLING FUNCTIONS ====================
+    
+    let currentBillingEnv = 'sandbox';
+    
+    // Load billing configuration
+    async function loadBillingConfig() {
+      try {
+        const res = await fetch('/admin/billing/config', {
+          headers: { 'X-Admin-Key': adminKey }
+        });
+        const data = await res.json();
+        
+        if (data.success) {
+          currentBillingEnv = data.config.environment;
+          updateBillingUI();
+        }
+      } catch (e) {
+        console.error('[BILLING] Failed to load config:', e);
+      }
+    }
+    
+    // Update billing UI based on environment
+    function updateBillingUI() {
+      const isSandbox = currentBillingEnv === 'sandbox';
+      
+      // Update toggle button
+      const toggle = document.getElementById('billingEnvToggle');
+      const icon = document.getElementById('billingEnvIcon');
+      const status = document.getElementById('billingEnvStatus');
+      
+      if (isSandbox) {
+        toggle.className = 'px-4 py-2 rounded-xl bg-success/20 text-success text-sm font-medium hover:bg-success/30 transition-all';
+        toggle.innerHTML = '<i class="fas fa-toggle-on mr-2"></i>Sandbox';
+        icon.className = 'fas fa-flask text-accent';
+        status.textContent = 'Sandbox Mode (Testing)';
+        status.className = 'text-xs text-gray-500';
+      } else {
+        toggle.className = 'px-4 py-2 rounded-xl bg-warning/20 text-warning text-sm font-medium hover:bg-warning/30 transition-all';
+        toggle.innerHTML = '<i class="fas fa-toggle-off mr-2"></i>Production';
+        icon.className = 'fas fa-lock text-warning';
+        status.textContent = 'Production Mode (Live Payments)';
+        status.className = 'text-xs text-warning';
+      }
+      
+      // Show/hide credential sections
+      document.getElementById('sandboxCredentials').classList.toggle('hidden', !isSandbox);
+      document.getElementById('productionCredentials').classList.toggle('hidden', isSandbox);
+    }
+    
+    // Toggle between sandbox and production
+    async function toggleBillingEnvironment() {
+      const newEnv = currentBillingEnv === 'sandbox' ? 'production' : 'sandbox';
+      
+      try {
+        const res = await fetch('/admin/billing/environment', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'X-Admin-Key': adminKey 
+          },
+          body: JSON.stringify({ environment: newEnv })
+        });
+        
+        const data = await res.json();
+        if (data.success) {
+          currentBillingEnv = newEnv;
+          updateBillingUI();
+          showToast(`Switched to ${newEnv} mode`, 'success');
+        } else {
+          showToast(data.error || 'Failed to switch environment', 'error');
+        }
+      } catch (e) {
+        showToast('Failed to switch environment', 'error');
+        console.error(e);
+      }
+    }
+    
+    // Test DirectPay connection
+    async function testDirectPayConnection() {
+      try {
+        showToast('Testing connection...', 'info');
+        
+        const res = await fetch('/admin/billing/test', {
+          method: 'POST',
+          headers: { 'X-Admin-Key': adminKey }
+        });
+        
+        const data = await res.json();
+        if (data.success) {
+          showToast(`Connection successful (${data.environment})`, 'success');
+        } else {
+          showToast(data.error || 'Connection failed', 'error');
+        }
+      } catch (e) {
+        showToast('Connection test failed', 'error');
+        console.error(e);
+      }
+    }
+    
+    // Save production credentials
+    async function saveProductionCredentials() {
+      const merchantId = document.getElementById('prodMerchantId').value.trim();
+      const merchantKey = document.getElementById('prodMerchantKey').value.trim();
+      const apiBase = document.getElementById('prodApiBase').value.trim();
+      const dashboard = document.getElementById('prodDashboard').value.trim();
+      
+      if (!merchantId || !merchantKey) {
+        showToast('Merchant ID and Key are required', 'error');
+        return;
+      }
+      
+      try {
+        const res = await fetch('/admin/billing/credentials', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'X-Admin-Key': adminKey 
+          },
+          body: JSON.stringify({
+            merchantId,
+            merchantKey,
+            apiBase,
+            dashboard
+          })
+        });
+        
+        const data = await res.json();
+        if (data.success) {
+          showToast('Production credentials saved', 'success');
+          // Clear sensitive fields
+          document.getElementById('prodMerchantKey').value = '';
+        } else {
+          showToast(data.error || 'Failed to save credentials', 'error');
+        }
+      } catch (e) {
+        showToast('Failed to save credentials', 'error');
+        console.error(e);
+      }
+    }
+    
+    // Create test payment
+    async function createTestPayment() {
+      const amount = document.getElementById('testAmount').value;
+      const description = document.getElementById('testDescription').value;
+      
+      if (!amount || amount < 100) {
+        showToast('Minimum amount is ₱100', 'error');
+        return;
+      }
+      
+      try {
+        showToast('Creating checkout session...', 'info');
+        
+        const res = await fetch('/admin/billing/payment', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'X-Admin-Key': adminKey 
+          },
+          body: JSON.stringify({
+            amount: parseFloat(amount),
+            description,
+            metadata: { test: true, created_by: 'admin' }
+          })
+        });
+        
+        const data = await res.json();
+        if (data.success && data.checkoutUrl) {
+          showToast('Checkout created! Opening payment page...', 'success');
+          // Open checkout in new tab
+          window.open(data.checkoutUrl, '_blank');
+          // Reload transactions after a delay
+          setTimeout(loadTransactions, 5000);
+        } else {
+          showToast(data.error || 'Failed to create checkout', 'error');
+        }
+      } catch (e) {
+        showToast('Failed to create checkout', 'error');
+        console.error(e);
+      }
+    }
+    
+    // Load transactions
+    async function loadTransactions() {
+      try {
+        const res = await fetch('/admin/billing/transactions?limit=20', {
+          headers: { 'X-Admin-Key': adminKey }
+        });
+        
+        const data = await res.json();
+        const container = document.getElementById('transactionsList');
+        
+        if (data.success && data.transactions.length > 0) {
+          container.innerHTML = data.transactions.map(tx => {
+            const statusColors = {
+              'completed': 'text-success',
+              'pending': 'text-warning',
+              'failed': 'text-danger',
+              'cancelled': 'text-gray-500',
+              'refunded': 'text-accent'
+            };
+            const statusIcon = {
+              'completed': 'fa-check-circle',
+              'pending': 'fa-clock',
+              'failed': 'fa-times-circle',
+              'cancelled': 'fa-ban',
+              'refunded': 'fa-undo'
+            };
+            
+            return `
+              <div class="flex items-center justify-between p-3 rounded-xl bg-white/5">
+                <div class="flex items-center gap-3">
+                  <i class="fas ${statusIcon[tx.status] || 'fa-receipt'} ${statusColors[tx.status] || 'text-gray-400'}"></i>
+                  <div>
+                    <p class="text-sm font-medium">${tx.description || 'Payment'}</p>
+                    <p class="text-xs text-gray-500">${new Date(tx.created_at).toLocaleString()}</p>
+                  </div>
+                </div>
+                <div class="text-right">
+                  <p class="text-sm font-medium">₱${parseFloat(tx.amount).toFixed(2)}</p>
+                  <p class="text-xs ${statusColors[tx.status] || 'text-gray-500'} capitalize">${tx.status}</p>
+                </div>
+              </div>
+            `;
+          }).join('');
+        } else {
+          container.innerHTML = `
+            <div class="text-center py-8 text-gray-500">
+              <i class="fas fa-receipt text-4xl mb-3 opacity-30"></i>
+              <p>No transactions yet</p>
+              <p class="text-xs mt-1">Create a test payment to see it here</p>
+            </div>
+          `;
+        }
+      } catch (e) {
+        console.error('[BILLING] Failed to load transactions:', e);
+        document.getElementById('transactionsList').innerHTML = `
+          <div class="text-center py-8 text-gray-500">
+            <p>Failed to load transactions</p>
+          </div>
+        `;
+      }
+    }
+    
+    // Load billing data when billing tab is shown
+    document.addEventListener('DOMContentLoaded', () => {
+      // Load billing config on page load
+      loadBillingConfig();
+      loadTransactions();
+    });
+    
+    // Auto-refresh transactions when billing tab is active
+    setInterval(() => {
+      const billingTab = document.getElementById('tab-billing');
+      if (billingTab && !billingTab.classList.contains('hidden')) {
+        loadTransactions();
+      }
+    }, 30000); // Refresh every 30 seconds
   </script>
 </body>
 </html>
