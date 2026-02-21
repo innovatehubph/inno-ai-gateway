@@ -1,26 +1,38 @@
 {
-  "totalRequests": 43,
+  "totalRequests": 58,
   "totalTokens": 333115,
   "totalPromptTokens": 136,
   "totalCompletionTokens": 23278,
   "requestsByModel": {
-    "inno-ai-boyong-4.5": 29,
-    "inno-ai-boyong-mini": 1,
+    "inno-ai-boyong-4.5": 31,
+    "inno-ai-boyong-mini": 2,
     "inno-ai-vision-xl": 4,
     "inno-ai-3d-gen": 3,
-    "inno-ai-image-1": 1,
+    "inno-ai-image-1": 2,
     "inno-ai-image-6": 1,
     "inno-ai-ultrav2": 1,
     "inno-ai-ultrav1": 1,
-    "inno-ai-video-1": 2
+    "inno-ai-video-1": 2,
+    "inno-ai-3d-2": 3,
+    "inno-ai-image-free": 1,
+    "inno-ai-image-3": 1,
+    "inno-ai-3d-convert": 2,
+    "inno-ai-3d-premium": 3,
+    "hf-tiiuae/falcon-7b-instruct": 1
   },
   "requestsByHour": {
     "2026-02-20T12": 5,
     "2026-02-20T13": 6,
-    "2026-02-20T14": 32
+    "2026-02-20T14": 32,
+    "2026-02-20T15": 1,
+    "2026-02-20T16": 4,
+    "2026-02-20T17": 8,
+    "2026-02-20T21": 1,
+    "2026-02-21T00": 1
   },
   "requestsByDay": {
-    "2026-02-20": 43
+    "2026-02-20": 57,
+    "2026-02-21": 1
   },
   "startTime": 1771591312975
 }

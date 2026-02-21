@@ -57,9 +57,12 @@ tags:
     description: List available models
   - name: Admin
     description: Admin dashboard and analytics
+  - name: OAuth
+    description: OAuth account management and authentication
 
 security:
   - BearerAuth: []
+  - AdminKeyAuth: []
 
 paths:
   # ==================== CHAT ====================
@@ -545,6 +548,211 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/LogEntry'
+
+  # ==================== OAUTH / API KEYS ====================
+  /admin/oauth/url:
+    post:
+      tags: [OAuth]
+      summary: Generate OAuth URL
+      description: |
+        Generate an OAuth URL with PKCE for connecting external provider accounts.
+        
+        **Supported Providers:**
+        - `antigravity` - Google Antigravity (FREE Gemini & Claude models)
+        - `openrouter` - OpenRouter API key
+        - `moonshotai` - MoonshotAI API key
+      operationId: generateOAuthUrl
+      security:
+        - AdminAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [provider, accountName]
+              properties:
+                provider:
+                  type: string
+                  enum: [antigravity, openrouter, moonshotai]
+                  description: OAuth provider
+                accountName:
+                  type: string
+                  description: Display name for this account (e.g., "Personal Gmail")
+            example:
+              provider: antigravity
+              accountName: Personal Gmail
+      responses:
+        '200':
+          description: OAuth URL generated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url:
+                    type: string
+                    description: OAuth URL to open in browser
+                  state:
+                    type: string
+                    description: State parameter for verification
+                  expiresIn:
+                    type: integer
+                    description: Seconds until URL expires
+
+  /admin/oauth/exchange:
+    post:
+      tags: [OAuth]
+      summary: Exchange OAuth code for tokens
+      description: |
+        Exchange the authorization code (from OAuth callback) for access tokens.
+        
+        **Process:**
+        1. User authenticates via OAuth URL
+        2. Copies callback URL (contains `code` parameter)
+        3. Pastes callback URL here
+        4. Server exchanges code for tokens and saves account
+      operationId: exchangeOAuthCode
+      security:
+        - AdminAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [code, state, callbackUrl]
+              properties:
+                code:
+                  type: string
+                  description: Authorization code from callback
+                state:
+                  type: string
+                  description: State from generateOAuthUrl response
+                callbackUrl:
+                  type: string
+                  description: Full callback URL from browser
+                accountName:
+                  type: string
+                  description: Account name (from generateOAuthUrl)
+            example:
+              code: "4/0Adeu..."
+              state: "xyz123..."
+              callbackUrl: "http://localhost:51121/callback?code=4/0Adeu...&state=xyz123..."
+              accountName: "Personal Gmail"
+      responses:
+        '200':
+          description: Account connected successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  account:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      provider:
+                        type: string
+                      email:
+                        type: string
+        '400':
+          description: Invalid state or expired
+        '500':
+          description: Token exchange failed
+
+  /admin/accounts:
+    get:
+      tags: [OAuth]
+      summary: List connected accounts
+      description: Get all connected OAuth accounts with status and expiration info
+      operationId: listAccounts
+      security:
+        - AdminAuth: []
+      responses:
+        '200':
+          description: List of accounts
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accounts:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        provider:
+                          type: string
+                        name:
+                          type: string
+                        email:
+                          type: string
+                        status:
+                          type: string
+                          enum: [connected, expired, error]
+                        expiresAt:
+                          type: integer
+                          description: Unix timestamp
+                        expiresIn:
+                          type: integer
+                          description: Seconds until expiration
+    
+    delete:
+      tags: [OAuth]
+      summary: Delete account
+      description: Remove a connected OAuth account
+      operationId: deleteAccount
+      security:
+        - AdminAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Account deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+
+  /admin/accounts/{id}/refresh:
+    post:
+      tags: [OAuth]
+      summary: Refresh account tokens
+      description: Manually refresh expired OAuth tokens
+      operationId: refreshAccount
+      security:
+        - AdminAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Tokens refreshed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  expiresAt:
+                    type: integer
 
 components:
   securitySchemes:

@@ -427,6 +427,26 @@ const ANALYTICS_FILE = path.join(DATA_DIR, 'analytics.json');
 const LOGS_FILE = path.join(DATA_DIR, 'logs.json');
 const API_KEYS_FILE = path.join(DATA_DIR, 'api-keys.json');
 
+// OAuth/Accounts configuration
+const ACCOUNTS_FILE = '/root/.config/opencode/antigravity-accounts.json';
+const OAUTH_STATE_TTL = 5 * 60 * 1000; // 5 minutes
+const oauthStates = new Map(); // Temporary storage for PKCE states
+
+// Google OAuth Configuration
+const GOOGLE_OAUTH = {
+  clientId: process.env.GOOGLE_CLIENT_ID || '',
+  clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
+  redirectUri: 'http://localhost:51121/oauth/callback',
+  authEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
+  tokenEndpoint: 'https://oauth2.googleapis.com/token',
+  scopes: [
+    'https://www.googleapis.com/auth/userinfo.email',
+    'https://www.googleapis.com/auth/userinfo.profile',
+    'https://www.googleapis.com/auth/cloud-platform',
+    'openid'
+  ]
+};
+
 // Initialize data files
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 
@@ -464,6 +484,64 @@ function loadJSON(file) {
 function saveJSON(file, data) {
   fs.writeFileSync(file, JSON.stringify(data, null, 2));
 }
+
+// ==================== OAUTH & ACCOUNTS HELPERS ====================
+
+// PKCE Helper functions
+function generateCodeVerifier() {
+  const verifier = crypto.randomBytes(32).toString('base64url');
+  return verifier;
+}
+
+function generateCodeChallenge(verifier) {
+  return crypto.createHash('sha256').update(verifier).digest('base64url');
+}
+
+function generateState() {
+  return crypto.randomBytes(16).toString('hex');
+}
+
+// Load accounts from file
+function loadAccounts() {
+  try {
+    if (!fs.existsSync(ACCOUNTS_FILE)) {
+      // Create initial file structure
+      const initialData = { version: 1, accounts: {} };
+      saveJSON(ACCOUNTS_FILE, initialData);
+      return initialData;
+    }
+    return loadJSON(ACCOUNTS_FILE) || { version: 1, accounts: {} };
+  } catch (e) {
+    console.error('[ACCOUNTS] Error loading accounts:', e.message);
+    return { version: 1, accounts: {} };
+  }
+}
+
+// Save accounts to file
+function saveAccounts(data) {
+  try {
+    saveJSON(ACCOUNTS_FILE, data);
+  } catch (e) {
+    console.error('[ACCOUNTS] Error saving accounts:', e.message);
+    throw e;
+  }
+}
+
+// Get account by ID
+function getAccountById(accountId) {
+  const data = loadAccounts();
+  return data.accounts[accountId] || null;
+}
+
+// Clean expired OAuth states periodically
+setInterval(() => {
+  const now = Date.now();
+  for (const [state, data] of oauthStates.entries()) {
+    if (data.expiresAt < now) {
+      oauthStates.delete(state);
+    }
+  }
+}, 60000); // Clean every minute
 
 function loadAnalytics() { return loadJSON(ANALYTICS_FILE) || { totalRequests: 0, totalTokens: 0, totalPromptTokens: 0, totalCompletionTokens: 0, requestsByModel: {}, requestsByHour: {}, requestsByDay: {}, startTime: Date.now() }; }
 function saveAnalytics(data) { saveJSON(ANALYTICS_FILE, data); }
@@ -699,35 +777,49 @@ async function callMoonshotChat(modelId, messages, temperature = 0.7, max_tokens
   return response.data;
 }
 
-// Antigravity/OpenCode API - Uses OAuth credentials from auth-profiles.json
+// Antigravity/OpenCode API - Uses OAuth credentials from OpenCode config
 function loadAntigravityCredentials() {
   try {
-    const authPath = process.env.AUTH_PROFILES_PATH || '/root/.openclaw/agents/main/agent/auth-profiles.json';
+    const authPath = '/root/.config/opencode/antigravity-accounts.json';
     if (!fs.existsSync(authPath)) {
-      console.log('[ANTIGRAVITY] Auth profiles not found at:', authPath);
+      console.log('[ANTIGRAVITY] OpenCode config not found at:', authPath);
       return null;
     }
-    
+
     const data = JSON.parse(fs.readFileSync(authPath, 'utf8'));
-    const profile = data.profiles?.[ANTIGRAVITY_AUTH_PROFILE];
     
-    if (!profile || !profile.access) {
-      console.log('[ANTIGRAVITY] Profile not found or no access token');
+    // Handle both array format (from auth-server) and object format
+    let account = null;
+    
+    if (Array.isArray(data) && data.length > 0) {
+      // Array format from auth-server - get first enabled account
+      account = data.find(a => a.enabled !== false) || data[0];
+    } else if (data.accounts && typeof data.accounts === 'object') {
+      // Object format with accounts property
+      const accountId = Object.keys(data.accounts)[0];
+      if (accountId) {
+        account = data.accounts[accountId];
+      }
+    }
+
+    if (!account) {
+      console.log('[ANTIGRAVITY] No accounts configured in OpenCode config');
       return null;
     }
-    
+
     // Check if token is expired
-    if (profile.expires && profile.expires < Date.now()) {
-      console.log('[ANTIGRAVITY] Token expired');
+    if (account.expiresAt && account.expiresAt < Date.now()) {
+      console.log('[ANTIGRAVITY] Token expired, needs refresh');
+      // Could trigger refresh here via opencode-mcp
       return null;
     }
-    
+
     return {
-      accessToken: profile.access,
-      refreshToken: profile.refresh,
-      projectId: profile.projectId,
-      email: profile.email,
-      expires: profile.expires
+      accessToken: account.accessToken,
+      refreshToken: account.refreshToken,
+      projectId: account.projectId,
+      email: account.email,
+      expires: account.expiresAt
     };
   } catch (e) {
     console.error('[ANTIGRAVITY] Error loading credentials:', e.message);
@@ -2498,6 +2590,300 @@ app.delete('/admin/api-keys/:keyId', adminAuth, (req, res) => {
   saveApiKeys(data);
   
   res.json({ success: true, message: 'API key deleted' });
+});
+
+// ==================== OAUTH & ACCOUNTS ENDPOINTS ====================
+
+// Generate OAuth URL with PKCE
+app.post('/admin/oauth/url', adminAuth, async (req, res) => {
+  try {
+    const { provider, accountName } = req.body;
+    
+    if (!provider || !accountName) {
+      return res.status(400).json({ error: 'provider and accountName are required' });
+    }
+    
+    // Currently only supporting antigravity (Google OAuth)
+    if (provider !== 'antigravity') {
+      return res.status(400).json({ error: 'Only antigravity provider is currently supported' });
+    }
+    
+    // Generate PKCE parameters
+    const codeVerifier = generateCodeVerifier();
+    const codeChallenge = generateCodeChallenge(codeVerifier);
+    const state = generateState();
+    
+    // Store state with verifier (5 min TTL)
+    oauthStates.set(state, {
+      verifier: codeVerifier,
+      provider,
+      accountName,
+      createdAt: Date.now(),
+      expiresAt: Date.now() + OAUTH_STATE_TTL
+    });
+    
+    // Build OAuth URL
+    const params = new URLSearchParams({
+      client_id: GOOGLE_OAUTH.clientId,
+      redirect_uri: GOOGLE_OAUTH.redirectUri,
+      response_type: 'code',
+      scope: GOOGLE_OAUTH.scopes.join(' '),
+      state: state,
+      code_challenge: codeChallenge,
+      code_challenge_method: 'S256',
+      access_type: 'offline',
+      prompt: 'consent'
+    });
+    
+    const authUrl = `${GOOGLE_OAUTH.authEndpoint}?${params.toString()}`;
+    
+    console.log(`[OAUTH] Generated URL for ${accountName} (${provider})`);
+    
+    res.json({
+      url: authUrl,
+      state: state,
+      expiresIn: 300
+    });
+    
+  } catch (e) {
+    console.error('[OAUTH] Error generating URL:', e.message);
+    res.status(500).json({ error: 'Failed to generate OAuth URL', message: e.message });
+  }
+});
+
+// Exchange OAuth code for tokens
+app.post('/admin/oauth/exchange', adminAuth, async (req, res) => {
+  try {
+    const { code, state, callbackUrl, accountName } = req.body;
+    
+    if (!code || !state) {
+      return res.status(400).json({ error: 'code and state are required' });
+    }
+    
+    // Retrieve stored state data
+    const stateData = oauthStates.get(state);
+    if (!stateData) {
+      return res.status(400).json({ error: 'Invalid or expired state' });
+    }
+    
+    // Clean up used state
+    oauthStates.delete(state);
+    
+    // Exchange code for tokens
+    const tokenResponse = await axios.post(
+      GOOGLE_OAUTH.tokenEndpoint,
+      new URLSearchParams({
+        grant_type: 'authorization_code',
+        code: code,
+        redirect_uri: GOOGLE_OAUTH.redirectUri,
+        client_id: GOOGLE_OAUTH.clientId,
+        client_secret: GOOGLE_OAUTH.clientSecret,
+        code_verifier: stateData.verifier
+      }).toString(),
+      {
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+      }
+    );
+    
+    const { access_token, refresh_token, expires_in, id_token } = tokenResponse.data;
+    
+    // Decode ID token to get user info
+    let email = 'unknown';
+    let projectId = null;
+    
+    try {
+      // Decode JWT payload (base64)
+      const payload = JSON.parse(Buffer.from(id_token.split('.')[1], 'base64').toString());
+      email = payload.email || 'unknown';
+      console.log(`[OAUTH] Authenticated as ${email}`);
+    } catch (e) {
+      console.log('[OAUTH] Could not decode ID token');
+    }
+    
+    // Try to extract project ID from access token or make API call
+    // For now, use a default or extract from token if available
+    try {
+      // Attempt to get project info from Google Cloud API
+      const projectResponse = await axios.get(
+        'https://cloudresourcemanager.googleapis.com/v1/projects',
+        {
+          headers: { 'Authorization': `Bearer ${access_token}` }
+        }
+      );
+      
+      if (projectResponse.data.projects && projectResponse.data.projects.length > 0) {
+        projectId = projectResponse.data.projects[0].projectId;
+      }
+    } catch (e) {
+      console.log('[OAUTH] Could not fetch project info:', e.message);
+      // Use a default project ID pattern based on email
+      projectId = email.split('@')[0].replace(/[^a-z0-9]/g, '') + '-project';
+    }
+    
+    // Generate unique account ID
+    const accountId = 'acc_' + crypto.randomBytes(8).toString('hex');
+    
+    // Calculate expiration time
+    const expiresAt = Date.now() + (expires_in * 1000);
+    
+    // Load existing accounts
+    const accountsData = loadAccounts();
+    
+    // Create new account
+    const newAccount = {
+      id: accountId,
+      provider: stateData.provider,
+      name: accountName || stateData.accountName,
+      email: email,
+      accessToken: access_token,
+      refreshToken: refresh_token,
+      expiresAt: expiresAt,
+      projectId: projectId,
+      connectedAt: new Date().toISOString(),
+      status: 'connected'
+    };
+    
+    // Save to accounts file
+    accountsData.accounts[accountId] = newAccount;
+    saveAccounts(accountsData);
+    
+    console.log(`[OAUTH] Account connected: ${accountName} (${email})`);
+    
+    res.json({
+      success: true,
+      account: {
+        id: accountId,
+        provider: newAccount.provider,
+        name: newAccount.name,
+        email: newAccount.email,
+        projectId: newAccount.projectId,
+        expiresAt: newAccount.expiresAt,
+        status: 'connected'
+      }
+    });
+    
+  } catch (e) {
+    console.error('[OAUTH] Error exchanging code:', e.message);
+    if (e.response) {
+      console.error('[OAUTH] Response:', e.response.data);
+    }
+    res.status(500).json({ 
+      error: 'Failed to exchange code for tokens', 
+      message: e.response?.data?.error_description || e.message 
+    });
+  }
+});
+
+// List connected accounts
+app.get('/admin/accounts', adminAuth, (req, res) => {
+  try {
+    const accountsData = loadAccounts();
+    const accounts = Object.values(accountsData.accounts).map(acc => {
+      // Determine status based on expiration
+      const now = Date.now();
+      let status = acc.status;
+      if (acc.expiresAt && acc.expiresAt < now) {
+        status = 'expired';
+      }
+      
+      return {
+        id: acc.id,
+        provider: acc.provider,
+        name: acc.name,
+        email: acc.email,
+        projectId: acc.projectId,
+        expiresAt: acc.expiresAt,
+        status: status,
+        connectedAt: acc.connectedAt
+      };
+    });
+    
+    res.json({ accounts });
+    
+  } catch (e) {
+    console.error('[ACCOUNTS] Error listing accounts:', e.message);
+    res.status(500).json({ error: 'Failed to load accounts', message: e.message });
+  }
+});
+
+// Delete account
+app.delete('/admin/accounts/:id', adminAuth, (req, res) => {
+  try {
+    const { id } = req.params;
+    const accountsData = loadAccounts();
+    
+    if (!accountsData.accounts[id]) {
+      return res.status(404).json({ error: 'Account not found' });
+    }
+    
+    const accountName = accountsData.accounts[id].name;
+    delete accountsData.accounts[id];
+    saveAccounts(accountsData);
+    
+    console.log(`[ACCOUNTS] Deleted account: ${accountName} (${id})`);
+    res.json({ success: true, message: 'Account deleted' });
+    
+  } catch (e) {
+    console.error('[ACCOUNTS] Error deleting account:', e.message);
+    res.status(500).json({ error: 'Failed to delete account', message: e.message });
+  }
+});
+
+// Refresh token for an account
+app.post('/admin/accounts/:id/refresh', adminAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const accountsData = loadAccounts();
+    const account = accountsData.accounts[id];
+    
+    if (!account) {
+      return res.status(404).json({ error: 'Account not found' });
+    }
+    
+    if (!account.refreshToken) {
+      return res.status(400).json({ error: 'No refresh token available' });
+    }
+    
+    // Call Google token refresh endpoint
+    const refreshResponse = await axios.post(
+      GOOGLE_OAUTH.tokenEndpoint,
+      new URLSearchParams({
+        grant_type: 'refresh_token',
+        refresh_token: account.refreshToken,
+        client_id: GOOGLE_OAUTH.clientId,
+        client_secret: GOOGLE_OAUTH.clientSecret
+      }).toString(),
+      {
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+      }
+    );
+    
+    const { access_token, expires_in } = refreshResponse.data;
+    
+    // Update account
+    account.accessToken = access_token;
+    account.expiresAt = Date.now() + (expires_in * 1000);
+    account.status = 'connected';
+    
+    saveAccounts(accountsData);
+    
+    console.log(`[ACCOUNTS] Refreshed token for: ${account.name}`);
+    
+    res.json({
+      success: true,
+      expiresAt: account.expiresAt
+    });
+    
+  } catch (e) {
+    console.error('[ACCOUNTS] Error refreshing token:', e.message);
+    if (e.response) {
+      console.error('[ACCOUNTS] Response:', e.response.data);
+    }
+    res.status(500).json({ 
+      error: 'Failed to refresh token', 
+      message: e.response?.data?.error_description || e.message 
+    });
+  }
 });
 
 // Serve data files (for generated images)

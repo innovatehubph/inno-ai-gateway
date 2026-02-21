@@ -1,193 +1,293 @@
-# InnovateHub AI Gateway
+# 🚀 InnovateHub AI Gateway v3.2
 
-🤖 **OpenAI-compatible Multimodal AI API** powered by InnovateHub Philippines.
+> Universal AI Gateway with OAuth-based authentication for cost-effective AI model access
 
-![Version](https://img.shields.io/badge/Version-3.0.0-blue)
-![Models](https://img.shields.io/badge/Models-7-green)
-![Multimodal](https://img.shields.io/badge/Multimodal-✓-purple)
+[![Status](https://img.shields.io/badge/status-production-green.svg)]()
+[![Version](https://img.shields.io/badge/version-3.2.0-blue.svg)]()
+[![Models](https://img.shields.io/badge/models-200+-purple.svg)]()
+[![License](https://img.shields.io/badge/license-Proprietary-blue.svg)]()
 
-## Features
+## ✨ Features
 
-### 🎯 Core Capabilities
-- ✅ **OpenAI-compatible API** - Drop-in replacement
-- ✅ **Streaming Support** - Server-sent events (SSE)
-- ✅ **Rate Limiting** - Per-API-key limits with headers
-- ✅ **API Key Management** - Create, rotate, disable keys
-- ✅ **Usage Tracking** - Per-key request and token counts
+### 🤖 AI Providers
+- **🔥 Google Antigravity** - FREE access to Gemini & Claude models via OAuth
+- **🌐 OpenRouter** - 100+ premium models (GPT-4, Claude, etc.)
+- **🤗 Hugging Face** - FREE open-source models (Mistral, Llama, Qwen)
+- **🌙 MoonshotAI** - Kimi models with 256K context
+- **🚀 InnovateHub** - Proprietary models (OpenClaw/Claude integration)
 
-### 🎨 Multimodal (via HuggingFace)
-- 🖼️ **Image Generation** - Stable Diffusion XL
-- 🔊 **Text-to-Speech** - Neural TTS
-- 🎤 **Speech-to-Text** - Whisper
-- 📊 **Embeddings** - Sentence transformers
+### 🎨 Admin Dashboard
+- **📊 Real-time Analytics** - Request logs, token usage, latency metrics
+- **🔑 API Key Management** - Multi-account OAuth integration
+- **🧪 AI Playground** - Test models with live chat interface
+- **📱 Mobile Responsive** - Works on all devices
 
-### 📊 Admin Dashboard
-- 📈 Real-time analytics with charts
-- 🧪 AI Playground for testing
-- 📋 Request logs with inspector
-- 🔑 API key management UI
-- 💻 System health monitoring
-- 📱 Mobile-responsive design
+### 🔐 Authentication
+- **OAuth 2.0 + PKCE** - Secure authentication flow
+- **Multiple Accounts** - Support personal + work accounts per provider
+- **Auto-refresh** - Tokens refresh automatically before expiry
+- **Admin Access** - Secure dashboard with role-based access
 
-## Available Models
+## 🚀 Quick Start
 
-| Model | Type | Description |
-|-------|------|-------------|
-| `inno-ai-boyong-4.5` | Chat | Most capable, complex tasks |
-| `inno-ai-boyong-4.0` | Chat | Balanced performance |
-| `inno-ai-boyong-mini` | Chat | Fast responses |
-| `inno-ai-vision-xl` | Image | Stable Diffusion XL |
-| `inno-ai-voice-1` | TTS | Text to speech |
-| `inno-ai-whisper-1` | STT | Speech to text |
-| `inno-ai-embed-1` | Embeddings | Vector embeddings |
+### Prerequisites
+- Node.js 18+
+- PM2 (for process management)
+- Nginx (optional, for reverse proxy)
 
-## API Endpoints
+### Installation
 
-### Chat
 ```bash
+# Clone repository
+git clone https://github.com/innovatehubph/inno-ai-gateway.git
+cd inno-ai-gateway
+
+# Install dependencies
+npm install
+
+# Set up environment variables
+cp .env.example .env
+# Edit .env with your credentials
+
+# Start the server
+npm start
+# Or with PM2
+pm2 start server.js --name ai-gateway
+```
+
+### Environment Variables
+
+```env
+# Server Configuration
+PORT=8095
+ADMIN_KEY=your-secure-admin-key
+
+# API Keys
+HF_API_KEY=your-huggingface-key
+HF_API_TOKEN=your-huggingface-token
+REPLICATE_API_KEY=your-replicate-key
+OPENROUTER_API_KEY=your-openrouter-key
+MOONSHOT_API_KEY=your-moonshot-key
+
+# Google OAuth (for Antigravity)
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+
+# OpenClaw (optional)
+OPENCLAW_AUTH_PROFILE=anthropic:claude-cli
+```
+
+## 📚 API Documentation
+
+### OpenAI-Compatible Endpoints
+
+#### Chat Completions
+```http
 POST /v1/chat/completions
+Authorization: Bearer YOUR_API_KEY
+Content-Type: application/json
+
+{
+  "model": "inno-ai-boyong-4.5",
+  "messages": [
+    {"role": "user", "content": "Hello!"}
+  ],
+  "stream": false
+}
 ```
 
-### Images
-```bash
+**Supported Models:**
+- `inno-ai-boyong-4.5` - Most capable (via OpenClaw/Claude)
+- `inno-ai-boyong-4.0` - Balanced performance
+- `inno-ai-boyong-mini` - Fast responses
+- `hf-mistralai/Mistral-7B-Instruct-v0.2` - FREE Hugging Face
+- `or-anthropic/claude-3-opus` - Via OpenRouter
+- `kimi-k2.5` - MoonshotAI with 256K context
+- `antigravity-gemini-2.5-pro` - FREE via Google OAuth
+
+#### Image Generation
+```http
 POST /v1/images/generations
+Authorization: Bearer YOUR_API_KEY
+
+{
+  "prompt": "A serene mountain landscape at sunset",
+  "model": "image-3",
+  "n": 1,
+  "size": "1024x1024"
+}
 ```
 
-### Audio
+#### List Models
+```http
+GET /v1/models
+Authorization: Bearer YOUR_API_KEY
+```
+
+### Admin Endpoints
+
+#### Generate OAuth URL
+```http
+POST /admin/oauth/url
+X-Admin-Key: YOUR_ADMIN_KEY
+
+{
+  "provider": "antigravity",
+  "accountName": "Personal Gmail"
+}
+```
+
+#### Exchange OAuth Code
+```http
+POST /admin/oauth/exchange
+X-Admin-Key: YOUR_ADMIN_KEY
+
+{
+  "code": "4/0A...",
+  "state": "xyz123",
+  "callbackUrl": "http://localhost:51121/callback?code=...",
+  "accountName": "Personal Gmail"
+}
+```
+
+#### List Connected Accounts
+```http
+GET /admin/accounts
+X-Admin-Key: YOUR_ADMIN_KEY
+```
+
+## 🔐 OAuth Setup (Antigravity)
+
+### Step 1: Generate OAuth URL
+1. Go to Admin Dashboard → Settings → API Keys
+2. Click "Add Account"
+3. Select "Google Antigravity"
+4. Enter account name (e.g., "Personal")
+5. Click "Generate OAuth URL"
+
+### Step 2: Authenticate
+1. Copy the OAuth URL
+2. Open in browser
+3. Sign in with Google
+4. Authorize the application
+
+### Step 3: Complete Connection
+1. Copy the callback URL from browser
+2. Paste back into the modal
+3. Click "Connect Account"
+4. ✅ Account connected!
+
+## 🏗️ Architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                         CLIENT                              │
+│              (Browser / CLI / Application)                  │
+└──────────────────────┬──────────────────────────────────────┘
+                       │
+                       ▼
+┌─────────────────────────────────────────────────────────────┐
+│                    AI GATEWAY (Port 8095)                   │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌──────────────┐│
+│  │  Chat API       │  │  Image Gen      │  │  Admin API   ││
+│  │  /v1/chat/*     │  │  /v1/images/*   │  │  /admin/*    ││
+│  └─────────────────┘  └─────────────────┘  └──────────────┘│
+└──────────────────────┬──────────────────────────────────────┘
+                       │
+          ┌────────────┼────────────┐
+          ▼            ▼            ▼
+   ┌────────────┐ ┌──────────┐ ┌──────────┐
+   │ Antigravity│ │OpenRouter│ │  Hugging │
+   │  (OAuth)   │ │ (API Key)│ │  Face    │
+   └────────────┘ └──────────┘ └──────────┘
+```
+
+## 📊 Monitoring
+
+### Health Check
 ```bash
-POST /v1/audio/speech        # Text to speech
-POST /v1/audio/transcriptions # Speech to text
+curl https://ai-gateway.innoserver.cloud/health
 ```
 
-### Embeddings
+### Provider Status
 ```bash
-POST /v1/embeddings
+curl https://ai-gateway.innoserver.cloud/health | jq '.providers'
 ```
 
-### Utility
+### View Logs
 ```bash
-GET /v1/models   # List models
-GET /v1/usage    # Check API key usage
-GET /health      # Health check
-GET /docs        # API documentation
+# Real-time logs
+pm2 logs ai-gateway
+
+# View recent requests
+curl -H "X-Admin-Key: YOUR_KEY" \
+  https://ai-gateway.innoserver.cloud/admin/logs?limit=50
 ```
 
-## Quick Start
+## 🛠️ Development
 
-### Chat Completion
+### Run in Development Mode
 ```bash
-curl -X POST https://ai-gateway.innoserver.cloud/v1/chat/completions \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_API_KEY" \
-  -d '{
-    "model": "inno-ai-boyong-4.5",
-    "messages": [{"role": "user", "content": "Hello!"}],
-    "stream": false
-  }'
+npm run dev
 ```
 
-### Streaming
+### Run Tests
 ```bash
-curl -X POST https://ai-gateway.innoserver.cloud/v1/chat/completions \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_API_KEY" \
-  -d '{
-    "model": "inno-ai-boyong-4.5",
-    "messages": [{"role": "user", "content": "Tell me a story"}],
-    "stream": true
-  }'
+npm test
 ```
 
-### Image Generation
+### Code Style
 ```bash
-curl -X POST https://ai-gateway.innoserver.cloud/v1/images/generations \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_API_KEY" \
-  -d '{
-    "prompt": "A futuristic city at sunset",
-    "size": "1024x1024"
-  }'
+npm run lint
+npm run format
 ```
 
-### Text to Speech
-```bash
-curl -X POST https://ai-gateway.innoserver.cloud/v1/audio/speech \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_API_KEY" \
-  -d '{"input": "Hello world!"}' \
-  --output speech.mp3
-```
+## 🔒 Security
 
-### Embeddings
-```bash
-curl -X POST https://ai-gateway.innoserver.cloud/v1/embeddings \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_API_KEY" \
-  -d '{"input": "The quick brown fox"}'
-```
+- ✅ **PKCE OAuth Flow** - Industry-standard OAuth 2.0 with PKCE
+- ✅ **State Validation** - 5-minute TTL prevents CSRF attacks
+- ✅ **Admin Authentication** - All admin endpoints require secure key
+- ✅ **Token Encryption** - Secure storage in `~/.config/opencode/`
+- ✅ **Rate Limiting** - Built-in protection against abuse
+- ✅ **CORS Protection** - Configurable cross-origin policies
 
-## SDK Examples
+## 📝 Changelog
 
-### Python
-```python
-from openai import OpenAI
+### v3.2.0 (2026-02-21)
+- ✨ Added OAuth account management system
+- ✨ Support for multiple accounts per provider
+- ✨ Auto-refresh expired tokens
+- ✨ New admin dashboard UI for API keys
+- 🔧 Security hardening with PKCE
+- 📱 Enhanced mobile responsiveness
 
-client = OpenAI(
-    api_key="YOUR_API_KEY",
-    base_url="https://ai-gateway.innoserver.cloud/v1"
-)
+### v3.1.0 (2026-02-20)
+- ✨ Added Hugging Face integration
+- ✨ Added OpenRouter integration
+- ✨ Added MoonshotAI (Kimi) integration
+- ✨ Added 200+ free models
+- 🎨 Redesigned admin dashboard
 
-# Chat
-response = client.chat.completions.create(
-    model="inno-ai-boyong-4.5",
-    messages=[{"role": "user", "content": "Hello!"}]
-)
+### v3.0.0 (2026-02-19)
+- ✨ Initial multimodal support (chat, images, video, 3D, audio)
+- ✨ Tiered image generation models
+- ✨ Admin dashboard with analytics
+- ✨ OpenAI-compatible API
 
-# Streaming
-for chunk in client.chat.completions.create(
-    model="inno-ai-boyong-4.5",
-    messages=[{"role": "user", "content": "Tell me a story"}],
-    stream=True
-):
-    print(chunk.choices[0].delta.content, end="")
-```
+## 🤝 Contributing
 
-### JavaScript
-```javascript
-import OpenAI from 'openai';
+This is a proprietary project. For feature requests or bug reports, please contact:
 
-const client = new OpenAI({
-  apiKey: 'YOUR_API_KEY',
-  baseURL: 'https://ai-gateway.innoserver.cloud/v1'
-});
+📧 Email: support@innovatehub.ph
+🌐 Website: https://innovatehub.ph
 
-const response = await client.chat.completions.create({
-  model: 'inno-ai-boyong-4.5',
-  messages: [{ role: 'user', content: 'Hello!' }]
-});
-```
+## 📄 License
 
-## Environment Variables
+Proprietary - All rights reserved by InnovateHub Philippines
 
-| Variable | Description |
-|----------|-------------|
-| `PORT` | Server port (default: 8095) |
-| `ADMIN_KEY` | Admin dashboard key |
-| `HF_API_KEY` | HuggingFace API key for multimodal |
+---
 
-## Rate Limiting
-
-Rate limit headers are included in all responses:
-- `X-RateLimit-Limit` - Requests per minute
-- `X-RateLimit-Remaining` - Remaining requests
-- `X-RateLimit-Reset` - Reset timestamp
-
-## Links
-
-- **Admin Dashboard**: https://ai-gateway.innoserver.cloud/admin
-- **API Documentation**: https://ai-gateway.innoserver.cloud/docs
-- **Health Check**: https://ai-gateway.innoserver.cloud/health
-
-## License
-
-Proprietary - InnovateHub Philippines © 2026
+<p align="center">
+  <strong>Powered by InnovateHub Philippines 🇵🇭</strong><br>
+  Making AI accessible and affordable for everyone
+</p>
