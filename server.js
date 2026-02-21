@@ -3198,9 +3198,180 @@ app.get('/admin/billing/cancel', (req, res) => {
   `);
 });
 
+// ==================== CUSTOMER AUTHENTICATION & MANAGEMENT ====================
+const customerService = require('./lib/customer-service');
+const pricingStrategy = require('./lib/pricing-strategy');
+
+// Customer JWT middleware
+const authenticateCustomer = async (req, res, next) => {
+  try {
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    if (!token) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    const decoded = customerService.verifyToken(token);
+    req.customer = decoded;
+    next();
+  } catch (e) {
+    res.status(401).json({ error: 'Invalid or expired token' });
+  }
+};
+
+// Customer registration
+app.post('/api/v1/customers/register', async (req, res) => {
+  try {
+    const result = await customerService.registerCustomer(req.body);
+    res.status(201).json(result);
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+// Customer login
+app.post('/api/v1/customers/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    const result = await customerService.loginCustomer(email, password);
+    res.json(result);
+  } catch (e) {
+    res.status(401).json({ error: e.message });
+  }
+});
+
+// Get customer profile
+app.get('/api/v1/customers/profile', authenticateCustomer, async (req, res) => {
+  try {
+    const customer = customerService.getCustomer(req.customer.customerId);
+    res.json({ success: true, customer });
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+// Update customer profile
+app.put('/api/v1/customers/profile', authenticateCustomer, async (req, res) => {
+  try {
+    const result = await customerService.updateCustomer(req.customer.customerId, req.body);
+    res.json(result);
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+// Change password
+app.post('/api/v1/customers/change-password', authenticateCustomer, async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const result = await customerService.changePassword(req.customer.customerId, currentPassword, newPassword);
+    res.json(result);
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+// ==================== CUSTOMER API KEYS ====================
+
+// Create API key
+app.post('/api/v1/customers/api-keys', authenticateCustomer, async (req, res) => {
+  try {
+    const { name } = req.body;
+    const result = await customerService.createApiKey(req.customer.customerId, name);
+    res.status(201).json(result);
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+// List API keys
+app.get('/api/v1/customers/api-keys', authenticateCustomer, async (req, res) => {
+  try {
+    const apiKeys = customerService.getApiKeys(req.customer.customerId);
+    res.json({ success: true, apiKeys });
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+// Revoke API key
+app.delete('/api/v1/customers/api-keys/:keyId', authenticateCustomer, async (req, res) => {
+  try {
+    const result = await customerService.revokeApiKey(req.customer.customerId, req.params.keyId);
+    res.json(result);
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+// ==================== CUSTOMER USAGE & ANALYTICS ====================
+
+// Get usage statistics
+app.get('/api/v1/customers/usage', authenticateCustomer, async (req, res) => {
+  try {
+    const { period = '30d' } = req.query;
+    const usage = customerService.getUsage(req.customer.customerId, period);
+    res.json({ success: true, usage });
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+// ==================== PRICING & BILLING ====================
+
+// Get pricing information
+app.get('/api/v1/pricing', (req, res) => {
+  try {
+    const { philippinePricing, subscriptionTiers, payAsYouGo } = pricingStrategy.ourStrategy;
+    res.json({
+      success: true,
+      pricing: {
+        models: philippinePricing,
+        subscriptions: subscriptionTiers,
+        payAsYouGo: payAsYouGo,
+        currency: 'PHP'
+      }
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Get customer billing info
+app.get('/api/v1/customers/billing', authenticateCustomer, async (req, res) => {
+  try {
+    const usage = customerService.getUsage(req.customer.customerId, '30d');
+    const customer = customerService.getCustomer(req.customer.customerId);
+    
+    res.json({
+      success: true,
+      billing: {
+        tier: customer.tier,
+        currentUsage: usage.totalCost,
+        currency: 'PHP',
+        nextBillingDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+      }
+    });
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+// ==================== CUSTOMER DASHBOARD (STATIC) ====================
+
+// Serve customer portal
+app.get('/portal', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'portal.html'));
+});
+
+// Serve customer login page
+app.get('/portal/login', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'portal.html'));
+});
+
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🤖 InnovateHub AI Gateway v3.0.0 running on port ${PORT}`);
   console.log(`   Admin UI: http://localhost:${PORT}/admin`);
+  console.log(`   Customer Portal: http://localhost:${PORT}/portal`);
   console.log(`   API Docs: http://localhost:${PORT}/docs`);
   console.log(`   HuggingFace: ${HF_API_KEY ? 'Configured ✓' : 'Not configured'}`);
 });

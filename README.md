@@ -1,11 +1,12 @@
-# 🚀 InnovateHub AI Gateway v3.2
+# 🚀 InnovateHub AI Gateway v3.3
 
-> Universal AI Gateway with OAuth-based authentication for cost-effective AI model access
+> Universal AI Gateway with OAuth-based authentication and Philippine-market pricing for cost-effective AI model access. Similar to Replicate and Fal.ai, built for the Philippine market.
 
 [![Status](https://img.shields.io/badge/status-production-green.svg)]()
-[![Version](https://img.shields.io/badge/version-3.2.0-blue.svg)]()
+[![Version](https://img.shields.io/badge/version-3.3.0-blue.svg)]()
 [![Models](https://img.shields.io/badge/models-200+-purple.svg)]()
 [![License](https://img.shields.io/badge/license-Proprietary-blue.svg)]()
+[![Pricing](https://img.shields.io/badge/pricing-PHP%20based-success.svg)]()
 
 ## ✨ Features
 
@@ -267,6 +268,17 @@ npm run format
 - ✅ **CORS Protection** - Configurable cross-origin policies
 
 ## 📝 Changelog
+
+### v3.3.0 (2026-02-21) - MAJOR RELEASE
+- ✨ **Customer Platform** - Full customer auth, dashboard, and API management
+- ✨ **Philippine Market Pricing** - PHP-based pricing, competitive with Replicate/Fal.ai
+- ✨ **JWT Authentication** - Secure customer authentication system
+- ✨ **Customer Portal** - Replicate/Fal.ai-style customer dashboard
+- ✨ **Subscription Tiers** - Free, Starter (₱499), Pro (₱1,499), Enterprise (₱4,999)
+- ✨ **Usage Analytics** - Per-customer usage tracking and metering
+- ✨ **DirectPay Integration** - Philippine payment gateway with sandbox/production
+- ✨ **Professional Branding** - Official InnovateHub logo throughout
+- 💳 **Pay-As-You-Go** - Top-up system with volume bonuses
 
 ### v3.2.0 (2026-02-21)
 - ✨ Added OAuth account management system
