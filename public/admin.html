@@ -363,6 +363,12 @@
         <button onclick="showTab('billing')" data-tab="billing" class="nav-btn px-4 py-2 rounded-lg text-sm font-medium transition-all text-gray-400 hover:text-white hover:bg-white/5">
           <i class="fas fa-credit-card mr-2"></i>Billing
         </button>
+        <button onclick="showTab('providers')" data-tab="providers" class="nav-btn px-4 py-2 rounded-lg text-sm font-medium transition-all text-gray-400 hover:text-white hover:bg-white/5">
+          <i class="fas fa-plug mr-2"></i>Providers
+        </button>
+        <button onclick="showTab('models')" data-tab="models" class="nav-btn px-4 py-2 rounded-lg text-sm font-medium transition-all text-gray-400 hover:text-white hover:bg-white/5">
+          <i class="fas fa-robot mr-2"></i>Models
+        </button>
       </nav>
       
       <div class="flex items-center gap-3">
@@ -1102,6 +1108,47 @@
 
         </div>
       </div>
+
+      <!-- Providers Tab -->
+      <div id="tab-providers" class="tab-content hidden space-y-6">
+        <div class="glass rounded-2xl p-6">
+          <div class="flex items-center justify-between mb-6">
+            <div>
+              <h2 class="text-xl font-bold">AI Providers</h2>
+              <p class="text-gray-400 text-sm mt-1">Manage AI service providers and API keys</p>
+            </div>
+            <button onclick="loadProviders()" class="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-sm transition-all">
+              <i class="fas fa-sync-alt mr-2"></i>Refresh
+            </button>
+          </div>
+          <div id="providersList" class="grid md:grid-cols-2 gap-4">
+            <!-- Providers loaded here -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Models Tab -->
+      <div id="tab-models" class="tab-content hidden space-y-6">
+        <div class="glass rounded-2xl p-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            <div>
+              <h2 class="text-xl font-bold">AI Models</h2>
+              <p class="text-gray-400 text-sm mt-1">Manage available AI models and pricing</p>
+            </div>
+            <div class="flex gap-2">
+              <button onclick="showAddModelModal()" class="px-4 py-2 rounded-xl bg-accent hover:bg-accent-light text-sm font-medium transition-all">
+                <i class="fas fa-plus mr-2"></i>Add Model
+              </button>
+              <button onclick="loadModels()" class="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-sm transition-all">
+                <i class="fas fa-sync-alt"></i>
+              </button>
+            </div>
+          </div>
+          <div id="modelsList" class="overflow-x-auto">
+            <!-- Models table loaded here -->
+          </div>
+        </div>
+      </div>
     </main>
 
     <!-- Mobile Bottom Navigation -->
@@ -1130,6 +1177,14 @@
         <button onclick="showTab('billing')" data-tab="billing" class="mobile-nav-btn flex flex-col items-center gap-1 px-4 py-2 text-gray-500">
           <i class="fas fa-credit-card text-lg"></i>
           <span class="text-xs font-medium">Pay</span>
+        </button>
+        <button onclick="showTab('providers')" data-tab="providers" class="mobile-nav-btn flex flex-col items-center gap-1 px-4 py-2 text-gray-500">
+          <i class="fas fa-plug text-lg"></i>
+          <span class="text-xs font-medium">Providers</span>
+        </button>
+        <button onclick="showTab('models')" data-tab="models" class="mobile-nav-btn flex flex-col items-center gap-1 px-4 py-2 text-gray-500">
+          <i class="fas fa-robot text-lg"></i>
+          <span class="text-xs font-medium">Models</span>
         </button>
       </div>
     </nav>
@@ -2322,6 +2377,262 @@
         loadTransactions();
       }
     }, 30000); // Refresh every 30 seconds
+
+    // ==================== PROVIDER MANAGEMENT ====================
+
+    async function loadProviders() {
+      const container = document.getElementById('providersList');
+      container.innerHTML = '<div class="col-span-2 text-center py-8"><i class="fas fa-spinner fa-spin mr-2"></i>Loading providers...</div>';
+      
+      try {
+        const res = await fetch('/admin/providers', {
+          headers: { 'X-Admin-Key': adminKey }
+        });
+        
+        const data = await res.json();
+        if (!data.providers) throw new Error('No providers data');
+        
+        const providersHtml = Object.values(data.providers).map(provider => `
+          <div class="glass rounded-xl p-5 ${provider.enabled ? 'border border-success/20' : 'border border-gray-700 opacity-60'}">
+            <div class="flex items-start justify-between mb-4">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center">
+                  <i class="fas fa-plug text-accent"></i>
+                </div>
+                <div>
+                  <h3 class="font-semibold">${provider.name}</h3>
+                  <p class="text-xs text-gray-500">${provider.id}</p>
+                </div>
+              </div>
+              <span class="text-xs px-2 py-1 rounded-full ${provider.enabled ? 'bg-success/20 text-success' : 'bg-gray-700 text-gray-400'}">
+                ${provider.enabled ? 'Enabled' : 'Disabled'}
+              </span>
+            </div>
+            
+            <div class="space-y-2 text-sm mb-4">
+              <div class="flex justify-between">
+                <span class="text-gray-400">API Key:</span>
+                <span class="font-mono">${provider.apiKey || 'Not set'}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-400">Rate Limit:</span>
+                <span>${provider.rateLimit}/min</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-400">Status:</span>
+                <span class="${provider.status === 'active' ? 'text-success' : provider.status === 'error' ? 'text-danger' : 'text-gray-400'}">
+                  ${provider.status === 'active' ? '● Active' : provider.status === 'error' ? '● Error' : '● Unknown'}
+                </span>
+              </div>
+            </div>
+            
+            <div class="flex gap-2">
+              <button onclick="toggleProvider('${provider.id}', ${!provider.enabled})" class="flex-1 px-3 py-2 rounded-lg ${provider.enabled ? 'bg-danger/10 text-danger' : 'bg-success/10 text-success'} text-sm font-medium hover:opacity-80 transition-all">
+                ${provider.enabled ? 'Disable' : 'Enable'}
+              </button>
+              <button onclick="testProvider('${provider.id}')" class="px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-sm transition-all" title="Test Connection">
+                <i class="fas fa-plug"></i>
+              </button>
+              <button onclick="editProvider('${provider.id}')" class="px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-sm transition-all" title="Edit">
+                <i class="fas fa-edit"></i>
+              </button>
+            </div>
+          </div>
+        `).join('');
+        
+        container.innerHTML = providersHtml;
+      } catch (e) {
+        container.innerHTML = `<div class="col-span-2 text-center py-8 text-danger"><i class="fas fa-exclamation-circle mr-2"></i>Failed to load providers: ${e.message}</div>`;
+      }
+    }
+
+    async function toggleProvider(providerId, enabled) {
+      try {
+        const res = await fetch(`/admin/providers/${providerId}`, {
+          method: 'PUT',
+          headers: { 
+            'X-Admin-Key': adminKey,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ enabled })
+        });
+        
+        const data = await res.json();
+        if (data.success) {
+          showToast(`Provider ${enabled ? 'enabled' : 'disabled'}`, 'success');
+          loadProviders();
+        } else {
+          showToast(data.error || 'Failed to update provider', 'error');
+        }
+      } catch (e) {
+        showToast('Failed to update provider', 'error');
+      }
+    }
+
+    async function testProvider(providerId) {
+      showToast('Testing provider connection...', 'info');
+      try {
+        const res = await fetch(`/admin/providers/${providerId}/test`, {
+          method: 'POST',
+          headers: { 'X-Admin-Key': adminKey }
+        });
+        
+        const data = await res.json();
+        if (data.success) {
+          showToast(`Provider connected: ${data.message}`, 'success');
+        } else {
+          showToast(`Provider test failed: ${data.message}`, 'error');
+        }
+        loadProviders();
+      } catch (e) {
+        showToast('Failed to test provider', 'error');
+      }
+    }
+
+    // ==================== MODEL MANAGEMENT ====================
+
+    async function loadModels() {
+      const container = document.getElementById('modelsList');
+      container.innerHTML = '<div class="text-center py-8"><i class="fas fa-spinner fa-spin mr-2"></i>Loading models...</div>';
+      
+      try {
+        const res = await fetch('/admin/models', {
+          headers: { 'X-Admin-Key': adminKey }
+        });
+        
+        const data = await res.json();
+        if (!data.models) throw new Error('No models data');
+        
+        const modelsHtml = `
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="text-left text-gray-400 border-b border-white/5">
+                <th class="px-4 py-3 font-medium">Model</th>
+                <th class="px-4 py-3 font-medium">Provider</th>
+                <th class="px-4 py-3 font-medium">Pricing (1K tokens)</th>
+                <th class="px-4 py-3 font-medium">Status</th>
+                <th class="px-4 py-3 font-medium">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-white/5">
+              ${data.models.map(model => `
+                <tr class="hover:bg-white/5 transition-colors">
+                  <td class="px-4 py-3">
+                    <div class="font-medium">${model.name}</div>
+                    <div class="text-xs text-gray-500">${model.id}</div>
+                  </td>
+                  <td class="px-4 py-3 text-gray-400">${model.provider}</td>
+                  <td class="px-4 py-3">
+                    <div class="text-xs text-gray-400">In: $${model.pricing?.input || 0}</div>
+                    <div class="text-xs text-gray-400">Out: $${model.pricing?.output || 0}</div>
+                  </td>
+                  <td class="px-4 py-3">
+                    <span class="text-xs px-2 py-1 rounded-full ${model.enabled ? 'bg-success/20 text-success' : 'bg-gray-700 text-gray-400'}">
+                      ${model.enabled ? 'Active' : 'Disabled'}
+                    </span>
+                  </td>
+                  <td class="px-4 py-3">
+                    <div class="flex gap-2">
+                      <button onclick="toggleModel('${model.id}', ${!model.enabled})" class="px-2 py-1 rounded bg-white/5 hover:bg-white/10 text-xs transition-all">
+                        ${model.enabled ? 'Disable' : 'Enable'}
+                      </button>
+                      <button onclick="deleteModel('${model.id}')" class="px-2 py-1 rounded bg-danger/10 hover:bg-danger/20 text-danger text-xs transition-all">
+                        <i class="fas fa-trash"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        `;
+        
+        container.innerHTML = modelsHtml;
+      } catch (e) {
+        container.innerHTML = `<div class="text-center py-8 text-danger"><i class="fas fa-exclamation-circle mr-2"></i>Failed to load models: ${e.message}</div>`;
+      }
+    }
+
+    async function toggleModel(modelId, enabled) {
+      try {
+        const res = await fetch(`/admin/models/${modelId}`, {
+          method: 'PUT',
+          headers: { 
+            'X-Admin-Key': adminKey,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ enabled })
+        });
+        
+        const data = await res.json();
+        if (data.success) {
+          showToast(`Model ${enabled ? 'enabled' : 'disabled'}`, 'success');
+          loadModels();
+        } else {
+          showToast(data.error || 'Failed to update model', 'error');
+        }
+      } catch (e) {
+        showToast('Failed to update model', 'error');
+      }
+    }
+
+    async function deleteModel(modelId) {
+      if (!confirm('Are you sure you want to delete this model?')) return;
+      
+      try {
+        const res = await fetch(`/admin/models/${modelId}`, {
+          method: 'DELETE',
+          headers: { 'X-Admin-Key': adminKey }
+        });
+        
+        const data = await res.json();
+        if (data.success) {
+          showToast('Model deleted', 'success');
+          loadModels();
+        } else {
+          showToast(data.error || 'Failed to delete model', 'error');
+        }
+      } catch (e) {
+        showToast('Failed to delete model', 'error');
+      }
+    }
+
+    function showAddModelModal() {
+      // Simple prompt for now - can be enhanced later
+      const id = prompt('Enter model ID (e.g., my-custom-model):');
+      if (!id) return;
+      
+      const name = prompt('Enter model name:');
+      if (!name) return;
+      
+      const provider = prompt('Enter provider (openrouter, huggingface, openai, moonshot):');
+      if (!provider) return;
+      
+      addModel({ id, name, provider });
+    }
+
+    async function addModel(modelData) {
+      try {
+        const res = await fetch('/admin/models', {
+          method: 'POST',
+          headers: { 
+            'X-Admin-Key': adminKey,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(modelData)
+        });
+        
+        const data = await res.json();
+        if (data.success) {
+          showToast('Model added successfully', 'success');
+          loadModels();
+        } else {
+          showToast(data.error || 'Failed to add model', 'error');
+        }
+      } catch (e) {
+        showToast('Failed to add model', 'error');
+      }
+    }
   </script>
 </body>
 </html>
