@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0f172a">
+  <title>InnovateHub AI Gateway - API Documentation v3.2</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Swagger UI -->
+  <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5.10.3/swagger-ui.css" />
+  <script src="https://unpkg.com/swagger-ui-dist@5.10.3/swagger-ui-bundle.js"></script>
+  <script src="https://unpkg.com/swagger-ui-dist@5.10.3/swagger-ui-standalone-preset.js"></script>
+  
+  <!-- Fonts & Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { 
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace']
+          },
+          colors: {
+            dark: { 900: '#0a0a0f', 800: '#12121a', 700: '#1a1a25', 600: '#252532' },
+            accent: { DEFAULT: '#6366f1', light: '#818cf8', dark: '#4f46e5' },
+            success: '#10b981', warning: '#f59e0b', danger: '#ef4444'
+          }
+        }
+      }
+    }
+  </script>
+  
+  <style>
+    * { -webkit-tap-highlight-color: transparent; }
+    body { 
+      font-family: 'Inter', sans-serif; 
+      background: #0a0a0f;
+    }
+    
+    /* Gradient backgrounds */
+    .gradient-mesh {
+      background: 
+        radial-gradient(at 20% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
+        radial-gradient(at 80% 0%, rgba(139, 92, 246, 0.1) 0px, transparent 50%),
+        radial-gradient(at 40% 100%, rgba(99, 102, 241, 0.1) 0px, transparent 50%),
+        radial-gradient(at 0% 50%, rgba(139, 92, 246, 0.08) 0px, transparent 50%),
+        #0a0a0f;
+    }
+    
+    /* Glassmorphism */
+    .glass { 
+      background: rgba(255,255,255,0.03); 
+      backdrop-filter: blur(20px); 
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+    
+    .glass-strong {
+      background: rgba(255,255,255,0.08);
+      backdrop-filter: blur(40px);
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    
+    /* Code blocks */
+    .code-block {
+      font-family: 'JetBrains Mono', monospace;
+      background: rgba(0,0,0,0.4);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      overflow-x: auto;
+    }
+    
+    /* HTTP Methods */
+    .method-get { background: linear-gradient(135deg, #10b981, #059669); }
+    .method-post { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+    .method-delete { background: linear-gradient(135deg, #ef4444, #dc2626); }
+    .method-patch { background: linear-gradient(135deg, #f59e0b, #d97706); }
+    .method-put { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+    
+    /* Tab navigation */
+    .tab-btn {
+      transition: all 0.3s ease;
+      border-bottom: 2px solid transparent;
+    }
+    .tab-btn.active {
+      border-bottom-color: #6366f1;
+      color: #818cf8;
+    }
+    .tab-btn:hover:not(.active) {
+      border-bottom-color: rgba(255,255,255,0.2);
+    }
+    
+    /* Provider cards */
+    .provider-card {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .provider-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    }
+    
+    /* Copy button */
+    .copy-btn {
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .code-block:hover .copy-btn {
+      opacity: 1;
+    }
+    
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { 
+      background: rgba(255,255,255,0.1); 
+      border-radius: 4px; 
+    }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+    
+    /* Animations */
+    @keyframes fadeIn { 
+      from { opacity: 0; transform: translateY(10px); } 
+      to { opacity: 1; transform: translateY(0); } 
+    }
+    @keyframes slideUp { 
+      from { opacity: 0; transform: translateY(20px); } 
+      to { opacity: 1; transform: translateY(0); } 
+    }
+    
+    .animate-fade-in { animation: fadeIn 0.5s ease-out; }
+    .animate-slide-up { animation: slideUp 0.6s ease-out; }
+    
+    /* Swagger UI Customization */
+    .swagger-ui {
+      background: transparent !important;
+    }
+    .swagger-ui .topbar { display: none !important; }
+    .swagger-ui .info { margin: 0 !important; }
+    .swagger-ui .scheme-container { 
+      background: rgba(255,255,255,0.03) !important; 
+      box-shadow: none !important;
+    }
+    .swagger-ui .opblock {
+      background: rgba(255,255,255,0.03) !important;
+      border: 1px solid rgba(255,255,255,0.1) !important;
+      border-radius: 12px !important;
+      margin: 0 0 16px 0 !important;
+    }
+    .swagger-ui .opblock .opblock-summary {
+      border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+    }
+    .swagger-ui .opblock .opblock-summary-method {
+      border-radius: 6px !important;
+      font-weight: 600 !important;
+    }
+    .swagger-ui .btn {
+      background: rgba(99, 102, 241, 0.2) !important;
+      border-color: rgba(99, 102, 241, 0.5) !important;
+      color: #818cf8 !important;
+    }
+    .swagger-ui .btn:hover {
+      background: rgba(99, 102, 241, 0.3) !important;
+    }
+    .swagger-ui .responses-inner {
+      background: rgba(0,0,0,0.2) !important;
+    }
+    
+    /* Mobile responsive */
+    @media (max-width: 768px) {
+      .swagger-ui .opblock .opblock-summary-path {
+        font-size: 12px !important;
+      }
+      .swagger-ui .opblock .opblock-summary-description {
+        display: none !important;
+      }
+    }
+  </style>
+</head>
+<body class="gradient-mesh min-h-screen text-white">
+  
+  <!-- Navigation -->
+  <nav class="glass-strong sticky top-0 z-50 border-b border-white/5">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-accent to-purple-600 flex items-center justify-center">
+            <i class="fas fa-robot text-lg"></i>
+          </div>
+          <div>
+            <h1 class="font-bold text-lg">InnovateHub AI</h1>
+            <p class="text-xs text-gray-400">API Documentation v3.2</p>
+          </div>
+        </div>
+        
+        <div class="hidden md:flex items-center gap-4">
+          <a href="/admin" class="px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-sm transition-all">
+            <i class="fas fa-cog mr-2"></i>Admin
+          </a>
+          <a href="/openapi.json" class="px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-sm transition-all">
+            <i class="fas fa-download mr-2"></i>OpenAPI JSON
+          </a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    
+    <!-- Hero Section -->
+    <div class="text-center mb-12 animate-fade-in">
+      <h2 class="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-gray-200 to-gray-400 bg-clip-text text-transparent">
+        Universal AI Gateway
+      </h2>
+      <p class="text-gray-400 text-lg max-w-2xl mx-auto mb-6">
+        OpenAI-compatible API with OAuth authentication. Access 200+ AI models from multiple providers.
+      </p>
+      <div class="flex flex-wrap justify-center gap-4">
+        <span class="px-3 py-1 rounded-full bg-accent/20 text-accent text-sm">🔥 Antigravity</span>
+        <span class="px-3 py-1 rounded-full bg-purple-500/20 text-purple-400 text-sm">🌐 OpenRouter</span>
+        <span class="px-3 py-1 rounded-full bg-yellow-500/20 text-yellow-400 text-sm">🤗 Hugging Face</span>
+        <span class="px-3 py-1 rounded-full bg-blue-500/20 text-blue-400 text-sm">🌙 MoonshotAI</span>
+      </div>
+    </div>
+
+    <!-- Tab Navigation -->
+    <div class="flex border-b border-white/10 mb-8 overflow-x-auto">
+      <button onclick="switchTab('overview')" class="tab-btn active px-6 py-4 text-sm font-medium whitespace-nowrap" id="tab-overview">
+        <i class="fas fa-book mr-2"></i>Overview
+      </button>
+      <button onclick="switchTab('quickstart')" class="tab-btn px-6 py-4 text-sm font-medium whitespace-nowrap" id="tab-quickstart">
+        <i class="fas fa-rocket mr-2"></i>Quick Start
+      </button>
+      <button onclick="switchTab('oauth')" class="tab-btn px-6 py-4 text-sm font-medium whitespace-nowrap" id="tab-oauth">
+        <i class="fas fa-key mr-2"></i>OAuth Setup
+      </button>
+      <button onclick="switchTab('swagger')" class="tab-btn px-6 py-4 text-sm font-medium whitespace-nowrap" id="tab-swagger">
+        <i class="fas fa-code mr-2"></i>API Reference
+      </button>
+      <button onclick="switchTab('sdks')" class="tab-btn px-6 py-4 text-sm font-medium whitespace-nowrap" id="tab-sdks">
+        <i class="fas fa-laptop-code mr-2"></i>SDKs
+      </button>
+    </div>
+
+    <!-- Overview Tab -->
+    <div id="content-overview" class="tab-content">
+      
+      <!-- Base URL -->
+      <div class="glass rounded-2xl p-6 mb-6 animate-slide-up">
+        <h3 class="text-lg font-semibold mb-3"><i class="fas fa-globe text-accent mr-2"></i>Base URL</h3>
+        <div class="code-block p-4 relative group">
+          <code class="text-green-400 font-mono text-sm">https://ai-gateway.innoserver.cloud</code>
+          <button onclick="copyToClipboard('https://ai-gateway.innoserver.cloud')" class="copy-btn absolute top-3 right-3 px-3 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-xs transition-all">
+            <i class="fas fa-copy mr-1"></i>Copy
+          </button>
+        </div>
+      </div>
+
+      <!-- Authentication -->
+      <div class="glass rounded-2xl p-6 mb-6 animate-slide-up" style="animation-delay: 0.1s">
+        <h3 class="text-lg font-semibold mb-3"><i class="fas fa-shield-alt text-accent mr-2"></i>Authentication</h3>
+        <p class="text-gray-400 mb-4">All API requests require authentication via API key in the Authorization header:</p>
+        <div class="code-block p-4 relative">
+          <code class="text-yellow-400 font-mono text-sm">Authorization: Bearer YOUR_API_KEY</code>
+          <button onclick="copyToClipboard('Authorization: Bearer YOUR_API_KEY')" class="copy-btn absolute top-3 right-3 px-3 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-xs transition-all">
+            <i class="fas fa-copy mr-1"></i>Copy
+          </button>
+        </div>
+      </div>
+
+      <!-- Providers -->
+      <div class="mb-6 animate-slide-up" style="animation-delay: 0.2s">
+        <h3 class="text-lg font-semibold mb-4"><i class="fas fa-server text-accent mr-2"></i>Supported Providers</h3>
+        <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+          
+          <!-- Antigravity -->
+          <div class="provider-card glass rounded-2xl p-5 border border-red-500/20">
+            <div class="w-12 h-12 rounded-xl bg-red-500/20 flex items-center justify-center mb-3 text-2xl">🔥</div>
+            <h4 class="font-semibold mb-1">Google Antigravity</h4>
+            <p class="text-xs text-gray-400 mb-3">FREE access to Gemini & Claude via OAuth</p>
+            <ul class="text-xs text-gray-500 space-y-1">
+              <li>• Gemini 2.5 Pro</li>
+              <li>• Claude Opus 4.5</li>
+              <li>• Zero cost</li>
+            </ul>
+          </div>
+
+          <!-- OpenRouter -->
+          <div class="provider-card glass rounded-2xl p-5 border border-purple-500/20">
+            <div class="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center mb-3 text-2xl">🌐</div>
+            <h4 class="font-semibold mb-1">OpenRouter</h4>
+            <p class="text-xs text-gray-400 mb-3">100+ premium models via API key</p>
+            <ul class="text-xs text-gray-500 space-y-1">
+              <li>• GPT-4, Claude</li>
+              <li>• 100+ models</li>
+              <li>• Pay-per-use</li>
+            </ul>
+          </div>
+
+          <!-- Hugging Face -->
+          <div class="provider-card glass rounded-2xl p-5 border border-yellow-500/20">
+            <div class="w-12 h-12 rounded-xl bg-yellow-500/20 flex items-center justify-center mb-3 text-2xl">🤗</div>
+            <h4 class="font-semibold mb-1">Hugging Face</h4>
+            <p class="text-xs text-gray-400 mb-3">FREE open-source models</p>
+            <ul class="text-xs text-gray-500 space-y-1">
+              <li>• Mistral, Llama</li>
+              <li>• Qwen, Falcon</li>
+              <li>• 200+ models</li>
+            </ul>
+          </div>
+
+          <!-- MoonshotAI -->
+          <div class="provider-card glass rounded-2xl p-5 border border-blue-500/20">
+            <div class="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center mb-3 text-2xl">🌙</div>
+            <h4 class="font-semibold mb-1">MoonshotAI</h4>
+            <p class="text-xs text-gray-400 mb-3">Kimi models with 256K context</p>
+            <ul class="text-xs text-gray-500 space-y-1">
+              <li>• Kimi K2.5</li>
+              <li>• 256K context</li>
+              <li>• API key access</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Model Prefixes -->
+      <div class="glass rounded-2xl p-6 mb-6 animate-slide-up" style="animation-delay: 0.3s">
+        <h3 class="text-lg font-semibold mb-4"><i class="fas fa-tag text-accent mr-2"></i>Model Prefixes</h3>
+        <p class="text-gray-400 mb-4">Use these prefixes to specify which provider to use:</p>
+        <div class="grid md:grid-cols-2 gap-4">
+          <div class="bg-white/5 rounded-xl p-4">
+            <code class="text-red-400 font-mono text-sm">antigravity-</code>
+            <p class="text-xs text-gray-400 mt-1">Google Antigravity models</p>
+          </div>
+          <div class="bg-white/5 rounded-xl p-4">
+            <code class="text-purple-400 font-mono text-sm">or-</code>
+            <p class="text-xs text-gray-400 mt-1">OpenRouter models</p>
+          </div>
+          <div class="bg-white/5 rounded-xl p-4">
+            <code class="text-yellow-400 font-mono text-sm">hf-</code>
+            <p class="text-xs text-gray-400 mt-1">Hugging Face models</p>
+          </div>
+          <div class="bg-white/5 rounded-xl p-4">
+            <code class="text-blue-400 font-mono text-sm">kimi-</code>
+            <p class="text-xs text-gray-400 mt-1">MoonshotAI models</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Start Tab -->
+    <div id="content-quickstart" class="tab-content hidden">
+      
+      <!-- Step 1 -->
+      <div class="glass rounded-2xl p-6 mb-6">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-8 h-8 rounded-lg bg-accent/20 flex items-center justify-center font-bold text-accent">1</div>
+          <h3 class="text-lg font-semibold">Get API Key</h3>
+        </div>
+        <p class="text-gray-400 mb-4">Visit the admin dashboard to create an API key:</p>
+        <a href="/admin" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-accent/20 hover:bg-accent/30 text-accent transition-all">
+          <i class="fas fa-external-link-alt"></i>
+          Open Admin Dashboard
+        </a>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="glass rounded-2xl p-6 mb-6">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-8 h-8 rounded-lg bg-accent/20 flex items-center justify-center font-bold text-accent">2</div>
+          <h3 class="text-lg font-semibold">Make Your First Request</h3>
+        </div>
+        
+        <div class="mb-4">
+          <h4 class="text-sm font-medium mb-2">cURL</h4>
+          <div class="code-block p-4 relative">
+            <pre class="text-sm text-gray-300 overflow-x-auto"><code>curl -X POST https://ai-gateway.innoserver.cloud/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -d '{
+    "model": "inno-ai-boyong-4.5",
+    "messages": [{"role": "user", "content": "Hello!"}]
+  }'</code></pre>
+            <button onclick="copyCode(this)" class="copy-btn absolute top-3 right-3 px-3 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-xs transition-all">
+              <i class="fas fa-copy mr-1"></i>Copy
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <h4 class="text-sm font-medium mb-2">Python</h4>
+          <div class="code-block p-4 relative">
+            <pre class="text-sm text-gray-300 overflow-x-auto"><code>from openai import OpenAI
+
+client = OpenAI(
+    api_key="YOUR_API_KEY",
+    base_url="https://ai-gateway.innoserver.cloud/v1"
+)
+
+response = client.chat.completions.create(
+    model="inno-ai-boyong-4.5",
+    messages=[{"role": "user", "content": "Hello!"}]
+)
+
+print(response.choices[0].message.content)</code></pre>
+            <button onclick="copyCode(this)" class="copy-btn absolute top-3 right-3 px-3 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-xs transition-all">
+              <i class="fas fa-copy mr-1"></i>Copy
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="glass rounded-2xl p-6 mb-6">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-8 h-8 rounded-lg bg-accent/20 flex items-center justify-center font-bold text-accent">3</div>
+          <h3 class="text-lg font-semibold">Connect OAuth Accounts (Optional)</h3>
+        </div>
+        <p class="text-gray-400 mb-4">For FREE access to Google Antigravity models:</p>
+        <ol class="space-y-2 text-sm text-gray-400 list-decimal list-inside">
+          <li>Go to Admin → Settings → API Keys</li>
+          <li>Click "Add Account" → Select "Google Antigravity"</li>
+          <li>Generate OAuth URL and authenticate with Google</li>
+          <li>Paste callback URL to complete connection</li>
+        </ol>
+      </div>
+    </div>
+
+    <!-- OAuth Tab -->
+    <div id="content-oauth" class="tab-content hidden">
+      
+      <div class="glass rounded-2xl p-6 mb-6">
+        <h3 class="text-xl font-semibold mb-4"><i class="fas fa-key text-accent mr-2"></i>OAuth Account Management</h3>
+        <p class="text-gray-400 mb-6">
+          Connect multiple accounts from different providers. Support for personal + work accounts.
+        </p>
+
+        <!-- Admin Endpoints -->
+        <h4 class="font-semibold mb-4">Admin API Endpoints</h4>
+        
+        <div class="space-y-4">
+          <!-- Generate OAuth URL -->
+          <div class="glass rounded-xl overflow-hidden">
+            <div class="flex items-center gap-3 p-4 border-b border-white/5">
+              <span class="method-post px-3 py-1 rounded-lg text-xs font-bold">POST</span>
+              <code class="text-sm font-mono">/admin/oauth/url</code>
+            </div>
+            <div class="p-4">
+              <p class="text-gray-400 text-sm mb-4">Generate OAuth URL with PKCE for authentication.</p>
+              <h5 class="text-xs font-medium mb-2 text-gray-500">Request Body</h5>
+              <div class="code-block p-3 mb-4">
+                <pre class="text-sm text-gray-300"><code>{
+  "provider": "antigravity",
+  "accountName": "Personal Gmail"
+}</code></pre>
+              </div>
+              <h5 class="text-xs font-medium mb-2 text-gray-500">Response</h5>
+              <div class="code-block p-3">
+                <pre class="text-sm text-gray-300"><code>{
+  "url": "https://accounts.google.com/o/oauth2/v2/auth...",
+  "state": "xyz123...",
+  "expiresIn": 300
+}</code></pre>
+              </div>
+            </div>
+          </div>
+
+          <!-- Exchange Code -->
+          <div class="glass rounded-xl overflow-hidden">
+            <div class="flex items-center gap-3 p-4 border-b border-white/5">
+              <span class="method-post px-3 py-1 rounded-lg text-xs font-bold">POST</span>
+              <code class="text-sm font-mono">/admin/oauth/exchange</code>
+            </div>
+            <div class="p-4">
+              <p class="text-gray-400 text-sm mb-4">Exchange authorization code for access tokens.</p>
+              <h5 class="text-xs font-medium mb-2 text-gray-500">Request Body</h5>
+              <div class="code-block p-3 mb-4">
+                <pre class="text-sm text-gray-300"><code>{
+  "code": "4/0A...",
+  "state": "xyz123...",
+  "callbackUrl": "http://localhost:51121/callback?code=...",
+  "accountName": "Personal Gmail"
+}</code></pre>
+              </div>
+            </div>
+          </div>
+
+          <!-- List Accounts -->
+          <div class="glass rounded-xl overflow-hidden">
+            <div class="flex items-center gap-3 p-4 border-b border-white/5">
+              <span class="method-get px-3 py-1 rounded-lg text-xs font-bold">GET</span>
+              <code class="text-sm font-mono">/admin/accounts</code>
+            </div>
+            <div class="p-4">
+              <p class="text-gray-400 text-sm mb-4">List all connected OAuth accounts.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Swagger Tab -->
+    <div id="content-swagger" class="tab-content hidden">
+      <div id="swagger-ui" class="glass rounded-2xl p-6"></div>
+    </div>
+
+    <!-- SDKs Tab -->
+    <div id="content-sdks" class="tab-content hidden">
+      
+      <!-- Python -->
+      <div class="glass rounded-2xl p-6 mb-6">
+        <div class="flex items-center gap-3 mb-4">
+          <i class="fab fa-python text-3xl text-yellow-400"></i>
+          <h3 class="text-xl font-semibold">Python</h3>
+        </div>
+        
+        <div class="code-block p-4 relative mb-4">
+          <pre class="text-sm text-gray-300 overflow-x-auto"><code># Install
+pip install openai
+
+# Usage
+from openai import OpenAI
+
+client = OpenAI(
+    api_key="YOUR_API_KEY",
+    base_url="https://ai-gateway.innoserver.cloud/v1"
+)
+
+# Chat
+response = client.chat.completions.create(
+    model="inno-ai-boyong-4.5",
+    messages=[{"role": "user", "content": "Hello!"}]
+)
+
+# Streaming
+for chunk in client.chat.completions.create(
+    model="inno-ai-boyong-4.5",
+    messages=[{"role": "user", "content": "Tell me a story"}],
+    stream=True
+):
+    print(chunk.choices[0].delta.content, end="")
+
+# Images
+image = client.images.generate(
+    model="image-3",
+    prompt="A futuristic city",
+    size="1024x1024"
+)</code></pre>
+          <button onclick="copyCode(this)" class="copy-btn absolute top-3 right-3 px-3 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-xs transition-all">
+            <i class="fas fa-copy mr-1"></i>Copy
+          </button>
+        </div>
+      </div>
+
+      <!-- Node.js -->
+      <div class="glass rounded-2xl p-6 mb-6">
+        <div class="flex items-center gap-3 mb-4">
+          <i class="fab fa-node-js text-3xl text-green-400"></i>
+          <h3 class="text-xl font-semibold">Node.js</h3>
+        </div>
+        
+        <div class="code-block p-4 relative">
+          <pre class="text-sm text-gray-300 overflow-x-auto"><code>// Install
+npm install openai
+
+// Usage
+import OpenAI from 'openai';
+
+const client = new OpenAI({
+  apiKey: 'YOUR_API_KEY',
+  baseURL: 'https://ai-gateway.innoserver.cloud/v1'
+});
+
+// Chat
+const response = await client.chat.completions.create({
+  model: 'inno-ai-boyong-4.5',
+  messages: [{ role: 'user', content: 'Hello!' }]
+});
+
+console.log(response.choices[0].message.content);</code></pre>
+          <button onclick="copyCode(this)" class="copy-btn absolute top-3 right-3 px-3 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-xs transition-all">
+            <i class="fas fa-copy mr-1"></i>Copy
+          </button>
+        </div>
+      </div>
+
+      <!-- cURL -->
+      <div class="glass rounded-2xl p-6">
+        <div class="flex items-center gap-3 mb-4">
+          <i class="fas fa-terminal text-2xl text-gray-400"></i>
+          <h3 class="text-xl font-semibold">cURL</h3>
+        </div>
+        
+        <div class="code-block p-4 relative">
+          <pre class="text-sm text-gray-300 overflow-x-auto"><code># Chat
+curl -X POST https://ai-gateway.innoserver.cloud/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -d '{
+    "model": "inno-ai-boyong-4.5",
+    "messages": [{"role": "user", "content": "Hello!"}],
+    "stream": false
+  }'
+
+# Images
+curl -X POST https://ai-gateway.innoserver.cloud/v1/images/generations \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -d '{
+    "prompt": "A serene mountain landscape",
+    "size": "1024x1024"
+  }'</code></pre>
+          <button onclick="copyCode(this)" class="copy-btn absolute top-3 right-3 px-3 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-xs transition-all">
+            <i class="fas fa-copy mr-1"></i>Copy
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Footer -->
+  <footer class="border-t border-white/10 mt-12 py-8">
+    <div class="max-w-7xl mx-auto px-4 text-center text-gray-500 text-sm">
+      <p>© 2026 InnovateHub Philippines. All rights reserved.</p>
+      <p class="mt-2">Powered by AI Gateway v3.2</p>
+    </div>
+  </footer>
+
+  <script>
+    // Tab switching
+    function switchTab(tabName) {
+      // Hide all content
+      document.querySelectorAll('.tab-content').forEach(el => {
+        el.classList.add('hidden');
+      });
+      
+      // Remove active class from all tabs
+      document.querySelectorAll('.tab-btn').forEach(el => {
+        el.classList.remove('active');
+      });
+      
+      // Show selected content
+      document.getElementById(`content-${tabName}`).classList.remove('hidden');
+      document.getElementById(`tab-${tabName}`).classList.add('active');
+      
+      // Initialize Swagger if needed
+      if (tabName === 'swagger' && !window.swaggerInitialized) {
+        initSwagger();
+        window.swaggerInitialized = true;
+      }
+    }
+
+    // Initialize Swagger UI
+    function initSwagger() {
+      SwaggerUIBundle({
+        url: '/openapi.json',
+        dom_id: '#swagger-ui',
+        deepLinking: true,
+        presets: [
+          SwaggerUIBundle.presets.apis,
+          SwaggerUIStandalonePreset
+        ],
+        plugins: [
+          SwaggerUIBundle.plugins.DownloadUrl
+        ],
+        layout: "BaseLayout",
+        theme: "dark",
+        tryItOutEnabled: true,
+        requestInterceptor: (req) => {
+          // Add API key to requests
+          const apiKey = localStorage.getItem('api_key') || '';
+          if (apiKey) {
+            req.headers['Authorization'] = `Bearer ${apiKey}`;
+          }
+          return req;
+        }
+      });
+    }
+
+    // Copy to clipboard
+    function copyToClipboard(text) {
+      navigator.clipboard.writeText(text).then(() => {
+        showToast('Copied to clipboard!', 'success');
+      });
+    }
+
+    // Copy code block
+    function copyCode(btn) {
+      const code = btn.parentElement.querySelector('code').innerText;
+      navigator.clipboard.writeText(code).then(() => {
+        showToast('Copied to clipboard!', 'success');
+      });
+    }
+
+    // Toast notification
+    function showToast(message, type = 'success') {
+      const toast = document.createElement('div');
+      toast.className = `fixed bottom-24 left-1/2 -translate-x-1/2 px-6 py-3 rounded-xl bg-white/10 backdrop-blur-xl border border-white/10 text-sm z-50 animate-slide-up toast-${type}`;
+      toast.innerHTML = `<i class="fas fa-${type === 'success' ? 'check' : 'exclamation-circle'} mr-2"></i>${message}`;
+      document.body.appendChild(toast);
+      
+      setTimeout(() => {
+        toast.remove();
+      }, 3000);
+    }
+
+    // Check for API key in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const apiKey = urlParams.get('api_key');
+    if (apiKey) {
+      localStorage.setItem('api_key', apiKey);
+    }
+  </script>
+</body>
+</html>

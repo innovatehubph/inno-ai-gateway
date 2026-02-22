@@ -1,0 +1,2679 @@
+openapi: 3.0.0
+info:
+  title: InnoAI API
+  version: 3.1.0
+  description: |
+    AI Models for Every Filipino
+    
+    The InnoAI platform provides access to cutting-edge AI models including chat, image generation, 
+    audio processing, 3D generation, video generation, and embeddings. Built for the Philippine market 
+    with local currency pricing (PHP) and payment integration.
+    
+    ## Authentication
+    
+    The API supports three authentication methods:
+    
+    1. **JWT Bearer Token** - For customer portal authentication
+    2. **API Key** - For inference endpoints (X-API-Key header)
+    3. **Admin Key** - For administrative endpoints (x-admin-key header)
+    
+    ## Access Control Levels
+    
+    | Tier | Price | Requests/Day | Tokens/Month | Concurrent | Models |
+    |------|-------|--------------|--------------|------------|--------|
+    | Free | ₱0 | 100 | 10K | 1 | Basic only |
+    | Starter | ₱499 | 1,000 | 100K | 3 | All chat |
+    | Professional | ₱1,499 | 10,000 | 1M | 10 | All models |
+    | Enterprise | ₱4,999 | 100,000 | 10M | 50 | All + Priority |
+    
+    ## Pricing (PHP)
+    
+    - **Chat (Boyong Opus)**: ₱465/1M input, ₱2,325/1M output
+    - **Images (FLUX Pro)**: ₱3.75/image
+    - **Video (Wan 480p)**: ₱4.68/second
+    - **3D Generation**: Starting at ₱0.50/model
+    
+    ## Base URL
+    
+    All API requests should be made to: `https://ai-gateway.innoserver.cloud`
+    
+  contact:
+    name: InnovateHub Support
+    email: support@innovatehub.ph
+  license:
+    name: Proprietary
+    url: https://ai-gateway.innoserver.cloud/terms
+
+servers:
+  - url: https://ai-gateway.innoserver.cloud
+    description: Production server
+
+security:
+  - BearerAuth: []
+  - ApiKeyAuth: []
+  - AdminKeyAuth: []
+
+tags:
+  - name: Health
+    description: System health and status endpoints
+  - name: Authentication
+    description: Customer registration, login, and profile management
+  - name: Customers
+    description: API key management, usage tracking, and billing
+  - name: Billing
+    description: DirectPay integration and payment management (Admin only)
+  - name: Inference
+    description: AI model endpoints for chat, images, audio, 3D, video, and embeddings
+  - name: Admin
+    description: Administrative endpoints for analytics, logs, and system management
+
+paths:
+  # ==================== HEALTH ENDPOINTS ====================
+  /health:
+    get:
+      tags:
+        - Health
+      summary: Health check
+      description: Get system health status and available capabilities
+      operationId: healthCheck
+      security: []
+      responses:
+        '200':
+          description: System is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+              example:
+                status: ok
+                service: InnovateHub AI Gateway
+                version: "3.1.0"
+                models:
+                  chat:
+                    - inno-ai-boyong-4.5
+                    - inno-ai-boyong-4.0
+                    - inno-ai-boyong-mini
+                  image:
+                    - inno-ai-vision-xl
+                  audio:
+                    - inno-ai-voice-1
+                    - inno-ai-whisper-1
+                  embeddings:
+                    - inno-ai-embed-1
+                  3d:
+                    - inno-ai-3d-gen
+                    - inno-ai-3d-convert
+                capabilities:
+                  - chat
+                  - streaming
+                  - images
+                  - audio
+                  - embeddings
+                  - 3d_generation
+                  - image_to_3d
+                powered_by: InnovateHub Philippines
+                uptime_ms: 86400000
+                uptime_human: 1d 0h 0m
+                timestamp: "2026-02-21T10:30:00.000Z"
+                providers:
+                  huggingface:
+                    configured: true
+                    description: Hugging Face Inference API - use hf-{model_id} prefix
+                  openrouter:
+                    configured: true
+                    description: OpenRouter API - use or-{model_id} prefix
+                  moonshotai:
+                    configured: true
+                    description: MoonshotAI (Kimi) - use kimi-{model_id} prefix
+                  antigravity:
+                    configured: true
+                    description: Google Antigravity/OpenCode - use antigravity-{model_id} prefix
+                  replicate:
+                    configured: true
+                    description: Replicate - Image and 3D generation
+
+  # ==================== AUTHENTICATION ENDPOINTS ====================
+  /api/customer/auth/register:
+    post:
+      tags:
+        - Authentication
+      summary: Register new customer
+      description: Create a new customer account with email and password
+      operationId: registerCustomer
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+            example:
+              email: customer@example.com
+              password: SecurePass123!
+              name: John Doe
+              company: ACME Corp
+      responses:
+        '201':
+          description: Customer registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisterResponse'
+              example:
+                success: true
+                customer:
+                  id: cust_abc123def456
+                  email: customer@example.com
+                  name: John Doe
+                  company: ACME Corp
+                  tier: free
+                  status: active
+                  createdAt: "2026-02-21T10:30:00.000Z"
+                message: Registration successful. Please check your email to verify.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/customer/auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: Customer login
+      description: Authenticate with email and password to receive JWT token
+      operationId: loginCustomer
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+            example:
+              email: customer@example.com
+              password: SecurePass123!
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+              example:
+                success: true
+                token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                customer:
+                  id: cust_abc123def456
+                  email: customer@example.com
+                  name: John Doe
+                  tier: professional
+                  status: active
+                expiresIn: 7d
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/customer/auth/profile:
+    get:
+      tags:
+        - Authentication
+      summary: Get customer profile
+      description: Retrieve current customer's profile information
+      operationId: getProfile
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Profile retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileResponse'
+              example:
+                success: true
+                customer:
+                  id: cust_abc123def456
+                  email: customer@example.com
+                  name: John Doe
+                  company: ACME Corp
+                  tier: professional
+                  status: active
+                  createdAt: "2026-02-21T10:30:00.000Z"
+                  lastLogin: "2026-02-21T15:45:00.000Z"
+                  loginCount: 42
+                  settings:
+                    notifications: true
+                    newsletter: true
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    put:
+      tags:
+        - Authentication
+      summary: Update customer profile
+      description: Update customer profile information (name, company, settings)
+      operationId: updateProfile
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProfileRequest'
+            example:
+              name: Jane Doe
+              company: New Company Inc
+              settings:
+                notifications: true
+                newsletter: false
+      responses:
+        '200':
+          description: Profile updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/customer/auth/change-password:
+    post:
+      tags:
+        - Authentication
+      summary: Change password
+      description: Change customer password (requires current password)
+      operationId: changePassword
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePasswordRequest'
+            example:
+              currentPassword: OldPass123!
+              newPassword: NewSecurePass456!
+      responses:
+        '200':
+          description: Password changed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Password updated successfully
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ==================== CUSTOMER ENDPOINTS ====================
+  /api/v1/customers/api-keys:
+    get:
+      tags:
+        - Customers
+      summary: List API keys
+      description: Get all API keys for the authenticated customer
+      operationId: listApiKeys
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: API keys retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  apiKeys:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ApiKey'
+              example:
+                success: true
+                apiKeys:
+                  - id: key_abc123
+                    name: Production Key
+                    createdAt: "2026-02-21T10:30:00.000Z"
+                    lastUsed: "2026-02-21T15:45:00.000Z"
+                    usageCount: 1523
+                    status: active
+                    expiresAt: null
+                  - id: key_def456
+                    name: Development Key
+                    createdAt: "2026-02-20T08:00:00.000Z"
+                    lastUsed: null
+                    usageCount: 0
+                    status: active
+                    expiresAt: null
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    post:
+      tags:
+        - Customers
+      summary: Create API key
+      description: Create a new API key for making inference requests
+      operationId: createApiKey
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: Name for the API key
+                  example: Production API Key
+      responses:
+        '201':
+          description: API key created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  apiKey:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      name:
+                        type: string
+                      key:
+                        type: string
+                        description: The API key - copy this now, it won't be shown again
+                      createdAt:
+                        type: string
+                        format: date-time
+                      status:
+                        type: string
+                        enum: [active, revoked]
+                  message:
+                    type: string
+              example:
+                success: true
+                apiKey:
+                  id: key_xyz789
+                  name: Production API Key
+                  key: ik_aBcDeFgHiJkLmNoPqRsTuVwXyZ1234567890AbCdEf
+                  createdAt: "2026-02-21T10:30:00.000Z"
+                  status: active
+                message: API key created. Copy it now - it won't be shown again!
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/v1/customers/api-keys/{keyId}:
+    delete:
+      tags:
+        - Customers
+      summary: Revoke API key
+      description: Revoke an API key by its ID
+      operationId: revokeApiKey
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: keyId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The API key ID
+          example: key_xyz789
+      responses:
+        '200':
+          description: API key revoked successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+              example:
+                success: true
+                message: API key revoked
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/v1/customers/usage:
+    get:
+      tags:
+        - Customers
+      summary: Get usage statistics
+      description: Get usage statistics for the authenticated customer
+      operationId: getUsage
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: period
+          in: query
+          schema:
+            type: string
+            default: 30d
+          description: Time period for usage data (e.g., 7d, 30d, 90d)
+      responses:
+        '200':
+          description: Usage statistics retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  usage:
+                    type: object
+                    properties:
+                      totalRequests:
+                        type: integer
+                      totalTokens:
+                        type: integer
+                      totalCost:
+                        type: number
+                      requestsByModel:
+                        type: object
+                        additionalProperties:
+                          type: object
+                          properties:
+                            requests:
+                              type: integer
+                            tokens:
+                              type: integer
+                            cost:
+                              type: number
+                      recentDaily:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            date:
+                              type: string
+                            requests:
+                              type: integer
+                            tokens:
+                              type: integer
+                            cost:
+                              type: number
+              example:
+                success: true
+                usage:
+                  totalRequests: 5420
+                  totalTokens: 2450000
+                  totalCost: 1425.50
+                  requestsByModel:
+                    inno-ai-boyong-4.5:
+                      requests: 3200
+                      tokens: 1800000
+                      cost: 950.00
+                    flux-1.1-pro:
+                      requests: 150
+                      tokens: 0
+                      cost: 562.50
+                  recentDaily:
+                    - date: "2026-02-21"
+                      requests: 180
+                      tokens: 85000
+                      cost: 52.30
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/v1/customers/billing:
+    get:
+      tags:
+        - Customers
+      summary: Get billing information
+      description: Get current billing information for the authenticated customer
+      operationId: getBilling
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Billing information retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  billing:
+                    type: object
+                    properties:
+                      tier:
+                        type: string
+                        enum: [free, starter, professional, enterprise]
+                      currentUsage:
+                        type: number
+                      currency:
+                        type: string
+                        example: PHP
+                      nextBillingDate:
+                        type: string
+                        format: date-time
+              example:
+                success: true
+                billing:
+                  tier: professional
+                  currentUsage: 1425.50
+                  currency: PHP
+                  nextBillingDate: "2026-03-21T00:00:00.000Z"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/v1/customers/billing/subscribe:
+    post:
+      tags:
+        - Customers
+      summary: Subscribe to a tier
+      description: Create a checkout session for subscription upgrade
+      operationId: subscribeTier
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                tier:
+                  type: string
+                  enum: [starter, professional, enterprise]
+                  description: The subscription tier to upgrade to
+            example:
+              tier: professional
+      responses:
+        '200':
+          description: Checkout session created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  checkoutUrl:
+                    type: string
+                    format: uri
+                  tier:
+                    type: string
+                  amount:
+                    type: number
+              example:
+                success: true
+                checkoutUrl: https://checkout.directpayph.com/session/abc123
+                tier: professional
+                amount: 1499
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/v1/customers/pricing:
+    get:
+      tags:
+        - Customers
+      summary: Get pricing information
+      description: Get all pricing information including models, subscriptions, and pay-as-you-go options
+      operationId: getPricing
+      security: []
+      responses:
+        '200':
+          description: Pricing information retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  pricing:
+                    type: object
+                    properties:
+                      models:
+                        type: object
+                      subscriptions:
+                        type: object
+                      payAsYouGo:
+                        type: object
+                      currency:
+                        type: string
+                        example: PHP
+              example:
+                success: true
+                pricing:
+                  models:
+                    chatModels:
+                      inno-ai-boyong-4.5:
+                        name: Boyong Opus 4.5 (Most Capable)
+                        phpInputPrice: 465
+                        phpOutputPrice: 2325
+                      flux-1.1-pro:
+                        name: FLUX 1.1 Pro
+                        phpPrice: 3.75
+                    videoModels:
+                      wan-2.1-480p:
+                        name: Wan 2.1 480p
+                        phpPricePerSecond: 4.68
+                  subscriptions:
+                    starter:
+                      name: Starter
+                      pricePHP: 499
+                      limits:
+                        requestsPerDay: 1000
+                        tokensPerMonth: 100000
+                        concurrentRequests: 3
+                    professional:
+                      name: Professional
+                      pricePHP: 1499
+                      limits:
+                        requestsPerDay: 10000
+                        tokensPerMonth: 1000000
+                        concurrentRequests: 10
+                  payAsYouGo:
+                    enabled: true
+                    topUpOptions:
+                      - amountPHP: 500
+                        bonus: 0
+                        label: ₱500 Starter
+                      - amountPHP: 1000
+                        bonus: 100
+                        label: ₱1,000 + ₱100 Bonus
+                  currency: PHP
+
+  # ==================== BILLING ENDPOINTS (Admin) ====================
+  /admin/billing/config:
+    get:
+      tags:
+        - Billing
+      summary: Get DirectPay configuration
+      description: Get current DirectPay payment gateway configuration (Admin only)
+      operationId: getBillingConfig
+      security:
+        - AdminKeyAuth: []
+      responses:
+        '200':
+          description: Configuration retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  config:
+                    type: object
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /admin/billing/environment:
+    post:
+      tags:
+        - Billing
+      summary: Set environment
+      description: Set DirectPay environment to sandbox or production (Admin only)
+      operationId: setBillingEnvironment
+      security:
+        - AdminKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                environment:
+                  type: string
+                  enum: [sandbox, production]
+            example:
+              environment: production
+      responses:
+        '200':
+          description: Environment set successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  config:
+                    type: object
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /admin/billing/credentials:
+    post:
+      tags:
+        - Billing
+      summary: Save production credentials
+      description: Save DirectPay production credentials (Admin only)
+      operationId: saveBillingCredentials
+      security:
+        - AdminKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                merchantId:
+                  type: string
+                merchantKey:
+                  type: string
+                apiBase:
+                  type: string
+                dashboard:
+                  type: string
+                username:
+                  type: string
+                password:
+                  type: string
+            example:
+              merchantId: MERCHANT123
+              merchantKey: secret_key_abc123
+      responses:
+        '200':
+          description: Credentials saved successfully
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /admin/billing/test:
+    post:
+      tags:
+        - Billing
+      summary: Test DirectPay connection
+      description: Test the DirectPay payment gateway connection (Admin only)
+      operationId: testBillingConnection
+      security:
+        - AdminKeyAuth: []
+      responses:
+        '200':
+          description: Connection test result
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /admin/billing/payment:
+    post:
+      tags:
+        - Billing
+      summary: Create payment
+      description: Create a payment/checkout session (Admin only)
+      operationId: createPayment
+      security:
+        - AdminKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                amount:
+                  type: number
+                description:
+                  type: string
+                metadata:
+                  type: object
+            example:
+              amount: 1499
+              description: Professional Plan Subscription
+              metadata:
+                customerId: cust_abc123
+      responses:
+        '200':
+          description: Payment created successfully
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /admin/billing/transactions:
+    get:
+      tags:
+        - Billing
+      summary: Get transactions
+      description: Get list of payment transactions (Admin only)
+      operationId: getTransactions
+      security:
+        - AdminKeyAuth: []
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 100
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: Transactions retrieved successfully
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ==================== INFERENCE ENDPOINTS ====================
+  /v1/chat/completions:
+    post:
+      tags:
+        - Inference
+      summary: Chat completions
+      description: |
+        Generate chat completions using various AI models.
+        
+        **Supported Models:**
+        - `inno-ai-boyong-4.5` - Most capable (via OpenClaw/Anthropic)
+        - `inno-ai-boyong-4.0` - Balanced performance
+        - `inno-ai-boyong-mini` - Fast and efficient
+        - `hf-{model_id}` - Any HuggingFace model
+        - `or-{model_id}` - Any OpenRouter model
+        - `kimi-{model_id}` - MoonshotAI models
+        - `antigravity-{model_id}` - Google models via Antigravity
+        
+        **Pricing:**
+        - Boyong Opus 4.5: ₱465/1M input tokens, ₱2,325/1M output tokens
+        - Gemini models: FREE via OAuth
+      operationId: chatCompletions
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatCompletionRequest'
+            examples:
+              simple:
+                summary: Simple chat request
+                value:
+                  model: inno-ai-boyong-4.5
+                  messages:
+                    - role: system
+                      content: You are a helpful assistant.
+                    - role: user
+                      content: What is the capital of the Philippines?
+              streaming:
+                summary: Streaming request
+                value:
+                  model: inno-ai-boyong-4.0
+                  messages:
+                    - role: user
+                      content: Tell me a story
+                  stream: true
+              with-huggingface:
+                summary: HuggingFace model
+                value:
+                  model: hf-mistralai/Mistral-7B-Instruct-v0.2
+                  messages:
+                    - role: user
+                      content: Explain quantum computing
+      responses:
+        '200':
+          description: Chat completion successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatCompletionResponse'
+              example:
+                id: chatcmpl-abc123
+                object: chat.completion
+                created: 1708608000
+                model: inno-ai-boyong-4.5
+                choices:
+                  - index: 0
+                    message:
+                      role: assistant
+                      content: The capital of the Philippines is Manila.
+                    finish_reason: stop
+                usage:
+                  prompt_tokens: 25
+                  completion_tokens: 15
+                  total_tokens: 40
+            text/event-stream:
+              schema:
+                type: string
+                description: Server-sent events for streaming responses
+              example: |
+                data: {"id":"chatcmpl-abc","object":"chat.completion.chunk","created":1708608000,"model":"inno-ai-boyong-4.5","choices":[{"index":0,"delta":{"content":"The"},"finish_reason":null}]}
+                
+                data: {"id":"chatcmpl-abc","object":"chat.completion.chunk","created":1708608000,"model":"inno-ai-boyong-4.5","choices":[{"index":0,"delta":{"content":" capital"},"finish_reason":null}]}
+                
+                data: [DONE]
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+
+  /v1/images/generations:
+    post:
+      tags:
+        - Inference
+      summary: Generate images
+      description: |
+        Generate images from text prompts.
+        
+        **Available Models:**
+        - `image-1` / `fast` - Fast generation (~1 sec)
+        - `image-2` / `turbo` - Turbo quality (~1 sec)
+        - `image-3` / `default` - Standard quality (~3 sec)
+        - `image-4` / `quality` - High quality (~10 sec)
+        - `image-5` / `premium` / `pro` - Premium quality (~8 sec)
+        - `image-6` / `ultra` / `best` - Ultra quality (~15 sec)
+        - `standard` / `gemini` / `flash` - Gemini Flash
+        - `ultrav1` / `openai` / `gpt` - OpenAI GPT Image
+        - `ultrav2` / `imagen` / `imagen4` - Google Imagen 4
+        
+        **Pricing:**
+        - FLUX Pro: ₱3.75/image
+        - FLUX Dev: ₱2.34/image
+        - SD XL: ₱0.50/image
+      operationId: generateImages
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ImageGenerationRequest'
+            example:
+              prompt: A beautiful sunset over Manila Bay
+              model: image-3
+              n: 1
+              size: "1024x1024"
+              response_format: url
+      responses:
+        '200':
+          description: Image generation successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  created:
+                    type: integer
+                  model:
+                    type: string
+                  tier:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        url:
+                          type: string
+                        external_url:
+                          type: string
+                        b64_json:
+                          type: string
+              example:
+                created: 1708608000
+                model: image-3
+                tier: Standard
+                data:
+                  - url: /data/image_abc123_0.png
+                    external_url: https://replicate.com/output/...
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /v1/images/models:
+    get:
+      tags:
+        - Inference
+      summary: List image models
+      description: Get available image generation models
+      operationId: listImageModels
+      security:
+        - ApiKeyAuth: []
+      responses:
+        '200':
+          description: Image models retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  object:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      type: object
+                  aliases:
+                    type: object
+                  default:
+                    type: string
+                  replicate_configured:
+                    type: boolean
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /v1/audio/speech:
+    post:
+      tags:
+        - Inference
+      summary: Text to speech
+      description: Convert text to speech using AI voice synthesis
+      operationId: textToSpeech
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                input:
+                  type: string
+                  description: Text to convert to speech
+                model:
+                  type: string
+                  default: inno-ai-voice-1
+                voice:
+                  type: string
+                  default: alloy
+                  enum: [alloy, echo, fable, onyx, nova, shimmer]
+                response_format:
+                  type: string
+                  default: mp3
+                  enum: [mp3, opus, aac, flac]
+            example:
+              input: Hello, welcome to InnoAI!
+              model: inno-ai-voice-1
+              voice: alloy
+      responses:
+        '200':
+          description: Speech generation successful
+          content:
+            audio/mpeg:
+              schema:
+                type: string
+                format: binary
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /v1/audio/transcriptions:
+    post:
+      tags:
+        - Inference
+      summary: Speech to text
+      description: Transcribe audio to text using Whisper
+      operationId: speechToText
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Audio file data (binary or base64)
+                audio:
+                  type: string
+                  description: Base64 encoded audio data
+            example:
+              audio: base64EncodedAudioData...
+      responses:
+        '200':
+          description: Transcription successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  text:
+                    type: string
+              example:
+                text: Hello, this is a transcription test.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /v1/embeddings:
+    post:
+      tags:
+        - Inference
+      summary: Create embeddings
+      description: Generate text embeddings for RAG and semantic search
+      operationId: createEmbeddings
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                input:
+                  type: string
+                  description: Text to embed (or array of strings)
+                model:
+                  type: string
+                  default: inno-ai-embed-1
+            example:
+              input: This is a sample text for embedding generation
+              model: inno-ai-embed-1
+      responses:
+        '200':
+          description: Embeddings created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  object:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        object:
+                          type: string
+                        embedding:
+                          type: array
+                          items:
+                            type: number
+                        index:
+                          type: integer
+                  model:
+                    type: string
+                  usage:
+                    type: object
+                    properties:
+                      prompt_tokens:
+                        type: integer
+                      total_tokens:
+                        type: integer
+              example:
+                object: list
+                data:
+                  - object: embedding
+                    embedding: [0.0234, -0.0567, 0.0891, ...]
+                    index: 0
+                model: inno-ai-embed-1
+                usage:
+                  prompt_tokens: 10
+                  total_tokens: 10
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /v1/3d/generations:
+    post:
+      tags:
+        - Inference
+      summary: Generate 3D models
+      description: |
+        Generate 3D models from text prompts.
+        
+        **Available Tiers:**
+        - `3d-1` / `fast` - Fast generation (~30 sec)
+        - `3d-2` / `standard` / `default` / `hunyuan` - Standard quality (~2 min)
+        - `3d-premium` / `premium` / `rodin` / `best` - Premium quality (~3 min)
+        
+        **Requires:** REPLICATE_API_KEY configured
+      operationId: generate3D
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                prompt:
+                  type: string
+                  description: Text description of the 3D model
+                model:
+                  type: string
+                  default: 3d-2
+                format:
+                  type: string
+                  default: glb
+                  enum: [glb, obj, ply]
+            example:
+              prompt: A cute robot with round edges
+              model: 3d-2
+              format: glb
+      responses:
+        '200':
+          description: 3D model generated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  created:
+                    type: integer
+                  model:
+                    type: string
+                  tier:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        url:
+                          type: string
+                        format:
+                          type: string
+                        external_url:
+                          type: string
+              example:
+                created: 1708608000
+                model: 3d-2
+                tier: Standard 3D
+                data:
+                  - url: /data/model_abc123.glb
+                    format: glb
+                    external_url: https://replicate.com/output/...
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+
+  /v1/3d/image-to-3d:
+    post:
+      tags:
+        - Inference
+      summary: Convert image to 3D
+      description: Convert a 2D image to a 3D model
+      operationId: imageTo3D
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                image:
+                  type: string
+                  description: Image URL or base64 encoded image
+                format:
+                  type: string
+                  default: glb
+                steps:
+                  type: integer
+                  default: 25
+            example:
+              image: https://example.com/image.png
+              format: glb
+              steps: 25
+      responses:
+        '200':
+          description: Image converted to 3D successfully
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+
+  /v1/3d/models:
+    get:
+      tags:
+        - Inference
+      summary: List 3D models
+      description: Get available 3D generation models
+      operationId: list3DModels
+      security:
+        - ApiKeyAuth: []
+      responses:
+        '200':
+          description: 3D models retrieved successfully
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /v1/video/generations:
+    post:
+      tags:
+        - Inference
+      summary: Generate videos
+      description: |
+        Generate videos from text or images.
+        
+        **Available Models:**
+        - `video-1` / `fast` / `animatediff` - Fast text-to-video
+        - `video-2` / `standard` / `hailuo` / `minimax` - Standard quality
+        - `video-3` / `quality` / `luma` / `ray` - High quality
+        - `video-premium` / `wan25` - Premium quality
+        - `video-premium2` / `wan26` / `best` - Best quality
+        - `video-i2v` / `i2v` / `img2vid` - Image to video
+        - `video-i2v-kling` / `kling` - Premium I2V
+        
+        **Pricing:**
+        - Wan 480p: ₱4.68/second
+        - Wan 720p: ₱6.56/second
+        
+        **Requires:** REPLICATE_API_KEY configured
+      operationId: generateVideo
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                prompt:
+                  type: string
+                  description: Text prompt for video generation
+                image:
+                  type: string
+                  description: Image URL for image-to-video
+                model:
+                  type: string
+                  default: video-2
+                duration:
+                  type: integer
+                  default: 5
+                  description: Video duration in seconds
+            example:
+              prompt: A serene beach at sunset with waves gently lapping
+              model: video-2
+              duration: 5
+      responses:
+        '200':
+          description: Video generated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  created:
+                    type: integer
+                  model:
+                    type: string
+                  tier:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        url:
+                          type: string
+                        external_url:
+                          type: string
+                        duration:
+                          type: integer
+              example:
+                created: 1708608000
+                model: video-2
+                tier: Standard T2V
+                data:
+                  - url: /data/video_abc123.mp4
+                    external_url: https://replicate.com/output/...
+                    duration: 5
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+
+  /v1/video/edit:
+    post:
+      tags:
+        - Inference
+      summary: Edit video
+      description: Edit existing video with style transfer or prompt modifications
+      operationId: editVideo
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                video:
+                  type: string
+                  description: Video URL to edit
+                prompt:
+                  type: string
+                  description: Edit instructions
+                model:
+                  type: string
+                  default: video-edit
+                aspect_ratio:
+                  type: string
+            example:
+              video: https://example.com/video.mp4
+              prompt: Convert to anime style
+              model: video-edit
+      responses:
+        '200':
+          description: Video edited successfully
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+
+  /v1/video/add-audio:
+    post:
+      tags:
+        - Inference
+      summary: Add audio to video
+      description: Add AI-generated audio/sound effects to video
+      operationId: addVideoAudio
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                video:
+                  type: string
+                  description: Video URL
+                prompt:
+                  type: string
+                  description: Audio description
+            example:
+              video: https://example.com/video.mp4
+              prompt: Ocean waves and seagulls
+      responses:
+        '200':
+          description: Audio added successfully
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+
+  /v1/video/models:
+    get:
+      tags:
+        - Inference
+      summary: List video models
+      description: Get available video generation models
+      operationId: listVideoModels
+      security:
+        - ApiKeyAuth: []
+      responses:
+        '200':
+          description: Video models retrieved successfully
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /v1/usage:
+    get:
+      tags:
+        - Inference
+      summary: Get API key usage
+      description: Get usage statistics for the current API key
+      operationId: getApiKeyUsage
+      security:
+        - ApiKeyAuth: []
+      responses:
+        '200':
+          description: Usage retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  api_key_id:
+                    type: string
+                  api_key_name:
+                    type: string
+                  created:
+                    type: string
+                  last_used:
+                    type: string
+                    nullable: true
+                  usage:
+                    type: object
+                    properties:
+                      requests:
+                        type: integer
+                      tokens:
+                        type: integer
+                      rate_limit:
+                        type: integer
+                      monthly_limit:
+                        type: integer
+              example:
+                api_key_id: key_abc123
+                api_key_name: Production Key
+                created: "2026-02-21T10:30:00.000Z"
+                last_used: "2026-02-21T15:45:00.000Z"
+                usage:
+                  requests: 1523
+                  tokens: 450000
+                  rate_limit: 100
+                  monthly_limit: 1000000
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /v1/models:
+    get:
+      tags:
+        - Inference
+      summary: List all models
+      description: Get all available AI models including their capabilities
+      operationId: listModels
+      security:
+        - ApiKeyAuth: []
+      responses:
+        '200':
+          description: Models retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  object:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        object:
+                          type: string
+                        owned_by:
+                          type: string
+                        capabilities:
+                          type: array
+                          items:
+                            type: string
+                        description:
+                          type: string
+              example:
+                object: list
+                data:
+                  - id: inno-ai-boyong-4.5
+                    object: model
+                    owned_by: innovatehub
+                    capabilities: [chat, function_calling]
+                    description: Most capable chat model
+                  - id: flux-1.1-pro
+                    object: model
+                    owned_by: innovatehub
+                    capabilities: [image_generation]
+                    description: High-quality image generation
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ==================== ADMIN ENDPOINTS ====================
+  /admin/analytics:
+    get:
+      tags:
+        - Admin
+      summary: Get analytics
+      description: Get system analytics and usage statistics (Admin only)
+      operationId: getAnalytics
+      security:
+        - AdminKeyAuth: []
+      responses:
+        '200':
+          description: Analytics retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  totalRequests:
+                    type: integer
+                  totalTokens:
+                    type: integer
+                  requestsByModel:
+                    type: object
+                  requestsByHour:
+                    type: object
+                  requestsByDay:
+                    type: object
+                  uptime_ms:
+                    type: integer
+                  uptime_human:
+                    type: string
+                  last24Hours:
+                    type: object
+                  last7Days:
+                    type: object
+              example:
+                totalRequests: 50000
+                totalTokens: 25000000
+                requestsByModel:
+                  inno-ai-boyong-4.5: 30000
+                  flux-1.1-pro: 5000
+                uptime_ms: 86400000
+                uptime_human: 1d 0h 0m
+                last24Hours:
+                  "2026-02-21T10": 450
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /admin/logs:
+    get:
+      tags:
+        - Admin
+      summary: Get logs
+      description: Get recent request logs (Admin only)
+      operationId: getLogs
+      security:
+        - AdminKeyAuth: []
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 100
+          description: Number of logs to return
+      responses:
+        '200':
+          description: Logs retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LogEntry'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /admin/logs/{id}:
+    get:
+      tags:
+        - Admin
+      summary: Get log by ID
+      description: Get a specific log entry by ID (Admin only)
+      operationId: getLogById
+      security:
+        - AdminKeyAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Log entry retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LogEntry'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /admin/reset:
+    post:
+      tags:
+        - Admin
+      summary: Reset analytics
+      description: Reset all analytics data (Admin only)
+      operationId: resetAnalytics
+      security:
+        - AdminKeyAuth: []
+      responses:
+        '200':
+          description: Analytics reset successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+              example:
+                success: true
+                message: Analytics reset
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /admin/system:
+    get:
+      tags:
+        - Admin
+      summary: Get system info
+      description: Get system information and resource usage (Admin only)
+      operationId: getSystemInfo
+      security:
+        - AdminKeyAuth: []
+      responses:
+        '200':
+          description: System information retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  cpu:
+                    type: string
+                  memory:
+                    type: string
+                  disk:
+                    type: string
+                  nodeVersion:
+                    type: string
+                  platform:
+                    type: string
+                  pid:
+                    type: integer
+                  hfConfigured:
+                    type: boolean
+                  replicateConfigured:
+                    type: boolean
+                  capabilities:
+                    type: object
+              example:
+                cpu: "25.5%"
+                memory: "2048/8192 MB"
+                disk: "45G/100G"
+                nodeVersion: v20.11.0
+                platform: linux
+                pid: 12345
+                hfConfigured: true
+                replicateConfigured: true
+                capabilities:
+                  chat: true
+                  images: true
+                  audio: true
+                  embeddings: true
+                  3d: true
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /admin/playground:
+    post:
+      tags:
+        - Admin
+      summary: Playground chat
+      description: Test chat completions in the admin playground
+      operationId: adminPlayground
+      security:
+        - AdminKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                messages:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      role:
+                        type: string
+                      content:
+                        type: string
+                model:
+                  type: string
+            example:
+              messages:
+                - role: user
+                  content: Hello, how are you?
+              model: inno-ai-boyong-4.5
+      responses:
+        '200':
+          description: Playground response successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  model:
+                    type: string
+                  response:
+                    type: string
+                  usage:
+                    type: object
+              example:
+                model: inno-ai-boyong-4.5
+                response: I'm doing great! How can I help you today?
+                usage:
+                  prompt_tokens: 10
+                  completion_tokens: 15
+                  total_tokens: 25
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /admin/api-keys:
+    get:
+      tags:
+        - Admin
+      summary: List all API keys
+      description: Get all API keys (Admin only)
+      operationId: adminListApiKeys
+      security:
+        - AdminKeyAuth: []
+      responses:
+        '200':
+          description: API keys retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  keys:
+                    type: array
+                    items:
+                      type: object
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    post:
+      tags:
+        - Admin
+      summary: Create admin API key
+      description: Create a new API key (Admin only)
+      operationId: adminCreateApiKey
+      security:
+        - AdminKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                rateLimit:
+                  type: integer
+                  default: 100
+                monthlyLimit:
+                  type: integer
+                  default: 1000000
+            example:
+              name: Admin Test Key
+              rateLimit: 1000
+              monthlyLimit: 5000000
+      responses:
+        '200':
+          description: API key created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  key:
+                    type: string
+                  message:
+                    type: string
+              example:
+                success: true
+                key: inno_abc123def456...
+                message: API key created. Save this key - it won't be shown again!
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /admin/api-keys/{keyId}:
+    patch:
+      tags:
+        - Admin
+      summary: Update API key
+      description: Update an API key's settings (Admin only)
+      operationId: adminUpdateApiKey
+      security:
+        - AdminKeyAuth: []
+      parameters:
+        - name: keyId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                rateLimit:
+                  type: integer
+                monthlyLimit:
+                  type: integer
+                enabled:
+                  type: boolean
+      responses:
+        '200':
+          description: API key updated successfully
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags:
+        - Admin
+      summary: Delete API key
+      description: Delete an API key (Admin only)
+      operationId: adminDeleteApiKey
+      security:
+        - AdminKeyAuth: []
+      parameters:
+        - name: keyId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: API key deleted successfully
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /admin/oauth/url:
+    post:
+      tags:
+        - Admin
+      summary: Generate OAuth URL
+      description: Generate OAuth URL for external provider authentication (Admin only)
+      operationId: generateOAuthUrl
+      security:
+        - AdminKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                provider:
+                  type: string
+                accountName:
+                  type: string
+            example:
+              provider: antigravity
+              accountName: Production Account
+      responses:
+        '200':
+          description: OAuth URL generated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url:
+                    type: string
+                  state:
+                    type: string
+                  expiresIn:
+                    type: integer
+              example:
+                url: https://accounts.google.com/o/oauth2/auth?...
+                state: abc123...
+                expiresIn: 300
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /admin/oauth/exchange:
+    post:
+      tags:
+        - Admin
+      summary: Exchange OAuth code
+      description: Exchange OAuth authorization code for access tokens (Admin only)
+      operationId: exchangeOAuthCode
+      security:
+        - AdminKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                code:
+                  type: string
+                state:
+                  type: string
+                callbackUrl:
+                  type: string
+                accountName:
+                  type: string
+      responses:
+        '200':
+          description: Tokens exchanged successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  account:
+                    type: object
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /admin/accounts:
+    get:
+      tags:
+        - Admin
+      summary: List connected accounts
+      description: Get all connected OAuth accounts (Admin only)
+      operationId: listAccounts
+      security:
+        - AdminKeyAuth: []
+      responses:
+        '200':
+          description: Accounts retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accounts:
+                    type: array
+                    items:
+                      type: object
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /admin/accounts/{id}:
+    delete:
+      tags:
+        - Admin
+      summary: Delete account
+      description: Delete a connected account (Admin only)
+      operationId: deleteAccount
+      security:
+        - AdminKeyAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Account deleted successfully
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /admin/accounts/{id}/refresh:
+    post:
+      tags:
+        - Admin
+      summary: Refresh account token
+      description: Refresh OAuth access token for an account (Admin only)
+      operationId: refreshAccountToken
+      security:
+        - AdminKeyAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Token refreshed successfully
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token for customer authentication
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API key for inference endpoints (format ik_xxxxxxxx...)
+    AdminKeyAuth:
+      type: apiKey
+      in: header
+      name: x-admin-key
+      description: Admin key for administrative endpoints
+
+  schemas:
+    # ==================== AUTH SCHEMAS ====================
+    RegisterRequest:
+      type: object
+      required:
+        - email
+        - password
+        - name
+      properties:
+        email:
+          type: string
+          format: email
+          example: customer@example.com
+        password:
+          type: string
+          minLength: 8
+          example: SecurePass123!
+        name:
+          type: string
+          example: John Doe
+        company:
+          type: string
+          example: ACME Corp
+        tier:
+          type: string
+          enum: [free, starter, professional, enterprise]
+          default: free
+
+    RegisterResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        customer:
+          $ref: '#/components/schemas/Customer'
+        message:
+          type: string
+
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+
+    LoginResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        token:
+          type: string
+          description: JWT token for authentication
+        customer:
+          $ref: '#/components/schemas/Customer'
+        expiresIn:
+          type: string
+          example: 7d
+
+    UpdateProfileRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        company:
+          type: string
+        settings:
+          type: object
+          properties:
+            notifications:
+              type: boolean
+            newsletter:
+              type: boolean
+
+    ChangePasswordRequest:
+      type: object
+      required:
+        - currentPassword
+        - newPassword
+      properties:
+        currentPassword:
+          type: string
+        newPassword:
+          type: string
+          minLength: 8
+
+    ProfileResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        customer:
+          $ref: '#/components/schemas/Customer'
+
+    # ==================== CUSTOMER SCHEMAS ====================
+    Customer:
+      type: object
+      properties:
+        id:
+          type: string
+          example: cust_abc123def456
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+        company:
+          type: string
+        tier:
+          type: string
+          enum: [free, starter, professional, enterprise]
+        status:
+          type: string
+          enum: [active, suspended]
+        createdAt:
+          type: string
+          format: date-time
+        lastLogin:
+          type: string
+          format: date-time
+          nullable: true
+        loginCount:
+          type: integer
+        settings:
+          type: object
+
+    ApiKey:
+      type: object
+      properties:
+        id:
+          type: string
+          example: key_abc123
+        name:
+          type: string
+          example: Production Key
+        createdAt:
+          type: string
+          format: date-time
+        lastUsed:
+          type: string
+          format: date-time
+          nullable: true
+        usageCount:
+          type: integer
+        status:
+          type: string
+          enum: [active, revoked]
+        expiresAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    UsageResponse:
+      type: object
+      properties:
+        totalRequests:
+          type: integer
+        totalTokens:
+          type: integer
+        totalCost:
+          type: number
+        requestsByModel:
+          type: object
+          additionalProperties:
+            type: object
+            properties:
+              requests:
+                type: integer
+              tokens:
+                type: integer
+              cost:
+                type: number
+        recentDaily:
+          type: array
+          items:
+            type: object
+            properties:
+              date:
+                type: string
+              requests:
+                type: integer
+              tokens:
+                type: integer
+              cost:
+                type: number
+
+    # ==================== INFERENCE SCHEMAS ====================
+    ChatCompletionRequest:
+      type: object
+      required:
+        - messages
+      properties:
+        model:
+          type: string
+          description: Model ID to use
+          default: inno-ai-boyong-4.5
+        messages:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChatMessage'
+        stream:
+          type: boolean
+          default: false
+          description: Whether to stream the response
+        temperature:
+          type: number
+          minimum: 0
+          maximum: 2
+          default: 0.7
+        max_tokens:
+          type: integer
+          default: 4096
+
+    ChatMessage:
+      type: object
+      required:
+        - role
+        - content
+      properties:
+        role:
+          type: string
+          enum: [system, user, assistant, function]
+        content:
+          type: string
+        name:
+          type: string
+          description: Name of the function (for function role)
+
+    ChatCompletionResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        object:
+          type: string
+          example: chat.completion
+        created:
+          type: integer
+        model:
+          type: string
+        choices:
+          type: array
+          items:
+            type: object
+            properties:
+              index:
+                type: integer
+              message:
+                type: object
+                properties:
+                  role:
+                    type: string
+                  content:
+                    type: string
+              finish_reason:
+                type: string
+                enum: [stop, length, function_call]
+        usage:
+          type: object
+          properties:
+            prompt_tokens:
+              type: integer
+            completion_tokens:
+              type: integer
+            total_tokens:
+              type: integer
+
+    ImageGenerationRequest:
+      type: object
+      required:
+        - prompt
+      properties:
+        prompt:
+          type: string
+          description: Text description of the image to generate
+        model:
+          type: string
+          default: image-3
+          description: Image model tier to use
+        n:
+          type: integer
+          default: 1
+          description: Number of images to generate
+        size:
+          type: string
+          default: "1024x1024"
+          enum: ["256x256", "512x512", "1024x1024", "1792x1024", "1024x1792"]
+        response_format:
+          type: string
+          default: url
+          enum: [url, b64_json]
+
+    # ==================== ADMIN SCHEMAS ====================
+    LogEntry:
+      type: object
+      properties:
+        id:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        model:
+          type: string
+        source:
+          type: string
+        apiKey:
+          type: string
+        promptPreview:
+          type: string
+        responsePreview:
+          type: string
+        promptTokens:
+          type: integer
+        completionTokens:
+          type: integer
+        totalTokens:
+          type: integer
+        latency:
+          type: integer
+        status:
+          type: string
+
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: ok
+        service:
+          type: string
+          example: InnovateHub AI Gateway
+        version:
+          type: string
+          example: "3.1.0"
+        models:
+          type: object
+          properties:
+            chat:
+              type: array
+              items:
+                type: string
+            image:
+              type: array
+              items:
+                type: string
+            audio:
+              type: array
+              items:
+                type: string
+            embeddings:
+              type: array
+              items:
+                type: string
+            3d:
+              type: array
+              items:
+                type: string
+        capabilities:
+          type: array
+          items:
+            type: string
+        powered_by:
+          type: string
+        uptime_ms:
+          type: integer
+        uptime_human:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        providers:
+          type: object
+          additionalProperties:
+            type: object
+            properties:
+              configured:
+                type: boolean
+              description:
+                type: string
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+          example:
+            error: Invalid request parameters
+
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+          example:
+            error: Authentication required
+
+    NotFound:
+      description: Not found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+          example:
+            error: Resource not found
+
+    RateLimitExceeded:
+      description: Too Many Requests
+      headers:
+        X-RateLimit-Limit:
+          schema:
+            type: integer
+          description: Request limit per window
+        X-RateLimit-Remaining:
+          schema:
+            type: integer
+          description: Requests remaining in window
+        X-RateLimit-Reset:
+          schema:
+            type: integer
+          description: Unix timestamp when limit resets
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              message:
+                type: string
+          example:
+            error: Too Many Requests
+            message: Rate limit exceeded
+
+    ServiceUnavailable:
+      description: Service Unavailable
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              message:
+                type: string
+              setup:
+                type: string
+          example:
+            error: 3D generation not configured
+            message: REPLICATE_API_KEY is required for 3D generation
+            setup: Add REPLICATE_API_KEY to .env file

@@ -1,0 +1,2327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0f172a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="icon" type="image/png" href="/images/logo.png">
+  <link rel="apple-touch-icon" href="/images/logo.png">
+  <title>InnoAI Gateway</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'sans-serif'] },
+          colors: {
+            dark: { 900: '#0a0a0f', 800: '#12121a', 700: '#1a1a25', 600: '#252532' },
+            accent: { DEFAULT: '#6366f1', light: '#818cf8', dark: '#4f46e5' },
+            success: '#10b981', warning: '#f59e0b', danger: '#ef4444'
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    * { -webkit-tap-highlight-color: transparent; }
+    body { font-family: 'Inter', sans-serif; }
+    
+    /* Glassmorphism */
+    .glass { 
+      background: rgba(255,255,255,0.03); 
+      backdrop-filter: blur(20px); 
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+    .glass-strong {
+      background: rgba(255,255,255,0.08);
+      backdrop-filter: blur(40px);
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    
+    /* Gradient backgrounds */
+    .gradient-mesh {
+      background: 
+        radial-gradient(at 40% 20%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
+        radial-gradient(at 80% 0%, rgba(139, 92, 246, 0.1) 0px, transparent 50%),
+        radial-gradient(at 0% 50%, rgba(99, 102, 241, 0.1) 0px, transparent 50%),
+        radial-gradient(at 80% 50%, rgba(236, 72, 153, 0.08) 0px, transparent 50%),
+        radial-gradient(at 0% 100%, rgba(99, 102, 241, 0.1) 0px, transparent 50%),
+        #0a0a0f;
+    }
+    
+    /* Glow effects */
+    .glow { box-shadow: 0 0 40px rgba(99, 102, 241, 0.15); }
+    .glow-sm { box-shadow: 0 0 20px rgba(99, 102, 241, 0.1); }
+    .glow-accent { box-shadow: 0 0 30px rgba(99, 102, 241, 0.3); }
+    
+    /* Animations */
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes pulse-soft { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+    
+    .fade-in { animation: fadeIn 0.3s ease-out; }
+    .slide-up { animation: slideUp 0.4s ease-out; }
+    .pulse-soft { animation: pulse-soft 2s ease-in-out infinite; }
+    
+    /* Skeleton loading */
+    .skeleton {
+      background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+    
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+    
+    /* Custom checkbox */
+    .toggle { position: relative; width: 44px; height: 24px; }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider {
+      position: absolute; cursor: pointer; inset: 0;
+      background: rgba(255,255,255,0.1); border-radius: 24px;
+      transition: 0.3s;
+    }
+    .toggle-slider:before {
+      position: absolute; content: ""; height: 18px; width: 18px;
+      left: 3px; bottom: 3px; background: white; border-radius: 50%;
+      transition: 0.3s;
+    }
+    .toggle input:checked + .toggle-slider { background: #6366f1; }
+    .toggle input:checked + .toggle-slider:before { transform: translateX(20px); }
+    
+    /* Mobile nav */
+    .mobile-nav {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: rgba(10, 10, 15, 0.95);
+      backdrop-filter: blur(20px);
+      border-top: 1px solid rgba(255,255,255,0.05);
+      z-index: 100;
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+    
+    /* Toast */
+    .toast {
+      position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%);
+      background: rgba(255,255,255,0.1); backdrop-filter: blur(20px);
+      padding: 12px 24px; border-radius: 12px; z-index: 200;
+      animation: slideUp 0.3s ease-out;
+    }
+    
+    /* Chat bubbles */
+    .chat-bubble-user {
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      border-radius: 20px 20px 4px 20px;
+    }
+    .chat-bubble-ai {
+      background: rgba(255,255,255,0.08);
+      border-radius: 20px 20px 20px 4px;
+    }
+    
+    /* Stat card hover */
+    .stat-card {
+      transition: all 0.3s ease;
+    }
+    .stat-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    }
+    
+    /* Hide mobile nav on desktop */
+    @media (min-width: 768px) {
+      .mobile-nav { display: none; }
+      .desktop-nav { display: flex; }
+    }
+    @media (max-width: 767px) {
+      .desktop-nav { display: none; }
+      .main-content { padding-bottom: 80px; }
+    }
+    
+    /* Typing indicator */
+    .typing-dot { animation: pulse-soft 1.4s infinite; }
+    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+    
+    /* Responsive improvements */
+    .responsive-grid {
+      display: grid;
+      gap: 1rem;
+    }
+    
+    @media (max-width: 640px) {
+      .responsive-grid {
+        grid-template-columns: 1fr;
+      }
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .chat-area {
+        height: calc(100vh - 280px);
+      }
+    }
+    
+    @media (min-width: 641px) and (max-width: 1024px) {
+      .responsive-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    
+    @media (min-width: 1025px) {
+      .responsive-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+      .stats-grid {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+    
+    /* Loading spinner */
+    .spinner {
+      border: 3px solid rgba(255,255,255,0.1);
+      border-top: 3px solid #6366f1;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    /* Touch-friendly buttons */
+    .touch-btn {
+      min-height: 44px;
+      min-width: 44px;
+    }
+    
+    /* Modal improvements */
+    .modal-overlay {
+      background: rgba(0,0,0,0.8);
+      backdrop-filter: blur(8px);
+    }
+    
+    @media (max-width: 640px) {
+      .modal-content {
+        width: 95%;
+        max-height: 90vh;
+        overflow-y: auto;
+      }
+    }
+    
+    /* Form improvements */
+    .form-input:focus {
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+    }
+    
+    /* Card hover effects */
+    .hover-card {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .hover-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    }
+    
+    /* Status badges */
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+    
+    .status-connected {
+      background: rgba(16, 185, 129, 0.2);
+      color: #10b981;
+    }
+    
+    .status-expired {
+      background: rgba(245, 158, 11, 0.2);
+      color: #f59e0b;
+    }
+    
+    .status-error {
+      background: rgba(239, 68, 68, 0.2);
+      color: #ef4444;
+    }
+    
+    /* Toast notifications */
+    .toast-container {
+      position: fixed;
+      bottom: 100px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 200;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      pointer-events: none;
+    }
+    
+    .toast-item {
+      background: rgba(30, 30, 40, 0.95);
+      backdrop-filter: blur(20px);
+      padding: 12px 24px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.1);
+      animation: slideUp 0.3s ease-out;
+      pointer-events: auto;
+      max-width: 90vw;
+    }
+    
+    .toast-success { border-left: 4px solid #10b981; }
+    .toast-error { border-left: 4px solid #ef4444; }
+    .toast-warning { border-left: 4px solid #f59e0b; }
+  </style>
+</head>
+<body class="gradient-mesh min-h-screen text-white overflow-x-hidden">
+
+  <!-- Login Screen -->
+  <div id="loginScreen" class="fixed inset-0 flex items-center justify-center p-6 z-50">
+    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
+    <div class="glass-strong rounded-3xl p-8 w-full max-w-sm relative slide-up">
+      <!-- Logo -->
+      <div class="text-center mb-8">
+        <div class="w-24 h-24 mx-auto mb-4 rounded-2xl overflow-hidden glow-accent">
+          <img src="/images/logo.png" alt="InnovateHub Logo" class="w-full h-full object-contain">
+        </div>
+        <h1 class="text-2xl font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">InnoAI</h1>
+        <p class="text-gray-500 text-sm mt-1">Admin Gateway</p>
+      </div>
+      
+      <!-- Login Form -->
+      <div class="space-y-4">
+        <div class="relative">
+          <input type="password" id="adminKeyInput" placeholder="Enter admin key" 
+            class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-4 pl-12 focus:outline-none focus:border-accent/50 focus:bg-white/10 transition-all"
+            onkeypress="if(event.key==='Enter')login()">
+          <i class="fas fa-key absolute left-4 top-1/2 -translate-y-1/2 text-gray-500"></i>
+        </div>
+        <button onclick="login()" class="w-full bg-gradient-to-r from-accent to-purple-600 hover:from-accent-light hover:to-purple-500 rounded-xl py-4 font-semibold transition-all glow-sm hover:glow-accent active:scale-[0.98]">
+          Sign In
+        </button>
+      </div>
+      
+      <p id="loginError" class="text-danger text-center mt-4 text-sm hidden">
+        <i class="fas fa-exclamation-circle mr-1"></i>Invalid admin key
+      </p>
+      
+      <p class="text-center text-gray-600 text-xs mt-6">
+        Powered by InnovateHub Philippines
+      </p>
+    </div>
+  </div>
+
+  <!-- Main App -->
+  <div id="mainApp" class="hidden">
+    
+    <!-- Desktop Header -->
+    <header class="hidden md:flex glass-strong sticky top-0 z-40 px-6 py-4 items-center justify-between">
+      <div class="flex items-center gap-4">
+        <div class="w-10 h-10 rounded-xl overflow-hidden">
+          <img src="/images/logo.png" alt="InnovateHub" class="w-full h-full object-contain">
+        </div>
+        <div>
+          <h1 class="font-bold text-lg">InnoAI</h1>
+          <p class="text-gray-500 text-xs">Admin Portal</p>
+        </div>
+      </div>
+      
+      <!-- Desktop Navigation -->
+      <nav class="desktop-nav items-center gap-1 bg-white/5 rounded-xl p-1">
+        <button onclick="showTab('dashboard')" data-tab="dashboard" class="nav-btn px-4 py-2 rounded-lg text-sm font-medium transition-all bg-accent text-white">
+          <i class="fas fa-chart-line mr-2"></i>Dashboard
+        </button>
+        <button onclick="showTab('playground')" data-tab="playground" class="nav-btn px-4 py-2 rounded-lg text-sm font-medium transition-all text-gray-400 hover:text-white hover:bg-white/5">
+          <i class="fas fa-flask mr-2"></i>Playground
+        </button>
+        <button onclick="showTab('logs')" data-tab="logs" class="nav-btn px-4 py-2 rounded-lg text-sm font-medium transition-all text-gray-400 hover:text-white hover:bg-white/5">
+          <i class="fas fa-list mr-2"></i>Logs
+        </button>
+        <button onclick="showTab('apikeys')" data-tab="apikeys" class="nav-btn px-4 py-2 rounded-lg text-sm font-medium transition-all text-gray-400 hover:text-white hover:bg-white/5">
+          <i class="fas fa-key mr-2"></i>API Keys
+        </button>
+        <button onclick="showTab('settings')" data-tab="settings" class="nav-btn px-4 py-2 rounded-lg text-sm font-medium transition-all text-gray-400 hover:text-white hover:bg-white/5">
+          <i class="fas fa-cog mr-2"></i>Settings
+        </button>
+        <button onclick="showTab('billing')" data-tab="billing" class="nav-btn px-4 py-2 rounded-lg text-sm font-medium transition-all text-gray-400 hover:text-white hover:bg-white/5">
+          <i class="fas fa-credit-card mr-2"></i>Billing
+        </button>
+      </nav>
+      
+      <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-success/10 border border-success/20">
+          <span class="w-2 h-2 rounded-full bg-success pulse-soft"></span>
+          <span class="text-success text-sm font-medium">Online</span>
+        </div>
+        <button onclick="logout()" class="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center transition-all">
+          <i class="fas fa-sign-out-alt text-gray-400"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- Mobile Header -->
+    <header class="md:hidden glass-strong sticky top-0 z-40 px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl overflow-hidden">
+          <img src="/images/logo.png" alt="InnovateHub" class="w-full h-full object-contain">
+        </div>
+        <span class="font-bold">InnoAI</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-success pulse-soft"></span>
+        <button onclick="logout()" class="w-9 h-9 rounded-xl bg-white/5 flex items-center justify-center">
+          <i class="fas fa-sign-out-alt text-gray-400 text-sm"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content p-4 md:p-6 max-w-7xl mx-auto">
+      
+      <!-- Dashboard Tab -->
+      <div id="tab-dashboard" class="tab-content space-y-6">
+        <!-- Welcome Card -->
+        <div class="glass rounded-2xl p-6 glow slide-up">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <h2 class="text-xl md:text-2xl font-bold">Welcome back! 👋</h2>
+              <p class="text-gray-400 mt-1">Here's what's happening with your AI gateway</p>
+            </div>
+            <div class="flex gap-2">
+              <button onclick="loadAnalytics()" class="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-sm transition-all flex items-center gap-2">
+                <i class="fas fa-sync-alt"></i>
+                <span class="hidden sm:inline">Refresh</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="stat-card glass rounded-2xl p-5 cursor-pointer">
+            <div class="flex items-start justify-between">
+              <div>
+                <p class="text-gray-400 text-sm">Total Requests</p>
+                <p id="statRequests" class="text-2xl md:text-3xl font-bold mt-1">-</p>
+                <p class="text-xs text-gray-500 mt-2"><span class="text-success">↑ 12%</span> vs last week</p>
+              </div>
+              <div class="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center">
+                <i class="fas fa-paper-plane text-accent text-lg"></i>
+              </div>
+            </div>
+          </div>
+          
+          <div class="stat-card glass rounded-2xl p-5 cursor-pointer">
+            <div class="flex items-start justify-between">
+              <div>
+                <p class="text-gray-400 text-sm">Total Tokens</p>
+                <p id="statTokens" class="text-2xl md:text-3xl font-bold mt-1">-</p>
+                <p class="text-xs text-gray-500 mt-2"><span class="text-warning">~$0.00</span> estimated</p>
+              </div>
+              <div class="w-12 h-12 rounded-xl bg-warning/10 flex items-center justify-center">
+                <i class="fas fa-coins text-warning text-lg"></i>
+              </div>
+            </div>
+          </div>
+          
+          <div class="stat-card glass rounded-2xl p-5 cursor-pointer">
+            <div class="flex items-start justify-between">
+              <div>
+                <p class="text-gray-400 text-sm">Uptime</p>
+                <p id="statUptime" class="text-2xl md:text-3xl font-bold mt-1">-</p>
+                <p class="text-xs text-gray-500 mt-2"><span class="text-success">99.9%</span> availability</p>
+              </div>
+              <div class="w-12 h-12 rounded-xl bg-success/10 flex items-center justify-center">
+                <i class="fas fa-clock text-success text-lg"></i>
+              </div>
+            </div>
+          </div>
+          
+          <div class="stat-card glass rounded-2xl p-5 cursor-pointer">
+            <div class="flex items-start justify-between">
+              <div>
+                <p class="text-gray-400 text-sm">Avg Latency</p>
+                <p id="statLatency" class="text-2xl md:text-3xl font-bold mt-1">-</p>
+                <p class="text-xs text-gray-500 mt-2">Response time</p>
+              </div>
+              <div class="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center">
+                <i class="fas fa-bolt text-purple-400 text-lg"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Charts Row -->
+        <div class="grid lg:grid-cols-2 gap-4">
+          <div class="glass rounded-2xl p-5">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="font-semibold">Requests (24h)</h3>
+              <span class="text-xs text-gray-500">Hourly breakdown</span>
+            </div>
+            <div class="h-48 md:h-64">
+              <canvas id="hourlyChart"></canvas>
+            </div>
+          </div>
+          
+          <div class="glass rounded-2xl p-5">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="font-semibold">Model Usage</h3>
+              <span class="text-xs text-gray-500">Distribution</span>
+            </div>
+            <div class="h-48 md:h-64 flex items-center justify-center">
+              <canvas id="modelChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- System & Recent Activity -->
+        <div class="grid lg:grid-cols-3 gap-4">
+          <!-- System Health -->
+          <div class="glass rounded-2xl p-5">
+            <h3 class="font-semibold mb-4 flex items-center gap-2">
+              <i class="fas fa-server text-accent"></i>System Health
+            </h3>
+            <div class="space-y-4">
+              <div>
+                <div class="flex justify-between text-sm mb-1">
+                  <span class="text-gray-400">CPU</span>
+                  <span id="sysCpu">-</span>
+                </div>
+                <div class="h-2 bg-white/5 rounded-full overflow-hidden">
+                  <div id="sysCpuBar" class="h-full bg-gradient-to-r from-accent to-purple-500 rounded-full transition-all" style="width: 0%"></div>
+                </div>
+              </div>
+              <div>
+                <div class="flex justify-between text-sm mb-1">
+                  <span class="text-gray-400">Memory</span>
+                  <span id="sysMemory">-</span>
+                </div>
+                <div class="h-2 bg-white/5 rounded-full overflow-hidden">
+                  <div id="sysMemoryBar" class="h-full bg-gradient-to-r from-success to-emerald-400 rounded-full transition-all" style="width: 0%"></div>
+                </div>
+              </div>
+              <div>
+                <div class="flex justify-between text-sm mb-1">
+                  <span class="text-gray-400">Disk</span>
+                  <span id="sysDisk">-</span>
+                </div>
+                <div class="h-2 bg-white/5 rounded-full overflow-hidden">
+                  <div id="sysDiskBar" class="h-full bg-gradient-to-r from-warning to-orange-400 rounded-full transition-all" style="width: 0%"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- AI Providers -->
+          <div class="glass rounded-2xl p-5">
+            <h3 class="font-semibold mb-4 flex items-center gap-2">
+              <i class="fas fa-plug text-success"></i>AI Providers
+            </h3>
+            <div class="space-y-3" id="providersStatus">
+              <div class="flex items-center justify-between p-3 bg-white/5 rounded-xl">
+                <div class="flex items-center gap-3">
+                  <div class="w-8 h-8 rounded-lg bg-accent/20 flex items-center justify-center text-lg">🚀</div>
+                  <div>
+                    <p class="font-medium text-sm">InnovateHub</p>
+                    <p class="text-xs text-gray-500">Primary models</p>
+                  </div>
+                </div>
+                <span class="text-xs bg-success/20 text-success px-2 py-1 rounded-full">Active</span>
+              </div>
+              <div class="flex items-center justify-between p-3 bg-white/5 rounded-xl">
+                <div class="flex items-center gap-3">
+                  <div class="w-8 h-8 rounded-lg bg-yellow-500/20 flex items-center justify-center text-lg">🤗</div>
+                  <div>
+                    <p class="font-medium text-sm">Hugging Face</p>
+                    <p class="text-xs text-gray-500">Inference API</p>
+                  </div>
+                </div>
+                <span id="hfStatus" class="text-xs bg-gray-700 text-gray-400 px-2 py-1 rounded-full">Checking...</span>
+              </div>
+              <div class="flex items-center justify-between p-3 bg-white/5 rounded-xl">
+                <div class="flex items-center gap-3">
+                  <div class="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center text-lg">🌐</div>
+                  <div>
+                    <p class="font-medium text-sm">OpenRouter</p>
+                    <p class="text-xs text-gray-500">Multi-provider API</p>
+                  </div>
+                </div>
+                <span id="orStatus" class="text-xs bg-gray-700 text-gray-400 px-2 py-1 rounded-full">Checking...</span>
+              </div>
+              <div class="flex items-center justify-between p-3 bg-white/5 rounded-xl">
+                <div class="flex items-center gap-3">
+                  <div class="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center text-lg">🌙</div>
+                  <div>
+                    <p class="font-medium text-sm">MoonshotAI (Kimi)</p>
+                    <p class="text-xs text-gray-500">Chinese AI models</p>
+                  </div>
+                </div>
+                <span id="kimiStatus" class="text-xs bg-gray-700 text-gray-400 px-2 py-1 rounded-full">Checking...</span>
+              </div>
+              <div class="flex items-center justify-between p-3 bg-white/5 rounded-xl">
+                <div class="flex items-center gap-3">
+                  <div class="w-8 h-8 rounded-lg bg-red-500/20 flex items-center justify-center text-lg">🔥</div>
+                  <div>
+                    <p class="font-medium text-sm">Google Antigravity</p>
+                    <p class="text-xs text-gray-500">FREE via OpenClaw OAuth</p>
+                  </div>
+                </div>
+                <span id="antigravityStatus" class="text-xs bg-gray-700 text-gray-400 px-2 py-1 rounded-full">Checking...</span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Recent Activity -->
+          <div class="lg:col-span-2 glass rounded-2xl p-5">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="font-semibold flex items-center gap-2">
+                <i class="fas fa-history text-accent"></i>Recent Activity
+              </h3>
+              <button onclick="showTab('logs')" class="text-accent text-sm hover:underline">View all</button>
+            </div>
+            <div id="recentActivity" class="space-y-3">
+              <div class="skeleton h-12 rounded-xl"></div>
+              <div class="skeleton h-12 rounded-xl"></div>
+              <div class="skeleton h-12 rounded-xl"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Playground Tab -->
+      <div id="tab-playground" class="tab-content hidden">
+        <div class="max-w-3xl mx-auto">
+          <!-- Model Selector Card -->
+          <div class="glass rounded-2xl p-4 mb-4 slide-up">
+            <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+              <div class="flex items-center gap-3 flex-1">
+                <div class="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center">
+                  <i class="fas fa-flask text-accent"></i>
+                </div>
+                <div>
+                  <h3 class="font-semibold">AI Playground</h3>
+                  <p class="text-xs text-gray-500">Test your AI models</p>
+                </div>
+              </div>
+              <select id="playgroundModel" class="bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-accent/50">
+                <optgroup label="💰 FREE - Cost Effective Models (hf-)">
+                  <option value="hf-Qwen/Qwen2.5-72B-Instruct">💰 FREE - Qwen2.5 72B (Very Capable!)</option>
+                  <option value="hf-mistralai/Mistral-7B-Instruct-v0.2">💰 FREE - Mistral 7B Instruct</option>
+                  <option value="hf-HuggingFaceH4/zephyr-7b-beta">💰 FREE - Zephyr 7B (Assistant)</option>
+                  <option value="hf-tiiuae/falcon-7b-instruct">💰 FREE - Falcon 7B (Fast)</option>
+                  <option value="hf-upstage/SOLAR-10.7B-Instruct-v1.0">💰 FREE - SOLAR 10.7B</option>
+                </optgroup>
+                <optgroup label="🚀 InnovateHub Models">
+                  <option value="inno-ai-boyong-4.5">🚀 inno-ai-boyong-4.5</option>
+                  <option value="inno-ai-boyong-4.0">⚡ inno-ai-boyong-4.0</option>
+                  <option value="inno-ai-boyong-mini">💨 inno-ai-boyong-mini</option>
+                </optgroup>
+                <optgroup label="🌙 MoonshotAI/Kimi Models (prefix: kimi-)">
+                  <option value="kimi-k2.5">🌙 Kimi K2.5 (256K context)</option>
+                  <option value="kimi-k2">🌙 Kimi K2 (Balanced)</option>
+                  <option value="kimi-k1.5">🌙 Kimi K1.5 (Fast)</option>
+                </optgroup>
+                <optgroup label="🤗 Hugging Face Models (prefix: hf-)">
+                  <option value="hf-meta-llama/Llama-2-7b-chat-hf">🤗 Llama 2 7B Chat</option>
+                  <option value="hf-google/gemma-7b-it">🤗 Gemma 7B</option>
+                  <option value="hf-microsoft/Phi-3-mini-4k-instruct">🤗 Phi-3 Mini</option>
+                  <option value="hf-NousResearch/Nous-Hermes-2-Mistral-7B-DPO">🤗 Nous Hermes 2 7B</option>
+                </optgroup>
+                <optgroup label="🌐 OpenRouter Models (prefix: or-)">
+                  <option value="or-anthropic/claude-3-opus">🌐 Claude 3 Opus</option>
+                  <option value="or-anthropic/claude-3-sonnet">🌐 Claude 3 Sonnet</option>
+                  <option value="or-openai/gpt-4o">🌐 GPT-4o</option>
+                  <option value="or-openai/gpt-4-turbo">🌐 GPT-4 Turbo</option>
+                  <option value="or-google/gemini-pro">🌐 Gemini Pro</option>
+                </optgroup>
+                <optgroup label="🔥 Google Antigravity (prefix: antigravity-, FREE via OAuth)">
+                  <option value="antigravity-gemini-2.5-pro">🔥 Gemini 2.5 Pro (FREE)</option>
+                  <option value="antigravity-gemini-2.0-flash">🔥 Gemini 2.0 Flash (FREE)</option>
+                  <option value="antigravity-gemini-1.5-pro">🔥 Gemini 1.5 Pro (FREE)</option>
+                  <option value="antigravity-claude-opus-4-5-thinking">🔥 Claude Opus 4.5 Thinking (FREE)</option>
+                  <option value="antigravity-claude-sonnet-4-5">🔥 Claude Sonnet 4.5 (FREE)</option>
+                </optgroup>
+              </select>
+            </div>
+          </div>
+
+          <!-- Chat Container -->
+          <div class="glass rounded-2xl overflow-hidden slide-up" style="animation-delay: 0.1s">
+            <!-- Chat Messages -->
+            <div id="chatArea" class="h-[50vh] md:h-[60vh] overflow-y-auto p-4 space-y-4">
+              <div class="flex flex-col items-center justify-center h-full text-center p-4">
+                <div class="w-16 h-16 rounded-2xl bg-accent/10 flex items-center justify-center mb-4">
+                  <i class="fas fa-comments text-accent text-2xl"></i>
+                </div>
+                <h3 class="font-semibold text-lg">Start a conversation</h3>
+                <p class="text-gray-500 text-sm mt-1">Send a message to test the AI</p>
+              </div>
+            </div>
+            
+            <!-- Input Area -->
+            <div class="border-t border-white/5 p-4">
+              <div class="flex gap-2">
+                <input type="text" id="playgroundInput" placeholder="Type your message..." 
+                  class="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-accent/50 focus:bg-white/10 transition-all"
+                  onkeypress="if(event.key==='Enter' && !event.shiftKey)sendPlayground()">
+                <button onclick="sendPlayground()" id="sendBtn" class="w-12 h-12 bg-gradient-to-r from-accent to-purple-600 hover:from-accent-light hover:to-purple-500 rounded-xl flex items-center justify-center transition-all active:scale-95">
+                  <i class="fas fa-paper-plane"></i>
+                </button>
+              </div>
+              <div class="flex justify-between mt-3 text-xs text-gray-500">
+                <span>Tokens: <span id="playgroundTokens" class="text-accent font-medium">0</span></span>
+                <button onclick="clearChat()" class="hover:text-white transition-colors flex items-center gap-1">
+                  <i class="fas fa-trash-alt"></i>Clear chat
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Logs Tab -->
+      <div id="tab-logs" class="tab-content hidden">
+        <div class="glass rounded-2xl overflow-hidden slide-up">
+          <!-- Logs Header -->
+          <div class="p-4 border-b border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center">
+                <i class="fas fa-list text-accent"></i>
+              </div>
+              <div>
+                <h3 class="font-semibold">Request Logs</h3>
+                <p id="logsLastUpdated" class="text-xs text-gray-500">Loading...</p>
+              </div>
+            </div>
+            <div class="flex gap-2">
+              <button onclick="loadLogs()" class="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-sm transition-all flex items-center gap-2">
+                <i class="fas fa-sync-alt"></i>Refresh
+              </button>
+            </div>
+          </div>
+          
+          <!-- Logs Table (Desktop) -->
+          <div class="hidden md:block overflow-x-auto">
+            <table class="w-full">
+              <thead>
+                <tr class="text-left text-gray-400 text-sm border-b border-white/5">
+                  <th class="px-4 py-3 font-medium">Time</th>
+                  <th class="px-4 py-3 font-medium">Source</th>
+                  <th class="px-4 py-3 font-medium">Model</th>
+                  <th class="px-4 py-3 font-medium">Prompt</th>
+                  <th class="px-4 py-3 font-medium">Tokens</th>
+                  <th class="px-4 py-3 font-medium">Latency</th>
+                  <th class="px-4 py-3 font-medium">Status</th>
+                </tr>
+              </thead>
+              <tbody id="logsTable" class="text-sm">
+                <tr><td colspan="7" class="px-4 py-12 text-center text-gray-500">
+                  <i class="fas fa-spinner fa-spin mr-2"></i>Loading logs...
+                </td></tr>
+              </tbody>
+            </table>
+          </div>
+          
+          <!-- Logs Cards (Mobile) -->
+          <div id="logsCards" class="md:hidden p-4 space-y-3">
+            <div class="skeleton h-24 rounded-xl"></div>
+            <div class="skeleton h-24 rounded-xl"></div>
+            <div class="skeleton h-24 rounded-xl"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- API Keys Tab -->
+      <div id="tab-apikeys" class="tab-content hidden">
+        <div class="max-w-4xl mx-auto space-y-4">
+          <!-- Create Key Card -->
+          <div class="glass rounded-2xl p-5 slide-up">
+            <div class="flex items-center justify-between mb-4">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center">
+                  <i class="fas fa-plus text-accent"></i>
+                </div>
+                <div>
+                  <h3 class="font-semibold">Create API Key</h3>
+                  <p class="text-xs text-gray-500">Generate a new API key for your applications</p>
+                </div>
+              </div>
+            </div>
+            <div class="flex flex-col sm:flex-row gap-3">
+              <input type="text" id="newKeyName" placeholder="Key name (e.g., Production App)" 
+                class="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-accent/50">
+              <button onclick="createApiKey()" class="px-6 py-3 bg-gradient-to-r from-accent to-purple-600 rounded-xl font-medium transition-all hover:opacity-90 active:scale-95">
+                <i class="fas fa-plus mr-2"></i>Create Key
+              </button>
+            </div>
+          </div>
+
+          <!-- Keys List -->
+          <div class="glass rounded-2xl overflow-hidden slide-up" style="animation-delay: 0.1s">
+            <div class="p-4 border-b border-white/5 flex items-center justify-between">
+              <h3 class="font-semibold flex items-center gap-2">
+                <i class="fas fa-key text-accent"></i>Your API Keys
+              </h3>
+              <button onclick="loadApiKeys()" class="text-sm text-gray-400 hover:text-white">
+                <i class="fas fa-sync-alt mr-1"></i>Refresh
+              </button>
+            </div>
+            <div id="apiKeysList" class="divide-y divide-white/5">
+              <div class="p-8 text-center text-gray-500">
+                <i class="fas fa-spinner fa-spin mr-2"></i>Loading...
+              </div>
+            </div>
+          </div>
+
+          <!-- New Key Modal -->
+          <div id="newKeyModal" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+            <div class="glass-strong rounded-2xl p-6 max-w-md w-full slide-up">
+              <div class="text-center mb-4">
+                <div class="w-16 h-16 mx-auto rounded-2xl bg-success/10 flex items-center justify-center mb-4">
+                  <i class="fas fa-check text-success text-2xl"></i>
+                </div>
+                <h3 class="text-xl font-bold">API Key Created!</h3>
+                <p class="text-gray-400 text-sm mt-1">Copy this key now. You won't see it again!</p>
+              </div>
+              <div class="bg-black/30 rounded-xl p-4 mb-4">
+                <code id="newKeyValue" class="text-green-400 text-sm break-all"></code>
+              </div>
+              <div class="flex gap-2">
+                <button onclick="copyNewKey()" class="flex-1 px-4 py-3 bg-accent rounded-xl font-medium">
+                  <i class="fas fa-copy mr-2"></i>Copy Key
+                </button>
+                <button onclick="closeNewKeyModal()" class="px-4 py-3 bg-white/10 rounded-xl">Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Settings Tab -->
+      <div id="tab-settings" class="tab-content hidden">
+        <div class="max-w-2xl mx-auto space-y-4">
+          
+          <!-- API Information -->
+          <div class="glass rounded-2xl p-5 slide-up">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center">
+                <i class="fas fa-plug text-accent"></i>
+              </div>
+              <div>
+                <h3 class="font-semibold">API Endpoint</h3>
+                <p class="text-xs text-gray-500">Use this URL in your applications</p>
+              </div>
+            </div>
+            <div class="flex gap-2">
+              <input type="text" value="https://ai-gateway.innoserver.cloud/v1/chat/completions" readonly
+                class="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm font-mono">
+              <button onclick="copyToClipboard('https://ai-gateway.innoserver.cloud/v1/chat/completions')" class="px-4 rounded-xl bg-accent/10 hover:bg-accent/20 text-accent transition-all">
+                <i class="fas fa-copy"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Models -->
+          <div class="glass rounded-2xl p-5 slide-up" style="animation-delay: 0.1s">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center">
+                <i class="fas fa-robot text-purple-400"></i>
+              </div>
+              <div>
+                <h3 class="font-semibold">Available Models</h3>
+                <p class="text-xs text-gray-500">AI models you can use</p>
+              </div>
+            </div>
+            <div class="space-y-2">
+              <div class="flex items-center justify-between p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-all cursor-pointer">
+                <div class="flex items-center gap-3">
+                  <span class="text-xl">🚀</span>
+                  <div>
+                    <p class="font-medium">inno-ai-boyong-4.5</p>
+                    <p class="text-xs text-gray-500">Most capable model</p>
+                  </div>
+                </div>
+                <span class="px-2 py-1 rounded-lg bg-success/10 text-success text-xs">Recommended</span>
+              </div>
+              <div class="flex items-center justify-between p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-all cursor-pointer">
+                <div class="flex items-center gap-3">
+                  <span class="text-xl">⚡</span>
+                  <div>
+                    <p class="font-medium">inno-ai-boyong-4.0</p>
+                    <p class="text-xs text-gray-500">Balanced performance</p>
+                  </div>
+                </div>
+              </div>
+              <div class="flex items-center justify-between p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-all cursor-pointer">
+                <div class="flex items-center gap-3">
+                  <span class="text-xl">💨</span>
+                  <div>
+                    <p class="font-medium">inno-ai-boyong-mini</p>
+                    <p class="text-xs text-gray-500">Fast responses</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Actions -->
+          <div class="glass rounded-2xl p-5 slide-up" style="animation-delay: 0.2s">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="w-10 h-10 rounded-xl bg-warning/10 flex items-center justify-center">
+                <i class="fas fa-bolt text-warning"></i>
+              </div>
+              <div>
+                <h3 class="font-semibold">Quick Actions</h3>
+                <p class="text-xs text-gray-500">Common admin tasks</p>
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <button onclick="loadAnalytics()" class="p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-all text-left">
+                <i class="fas fa-sync-alt text-accent mb-1"></i>
+                <p class="text-sm font-medium">Refresh Stats</p>
+              </button>
+              <button onclick="showTab('playground')" class="p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-all text-left">
+                <i class="fas fa-flask text-purple-400 mb-1"></i>
+                <p class="text-sm font-medium">Open Playground</p>
+              </button>
+              <button onclick="showTab('logs')" class="p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-all text-left">
+                <i class="fas fa-list text-success mb-1"></i>
+                <p class="text-sm font-medium">View Logs</p>
+              </button>
+              <button onclick="exportLogs()" class="p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-all text-left">
+                <i class="fas fa-download text-warning mb-1"></i>
+                <p class="text-sm font-medium">Export Logs</p>
+              </button>
+            </div>
+          </div>
+
+          <!-- API Keys & OAuth Accounts Section -->
+          <div class="glass rounded-2xl p-5 slide-up" style="animation-delay: 0.25s">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center">
+                <i class="fas fa-key text-accent"></i>
+              </div>
+              <div>
+                <h3 class="font-semibold">API Keys & OAuth Accounts</h3>
+                <p class="text-xs text-gray-500">Manage connected provider accounts</p>
+              </div>
+            </div>
+            
+            <div id="accountsList" class="space-y-3 mb-4">
+              <div class="text-center py-8 text-gray-500">
+                <i class="fas fa-spinner fa-spin mr-2"></i>Loading accounts...
+              </div>
+            </div>
+            
+            <button onclick="openAddAccountModal()" class="w-full p-3 rounded-xl bg-accent/10 hover:bg-accent/20 text-accent transition-all text-sm font-medium flex items-center justify-center gap-2">
+              <i class="fas fa-plus"></i>Add Account
+            </button>
+          </div>
+
+          <!-- Danger Zone -->
+          <div class="glass rounded-2xl p-5 border border-danger/20 slide-up" style="animation-delay: 0.3s">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="w-10 h-10 rounded-xl bg-danger/10 flex items-center justify-center">
+                <i class="fas fa-exclamation-triangle text-danger"></i>
+              </div>
+              <div>
+                <h3 class="font-semibold text-danger">Danger Zone</h3>
+                <p class="text-xs text-gray-500">Irreversible actions</p>
+              </div>
+            </div>
+            <button onclick="resetAnalytics()" class="w-full p-3 rounded-xl bg-danger/10 hover:bg-danger/20 text-danger transition-all text-sm font-medium">
+              <i class="fas fa-trash-alt mr-2"></i>Reset All Analytics & Logs
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Billing Tab -->
+      <div id="tab-billing" class="tab-content hidden">
+        <div class="max-w-2xl mx-auto space-y-4">
+          
+          <!-- Environment Toggle -->
+          <div class="glass rounded-2xl p-5 slide-up">
+            <div class="flex items-center justify-between mb-4">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center">
+                  <i id="billingEnvIcon" class="fas fa-flask text-accent"></i>
+                </div>
+                <div>
+                  <h3 class="font-semibold">Environment</h3>
+                  <p id="billingEnvStatus" class="text-xs text-gray-500">Sandbox Mode (Testing)</p>
+                </div>
+              </div>
+              <button onclick="toggleBillingEnvironment()" id="billingEnvToggle" 
+                class="px-4 py-2 rounded-xl bg-success/20 text-success text-sm font-medium hover:bg-success/30 transition-all">
+                <i class="fas fa-toggle-on mr-2"></i>Sandbox
+              </button>
+            </div>
+            <p class="text-xs text-gray-400">
+              <i class="fas fa-info-circle mr-1"></i>
+              Sandbox mode uses test credentials. No real money is processed.
+            </p>
+          </div>
+
+          <!-- Sandbox Credentials (Auto-populated) -->
+          <div id="sandboxCredentials" class="glass rounded-2xl p-5 slide-up" style="animation-delay: 0.1s">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="w-10 h-10 rounded-xl bg-success/10 flex items-center justify-center">
+                <i class="fas fa-vial text-success"></i>
+              </div>
+              <div>
+                <h3 class="font-semibold">Sandbox Credentials</h3>
+                <p class="text-xs text-gray-500">Pre-configured for testing</p>
+              </div>
+            </div>
+            <div class="space-y-3">
+              <div class="flex justify-between items-center p-3 rounded-xl bg-white/5">
+                <span class="text-sm text-gray-400">Merchant ID</span>
+                <span class="text-sm font-mono">TEST5VMFBNLCWJKD</span>
+              </div>
+              <div class="flex justify-between items-center p-3 rounded-xl bg-white/5">
+                <span class="text-sm text-gray-400">API Base</span>
+                <span class="text-sm font-mono text-xs">sandbox.directpayph.com</span>
+              </div>
+              <div class="flex justify-between items-center p-3 rounded-xl bg-white/5">
+                <span class="text-sm text-gray-400">Test Balance</span>
+                <span class="text-sm font-medium text-success">₱10,000.00</span>
+              </div>
+            </div>
+            <button onclick="testDirectPayConnection()" class="w-full mt-4 p-3 rounded-xl bg-success/10 hover:bg-success/20 text-success transition-all text-sm font-medium flex items-center justify-center gap-2">
+              <i class="fas fa-plug"></i>Test Connection
+            </button>
+          </div>
+
+          <!-- Production Credentials (Hidden by default) -->
+          <div id="productionCredentials" class="glass rounded-2xl p-5 slide-up hidden" style="animation-delay: 0.1s">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="w-10 h-10 rounded-xl bg-warning/10 flex items-center justify-center">
+                <i class="fas fa-lock text-warning"></i>
+              </div>
+              <div>
+                <h3 class="font-semibold">Production Credentials</h3>
+                <p class="text-xs text-gray-500">Enter your live DirectPay credentials</p>
+              </div>
+            </div>
+            <div class="space-y-3">
+              <div>
+                <label class="block text-sm text-gray-400 mb-2">Merchant ID</label>
+                <input type="text" id="prodMerchantId" placeholder="LIVE1234567890" 
+                  class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-warning/50">
+              </div>
+              <div>
+                <label class="block text-sm text-gray-400 mb-2">Merchant Key</label>
+                <input type="password" id="prodMerchantKey" placeholder="••••••••••••••••" 
+                  class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-warning/50">
+              </div>
+              <div>
+                <label class="block text-sm text-gray-400 mb-2">API Base URL</label>
+                <input type="text" id="prodApiBase" value="https://api.directpayph.com/api" 
+                  class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-warning/50">
+              </div>
+              <div>
+                <label class="block text-sm text-gray-400 mb-2">Dashboard URL</label>
+                <input type="text" id="prodDashboard" value="https://dashboard.directpayph.com" 
+                  class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-warning/50">
+              </div>
+            </div>
+            <button onclick="saveProductionCredentials()" class="w-full mt-4 p-3 rounded-xl bg-warning/10 hover:bg-warning/20 text-warning transition-all text-sm font-medium flex items-center justify-center gap-2">
+              <i class="fas fa-save"></i>Save Production Credentials
+            </button>
+          </div>
+
+          <!-- Test Payment -->
+          <div class="glass rounded-2xl p-5 slide-up" style="animation-delay: 0.2s">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center">
+                <i class="fas fa-credit-card text-purple-400"></i>
+              </div>
+              <div>
+                <h3 class="font-semibold">Test Payment</h3>
+                <p class="text-xs text-gray-500">Create a test checkout session</p>
+              </div>
+            </div>
+            <div class="space-y-3">
+              <div>
+                <label class="block text-sm text-gray-400 mb-2">Amount (₱)</label>
+                <input type="number" id="testAmount" value="100" min="100" 
+                  class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-500/50">
+                <p class="text-xs text-gray-500 mt-1">Minimum: ₱100</p>
+              </div>
+              <div>
+                <label class="block text-sm text-gray-400 mb-2">Description</label>
+                <input type="text" id="testDescription" value="AI Gateway Pro Plan - Monthly" 
+                  class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-500/50">
+              </div>
+            </div>
+            <button onclick="createTestPayment()" class="w-full mt-4 p-3 rounded-xl bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 transition-all text-sm font-medium flex items-center justify-center gap-2">
+              <i class="fas fa-shopping-cart"></i>Create Test Checkout
+            </button>
+          </div>
+
+          <!-- Recent Transactions -->
+          <div class="glass rounded-2xl p-5 slide-up" style="animation-delay: 0.3s">
+            <div class="flex items-center justify-between mb-4">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center">
+                  <i class="fas fa-receipt text-accent"></i>
+                </div>
+                <div>
+                  <h3 class="font-semibold">Recent Transactions</h3>
+                  <p class="text-xs text-gray-500">Last 100 payments</p>
+                </div>
+              </div>
+              <button onclick="loadTransactions()" class="p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-all">
+                <i class="fas fa-sync-alt text-gray-400"></i>
+              </button>
+            </div>
+            <div id="transactionsList" class="space-y-2">
+              <div class="text-center py-8 text-gray-500">
+                <i class="fas fa-spinner fa-spin mr-2"></i>Loading transactions...
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </main>
+
+    <!-- Mobile Bottom Navigation -->
+    <nav class="mobile-nav">
+      <div class="flex justify-around py-2">
+        <button onclick="showTab('dashboard')" data-tab="dashboard" class="mobile-nav-btn flex flex-col items-center gap-1 px-4 py-2 text-accent">
+          <i class="fas fa-chart-line text-lg"></i>
+          <span class="text-xs font-medium">Dashboard</span>
+        </button>
+        <button onclick="showTab('playground')" data-tab="playground" class="mobile-nav-btn flex flex-col items-center gap-1 px-4 py-2 text-gray-500">
+          <i class="fas fa-flask text-lg"></i>
+          <span class="text-xs font-medium">Playground</span>
+        </button>
+        <button onclick="showTab('logs')" data-tab="logs" class="mobile-nav-btn flex flex-col items-center gap-1 px-4 py-2 text-gray-500">
+          <i class="fas fa-list text-lg"></i>
+          <span class="text-xs font-medium">Logs</span>
+        </button>
+        <button onclick="showTab('apikeys')" data-tab="apikeys" class="mobile-nav-btn flex flex-col items-center gap-1 px-4 py-2 text-gray-500">
+          <i class="fas fa-key text-lg"></i>
+          <span class="text-xs font-medium">Keys</span>
+        </button>
+        <button onclick="showTab('settings')" data-tab="settings" class="mobile-nav-btn flex flex-col items-center gap-1 px-4 py-2 text-gray-500">
+          <i class="fas fa-cog text-lg"></i>
+          <span class="text-xs font-medium">More</span>
+        </button>
+        <button onclick="showTab('billing')" data-tab="billing" class="mobile-nav-btn flex flex-col items-center gap-1 px-4 py-2 text-gray-500">
+          <i class="fas fa-credit-card text-lg"></i>
+          <span class="text-xs font-medium">Pay</span>
+        </button>
+      </div>
+    </nav>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toastContainer" class="fixed bottom-24 md:bottom-6 left-0 right-0 flex justify-center pointer-events-none z-50"></div>
+
+  <script>
+    let adminKey = localStorage.getItem('adminKey') || '';
+    let hourlyChart, modelChart;
+    let totalPlaygroundTokens = 0;
+
+    // Check if already logged in
+    if (adminKey) verifyLogin();
+
+    async function login() {
+      adminKey = document.getElementById('adminKeyInput').value;
+      await verifyLogin();
+    }
+
+    async function verifyLogin() {
+      try {
+        const res = await fetch('/admin/analytics', { headers: { 'X-Admin-Key': adminKey } });
+        if (res.ok) {
+          localStorage.setItem('adminKey', adminKey);
+          document.getElementById('loginScreen').classList.add('hidden');
+          document.getElementById('mainApp').classList.remove('hidden');
+          initDashboard();
+        } else {
+          document.getElementById('loginError').classList.remove('hidden');
+          localStorage.removeItem('adminKey');
+        }
+      } catch (e) {
+        document.getElementById('loginError').classList.remove('hidden');
+      }
+    }
+
+    function logout() {
+      localStorage.removeItem('adminKey');
+      location.reload();
+    }
+
+    function showTab(tab) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      document.getElementById(`tab-${tab}`).classList.remove('hidden');
+      
+      // Update desktop nav
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.classList.remove('bg-accent', 'text-white');
+        btn.classList.add('text-gray-400', 'hover:text-white', 'hover:bg-white/5');
+      });
+      document.querySelector(`.nav-btn[data-tab="${tab}"]`)?.classList.add('bg-accent', 'text-white');
+      document.querySelector(`.nav-btn[data-tab="${tab}"]`)?.classList.remove('text-gray-400', 'hover:text-white', 'hover:bg-white/5');
+      
+      // Update mobile nav
+      document.querySelectorAll('.mobile-nav-btn').forEach(btn => {
+        btn.classList.remove('text-accent');
+        btn.classList.add('text-gray-500');
+      });
+      document.querySelector(`.mobile-nav-btn[data-tab="${tab}"]`)?.classList.add('text-accent');
+      document.querySelector(`.mobile-nav-btn[data-tab="${tab}"]`)?.classList.remove('text-gray-500');
+      
+      if (tab === 'logs') loadLogs();
+    }
+
+    async function initDashboard() {
+      await Promise.all([loadAnalytics(), loadSystemInfo(), loadRecentActivity(), loadProviderStatus()]);
+      setInterval(loadAnalytics, 30000);
+      setInterval(loadSystemInfo, 60000);
+      setInterval(loadProviderStatus, 60000);
+    }
+
+    async function loadAnalytics() {
+      try {
+        const res = await fetch('/admin/analytics', { headers: { 'X-Admin-Key': adminKey } });
+        const data = await res.json();
+        
+        document.getElementById('statRequests').textContent = data.totalRequests.toLocaleString();
+        document.getElementById('statTokens').textContent = formatNumber(data.totalTokens);
+        document.getElementById('statUptime').textContent = data.uptime_human;
+        
+        const logsRes = await fetch('/admin/logs?limit=100', { headers: { 'X-Admin-Key': adminKey } });
+        const logs = await logsRes.json();
+        const avgLatency = logs.length > 0 ? Math.round(logs.reduce((a, l) => a + (l.latency || 0), 0) / logs.length) : 0;
+        document.getElementById('statLatency').textContent = avgLatency + 'ms';
+        
+        updateCharts(data);
+      } catch (e) {
+        console.error('Failed to load analytics', e);
+      }
+    }
+
+    async function loadRecentActivity() {
+      try {
+        const res = await fetch('/admin/logs?limit=5', { headers: { 'X-Admin-Key': adminKey } });
+        const logs = await res.json();
+        
+        const container = document.getElementById('recentActivity');
+        if (!logs.length) {
+          container.innerHTML = '<p class="text-center text-gray-500 py-4">No recent activity</p>';
+          return;
+        }
+        
+        container.innerHTML = logs.map(log => `
+          <div class="flex items-center gap-3 p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-all">
+            <div class="w-10 h-10 rounded-xl ${log.status === 'success' ? 'bg-success/10' : 'bg-danger/10'} flex items-center justify-center flex-shrink-0">
+              <i class="fas ${log.status === 'success' ? 'fa-check text-success' : 'fa-times text-danger'}"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-medium truncate">${escapeHtml(log.promptPreview || 'No prompt')}</p>
+              <p class="text-xs text-gray-500">${log.model} · ${log.latency}ms</p>
+            </div>
+            <span class="text-xs text-gray-500 flex-shrink-0">${timeAgo(log.timestamp)}</span>
+          </div>
+        `).join('');
+      } catch (e) {
+        console.error('Failed to load recent activity', e);
+      }
+    }
+
+    function timeAgo(timestamp) {
+      const seconds = Math.floor((Date.now() - new Date(timestamp)) / 1000);
+      if (seconds < 60) return 'Just now';
+      if (seconds < 3600) return Math.floor(seconds / 60) + 'm ago';
+      if (seconds < 86400) return Math.floor(seconds / 3600) + 'h ago';
+      return Math.floor(seconds / 86400) + 'd ago';
+    }
+
+    function formatNumber(num) {
+      if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+      if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+      return num.toString();
+    }
+
+    function updateCharts(data) {
+      const hours = Object.keys(data.last24Hours);
+      const hourlyData = Object.values(data.last24Hours);
+      
+      if (hourlyChart) hourlyChart.destroy();
+      hourlyChart = new Chart(document.getElementById('hourlyChart'), {
+        type: 'line',
+        data: {
+          labels: hours.map(h => h.slice(11) + ':00'),
+          datasets: [{
+            label: 'Requests',
+            data: hourlyData,
+            borderColor: '#6366f1',
+            backgroundColor: 'rgba(99, 102, 241, 0.1)',
+            fill: true,
+            tension: 0.4,
+            pointRadius: 0,
+            pointHoverRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#6b7280' } },
+            x: { grid: { display: false }, ticks: { color: '#6b7280', maxRotation: 0, maxTicksLimit: 8 } }
+          },
+          interaction: { intersect: false, mode: 'index' }
+        }
+      });
+
+      const models = Object.keys(data.requestsByModel);
+      const modelData = Object.values(data.requestsByModel);
+      
+      if (modelChart) modelChart.destroy();
+      if (models.length === 0) {
+        document.getElementById('modelChart').parentElement.innerHTML = '<div class="flex items-center justify-center h-full text-gray-500"><p>No data yet</p></div>';
+        return;
+      }
+      
+      modelChart = new Chart(document.getElementById('modelChart'), {
+        type: 'doughnut',
+        data: {
+          labels: models,
+          datasets: [{
+            data: modelData,
+            backgroundColor: ['#6366f1', '#8b5cf6', '#ec4899'],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '70%',
+          plugins: { legend: { position: 'bottom', labels: { color: '#9ca3af', padding: 16, usePointStyle: true } } }
+        }
+      });
+    }
+
+    async function loadSystemInfo() {
+      try {
+        const res = await fetch('/admin/system', { headers: { 'X-Admin-Key': adminKey } });
+        const data = await res.json();
+
+        const cpuVal = parseFloat(data.cpu) || 0;
+        document.getElementById('sysCpu').textContent = data.cpu || '-';
+        document.getElementById('sysCpuBar').style.width = cpuVal + '%';
+
+        const memParts = (data.memory || '').split('/');
+        const memPercent = memParts.length === 2 ? (parseInt(memParts[0]) / parseInt(memParts[1]) * 100) : 0;
+        document.getElementById('sysMemory').textContent = data.memory || '-';
+        document.getElementById('sysMemoryBar').style.width = memPercent + '%';
+
+        const diskParts = (data.disk || '').split('/');
+        const diskUsed = parseFloat(diskParts[0]) || 0;
+        const diskTotal = parseFloat(diskParts[1]) || 1;
+        const diskPercent = (diskUsed / diskTotal) * 100;
+        document.getElementById('sysDisk').textContent = data.disk || '-';
+        document.getElementById('sysDiskBar').style.width = diskPercent + '%';
+      } catch (e) {
+        console.error('Failed to load system info', e);
+      }
+    }
+
+    async function loadProviderStatus() {
+      try {
+        const res = await fetch('/health');
+        const data = await res.json();
+
+        if (data.providers) {
+          const hfStatus = document.getElementById('hfStatus');
+          const orStatus = document.getElementById('orStatus');
+
+          if (hfStatus) {
+            if (data.providers.huggingface?.configured) {
+              hfStatus.textContent = 'Active';
+              hfStatus.className = 'text-xs bg-success/20 text-success px-2 py-1 rounded-full';
+            } else {
+              hfStatus.textContent = 'Not Configured';
+              hfStatus.className = 'text-xs bg-gray-700 text-gray-400 px-2 py-1 rounded-full';
+            }
+          }
+
+          if (orStatus) {
+            if (data.providers.openrouter?.configured) {
+              orStatus.textContent = 'Active';
+              orStatus.className = 'text-xs bg-success/20 text-success px-2 py-1 rounded-full';
+            } else {
+              orStatus.textContent = 'Not Configured';
+              orStatus.className = 'text-xs bg-gray-700 text-gray-400 px-2 py-1 rounded-full';
+            }
+          }
+
+          const kimiStatus = document.getElementById('kimiStatus');
+          if (kimiStatus) {
+            if (data.providers.moonshotai?.configured) {
+              kimiStatus.textContent = 'Active';
+              kimiStatus.className = 'text-xs bg-success/20 text-success px-2 py-1 rounded-full';
+            } else {
+              kimiStatus.textContent = 'Not Configured';
+              kimiStatus.className = 'text-xs bg-gray-700 text-gray-400 px-2 py-1 rounded-full';
+            }
+          }
+
+          const antigravityStatus = document.getElementById('antigravityStatus');
+          if (antigravityStatus) {
+            if (data.providers.antigravity?.configured) {
+              antigravityStatus.textContent = 'Active';
+              antigravityStatus.className = 'text-xs bg-success/20 text-success px-2 py-1 rounded-full';
+            } else {
+              antigravityStatus.textContent = 'Setup Required';
+              antigravityStatus.className = 'text-xs bg-warning/20 text-warning px-2 py-1 rounded-full';
+            }
+          }
+        }
+      } catch (e) {
+        console.error('Failed to load provider status', e);
+      }
+    }
+
+    async function loadLogs() {
+      const table = document.getElementById('logsTable');
+      const cards = document.getElementById('logsCards');
+      
+      try {
+        const res = await fetch('/admin/logs?limit=100', { headers: { 'X-Admin-Key': adminKey } });
+        const logs = await res.json();
+        
+        document.getElementById('logsLastUpdated').textContent = 'Updated ' + new Date().toLocaleTimeString();
+        
+        if (!logs || logs.length === 0) {
+          table.innerHTML = '<tr><td colspan="7" class="px-4 py-12 text-center text-gray-500"><i class="fas fa-inbox text-2xl mb-2 block"></i>No logs yet</td></tr>';
+          cards.innerHTML = '<p class="text-center text-gray-500 py-8">No logs yet. Make some API requests first!</p>';
+          return;
+        }
+        
+        // Desktop table
+        table.innerHTML = logs.map(log => `
+          <tr class="border-b border-white/5 hover:bg-white/5 transition-all cursor-pointer" onclick="viewLogDetails('${log.id}')">
+            <td class="px-4 py-3 text-gray-300">${new Date(log.timestamp).toLocaleString()}</td>
+            <td class="px-4 py-3">${log.source === 'playground' 
+              ? '<span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-purple-500/10 text-purple-400 text-xs"><i class="fas fa-flask"></i>Playground</span>'
+              : '<span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-success/10 text-success text-xs"><i class="fas fa-code"></i>API</span>'}</td>
+            <td class="px-4 py-3"><span class="px-2 py-1 rounded-lg bg-accent/10 text-accent text-xs">${log.model || '-'}</span></td>
+            <td class="px-4 py-3 max-w-xs truncate text-gray-300" title="${escapeHtml(log.promptPreview || '')}">${escapeHtml(log.promptPreview || '-')}</td>
+            <td class="px-4 py-3 text-gray-300">${(log.totalTokens || 0).toLocaleString()}</td>
+            <td class="px-4 py-3 text-gray-300">${log.latency || 0}ms</td>
+            <td class="px-4 py-3">${log.status === 'success' 
+              ? '<span class="text-success"><i class="fas fa-check-circle"></i></span>' 
+              : '<span class="text-danger"><i class="fas fa-times-circle"></i></span>'}</td>
+          </tr>
+        `).join('');
+        
+        // Mobile cards
+        cards.innerHTML = logs.map(log => `
+          <div class="p-4 rounded-xl bg-white/5 space-y-2 cursor-pointer hover:bg-white/10 transition-all" onclick="viewLogDetails('${log.id}')">
+            <div class="flex items-center justify-between">
+              <span class="text-xs text-gray-500">${timeAgo(log.timestamp)}</span>
+              ${log.status === 'success' 
+                ? '<span class="text-success text-sm"><i class="fas fa-check-circle"></i></span>' 
+                : '<span class="text-danger text-sm"><i class="fas fa-times-circle"></i></span>'}
+            </div>
+            <p class="text-sm truncate">${escapeHtml(log.promptPreview || '-')}</p>
+            <div class="flex items-center gap-2 text-xs">
+              ${log.source === 'playground' 
+                ? '<span class="px-2 py-1 rounded-lg bg-purple-500/10 text-purple-400"><i class="fas fa-flask mr-1"></i>Playground</span>'
+                : '<span class="px-2 py-1 rounded-lg bg-success/10 text-success"><i class="fas fa-code mr-1"></i>API</span>'}
+              <span class="px-2 py-1 rounded-lg bg-accent/10 text-accent">${log.model || '-'}</span>
+              <span class="text-gray-500">${log.latency}ms</span>
+            </div>
+          </div>
+        `).join('');
+      } catch (e) {
+        console.error('Failed to load logs', e);
+        table.innerHTML = '<tr><td colspan="7" class="px-4 py-12 text-center text-danger"><i class="fas fa-exclamation-triangle mr-2"></i>Failed to load logs</td></tr>';
+      }
+    }
+
+    async function sendPlayground() {
+      const input = document.getElementById('playgroundInput');
+      const message = input.value.trim();
+      if (!message) return;
+      
+      const model = document.getElementById('playgroundModel').value;
+      const chatArea = document.getElementById('chatArea');
+      const sendBtn = document.getElementById('sendBtn');
+      
+      // Clear empty state
+      if (chatArea.querySelector('.fa-comments')) chatArea.innerHTML = '';
+      
+      // Add user message
+      chatArea.innerHTML += `
+        <div class="flex justify-end fade-in">
+          <div class="chat-bubble-user px-4 py-3 max-w-[85%]">
+            <p class="text-sm">${escapeHtml(message)}</p>
+          </div>
+        </div>
+      `;
+      
+      input.value = '';
+      sendBtn.disabled = true;
+      sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+      
+      // Typing indicator
+      const typingId = 'typing-' + Date.now();
+      chatArea.innerHTML += `
+        <div id="${typingId}" class="flex fade-in">
+          <div class="chat-bubble-ai px-4 py-3">
+            <div class="flex gap-1">
+              <span class="typing-dot w-2 h-2 bg-gray-400 rounded-full"></span>
+              <span class="typing-dot w-2 h-2 bg-gray-400 rounded-full"></span>
+              <span class="typing-dot w-2 h-2 bg-gray-400 rounded-full"></span>
+            </div>
+          </div>
+        </div>
+      `;
+      chatArea.scrollTop = chatArea.scrollHeight;
+      
+      try {
+        const res = await fetch('/admin/playground', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-Admin-Key': adminKey },
+          body: JSON.stringify({ model, messages: [{ role: 'user', content: message }] })
+        });
+        
+        const data = await res.json();
+        document.getElementById(typingId)?.remove();
+        
+        if (data.error) {
+          chatArea.innerHTML += `
+            <div class="flex fade-in">
+              <div class="chat-bubble-ai px-4 py-3 max-w-[85%] border border-danger/30">
+                <p class="text-sm text-danger"><i class="fas fa-exclamation-circle mr-1"></i>${escapeHtml(data.error)}</p>
+              </div>
+            </div>
+          `;
+        } else {
+          chatArea.innerHTML += `
+            <div class="flex fade-in">
+              <div class="chat-bubble-ai px-4 py-3 max-w-[85%]">
+                <p class="text-sm whitespace-pre-wrap">${escapeHtml(data.response)}</p>
+                <p class="text-xs text-gray-500 mt-2">${data.model} · ${data.usage?.total_tokens || 0} tokens</p>
+              </div>
+            </div>
+          `;
+          totalPlaygroundTokens += data.usage?.total_tokens || 0;
+          document.getElementById('playgroundTokens').textContent = totalPlaygroundTokens.toLocaleString();
+        }
+      } catch (e) {
+        document.getElementById(typingId)?.remove();
+        chatArea.innerHTML += `
+          <div class="flex fade-in">
+            <div class="chat-bubble-ai px-4 py-3 border border-danger/30">
+              <p class="text-sm text-danger"><i class="fas fa-wifi mr-1"></i>Network error</p>
+            </div>
+          </div>
+        `;
+      }
+      
+      sendBtn.disabled = false;
+      sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i>';
+      chatArea.scrollTop = chatArea.scrollHeight;
+      loadRecentActivity();
+    }
+
+    function clearChat() {
+      document.getElementById('chatArea').innerHTML = `
+        <div class="flex flex-col items-center justify-center h-full text-center p-4">
+          <div class="w-16 h-16 rounded-2xl bg-accent/10 flex items-center justify-center mb-4">
+            <i class="fas fa-comments text-accent text-2xl"></i>
+          </div>
+          <h3 class="font-semibold text-lg">Start a conversation</h3>
+          <p class="text-gray-500 text-sm mt-1">Send a message to test the AI</p>
+        </div>
+      `;
+      totalPlaygroundTokens = 0;
+      document.getElementById('playgroundTokens').textContent = '0';
+    }
+
+    async function resetAnalytics() {
+      if (!confirm('Are you sure you want to reset all analytics and logs? This cannot be undone.')) return;
+      
+      try {
+        await fetch('/admin/reset', { method: 'POST', headers: { 'X-Admin-Key': adminKey } });
+        showToast('Analytics reset successfully', 'success');
+        loadAnalytics();
+        loadRecentActivity();
+      } catch (e) {
+        showToast('Failed to reset analytics', 'error');
+      }
+    }
+
+    function exportLogs() {
+      fetch('/admin/logs?limit=1000', { headers: { 'X-Admin-Key': adminKey } })
+        .then(r => r.json())
+        .then(logs => {
+          const csv = 'Timestamp,Source,Model,Prompt,Tokens,Latency,Status\n' + 
+            logs.map(l => `"${l.timestamp}","${l.source || 'api'}","${l.model}","${(l.promptPreview || '').replace(/"/g, '""')}",${l.totalTokens},${l.latency},"${l.status}"`).join('\n');
+          const blob = new Blob([csv], { type: 'text/csv' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `ai-gateway-logs-${new Date().toISOString().slice(0,10)}.csv`;
+          a.click();
+          showToast('Logs exported', 'success');
+        });
+    }
+
+    function copyToClipboard(text) {
+      navigator.clipboard.writeText(text);
+      showToast('Copied to clipboard', 'success');
+    }
+
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = `toast glass-strong flex items-center gap-2 text-sm pointer-events-auto`;
+      const icon = type === 'success' ? 'fa-check-circle text-success' : type === 'error' ? 'fa-exclamation-circle text-danger' : 'fa-info-circle text-accent';
+      toast.innerHTML = `<i class="fas ${icon}"></i>${message}`;
+      container.appendChild(toast);
+      setTimeout(() => toast.remove(), 3000);
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // API Key Management
+    async function loadApiKeys() {
+      try {
+        const res = await fetch('/admin/api-keys', { headers: { 'X-Admin-Key': adminKey } });
+        const data = await res.json();
+        
+        const container = document.getElementById('apiKeysList');
+        if (!data.keys || data.keys.length === 0) {
+          container.innerHTML = '<p class="p-8 text-center text-gray-500">No API keys found</p>';
+          return;
+        }
+        
+        container.innerHTML = data.keys.map(key => `
+          <div class="p-4 hover:bg-white/5 transition-all">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div class="flex-1">
+                <div class="flex items-center gap-2">
+                  <span class="font-medium">${escapeHtml(key.name)}</span>
+                  ${key.enabled 
+                    ? '<span class="px-2 py-0.5 rounded-full bg-success/10 text-success text-xs">Active</span>'
+                    : '<span class="px-2 py-0.5 rounded-full bg-danger/10 text-danger text-xs">Disabled</span>'}
+                </div>
+                <div class="flex items-center gap-4 mt-1 text-sm text-gray-500">
+                  <code class="text-xs">${key.key}</code>
+                  <span><i class="fas fa-paper-plane mr-1"></i>${key.requests.toLocaleString()} requests</span>
+                  <span><i class="fas fa-coins mr-1"></i>${formatNumber(key.tokens)} tokens</span>
+                </div>
+                <p class="text-xs text-gray-600 mt-1">
+                  Created ${new Date(key.created).toLocaleDateString()} · 
+                  ${key.lastUsed ? 'Last used ' + timeAgo(key.lastUsed) : 'Never used'}
+                </p>
+              </div>
+              <div class="flex items-center gap-2">
+                <button onclick="toggleApiKey('${key.id}', ${!key.enabled})" class="px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-sm">
+                  <i class="fas fa-${key.enabled ? 'pause' : 'play'}"></i>
+                </button>
+                <button onclick="deleteApiKey('${key.id}', '${escapeHtml(key.name)}')" class="px-3 py-2 rounded-lg bg-danger/10 hover:bg-danger/20 text-danger text-sm">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        `).join('');
+      } catch (e) {
+        console.error('Failed to load API keys', e);
+      }
+    }
+
+    async function createApiKey() {
+      const name = document.getElementById('newKeyName').value.trim();
+      if (!name) {
+        showToast('Please enter a key name', 'error');
+        return;
+      }
+      
+      try {
+        const res = await fetch('/admin/api-keys', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-Admin-Key': adminKey },
+          body: JSON.stringify({ name, rateLimit: 100, monthlyLimit: 1000000 })
+        });
+        
+        const data = await res.json();
+        if (data.success) {
+          document.getElementById('newKeyValue').textContent = data.key;
+          document.getElementById('newKeyModal').classList.remove('hidden');
+          document.getElementById('newKeyName').value = '';
+          loadApiKeys();
+        } else {
+          showToast(data.error || 'Failed to create key', 'error');
+        }
+      } catch (e) {
+        showToast('Failed to create API key', 'error');
+      }
+    }
+
+    function copyNewKey() {
+      const key = document.getElementById('newKeyValue').textContent;
+      navigator.clipboard.writeText(key);
+      showToast('API key copied!', 'success');
+    }
+
+    function closeNewKeyModal() {
+      document.getElementById('newKeyModal').classList.add('hidden');
+    }
+
+    async function toggleApiKey(keyId, enabled) {
+      try {
+        await fetch(`/admin/api-keys/${keyId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', 'X-Admin-Key': adminKey },
+          body: JSON.stringify({ enabled })
+        });
+        loadApiKeys();
+        showToast(`API key ${enabled ? 'enabled' : 'disabled'}`, 'success');
+      } catch (e) {
+        showToast('Failed to update API key', 'error');
+      }
+    }
+
+    async function deleteApiKey(keyId, name) {
+      if (!confirm(`Delete API key "${name}"? This cannot be undone.`)) return;
+      
+      try {
+        await fetch(`/admin/api-keys/${keyId}`, {
+          method: 'DELETE',
+          headers: { 'X-Admin-Key': adminKey }
+        });
+        loadApiKeys();
+        showToast('API key deleted', 'success');
+      } catch (e) {
+        showToast('Failed to delete API key', 'error');
+      }
+    }
+
+    // Request Inspector
+    async function viewLogDetails(logId) {
+      try {
+        const res = await fetch(`/admin/logs/${logId}`, { headers: { 'X-Admin-Key': adminKey } });
+        const log = await res.json();
+        
+        const modal = document.createElement('div');
+        modal.className = 'fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4';
+        modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
+        
+        modal.innerHTML = `
+          <div class="glass-strong rounded-2xl p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto slide-up">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-lg font-bold">Request Details</h3>
+              <button onclick="this.closest('.fixed').remove()" class="text-gray-400 hover:text-white">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+            
+            <div class="space-y-4">
+              <div class="grid grid-cols-2 gap-4 text-sm">
+                <div class="bg-white/5 rounded-xl p-3">
+                  <p class="text-gray-500">ID</p>
+                  <p class="font-mono text-xs mt-1">${log.id}</p>
+                </div>
+                <div class="bg-white/5 rounded-xl p-3">
+                  <p class="text-gray-500">Model</p>
+                  <p class="font-medium mt-1">${log.model}</p>
+                </div>
+                <div class="bg-white/5 rounded-xl p-3">
+                  <p class="text-gray-500">Latency</p>
+                  <p class="font-medium mt-1">${log.latency}ms</p>
+                </div>
+                <div class="bg-white/5 rounded-xl p-3">
+                  <p class="text-gray-500">Tokens</p>
+                  <p class="font-medium mt-1">${log.totalTokens?.toLocaleString() || 0}</p>
+                </div>
+              </div>
+              
+              <div>
+                <p class="text-gray-500 text-sm mb-2">Prompt</p>
+                <pre class="bg-black/30 rounded-xl p-4 text-sm whitespace-pre-wrap max-h-48 overflow-y-auto">${escapeHtml(log.fullPrompt || log.promptPreview || '-')}</pre>
+              </div>
+              
+              <div>
+                <p class="text-gray-500 text-sm mb-2">Response</p>
+                <pre class="bg-black/30 rounded-xl p-4 text-sm whitespace-pre-wrap max-h-48 overflow-y-auto">${escapeHtml(log.fullResponse || log.responsePreview || '-')}</pre>
+              </div>
+              
+              ${log.error ? `
+              <div>
+                <p class="text-danger text-sm mb-2">Error</p>
+                <pre class="bg-danger/10 rounded-xl p-4 text-sm text-danger">${escapeHtml(log.error)}</pre>
+              </div>
+              ` : ''}
+            </div>
+          </div>
+        `;
+        
+        document.body.appendChild(modal);
+      } catch (e) {
+        showToast('Failed to load log details', 'error');
+      }
+    }
+
+    // Load API keys when tab is shown
+    const originalShowTab = showTab;
+    showTab = function(tab) {
+      originalShowTab(tab);
+      if (tab === 'apikeys') loadApiKeys();
+      if (tab === 'settings') loadAccounts();
+    };
+
+    // ==================== OAUTH ACCOUNTS MANAGEMENT ====================
+    
+    let currentOAuthState = null;
+    let currentAccountName = '';
+    let oauthCode = '';
+    
+    async function loadAccounts() {
+      try {
+        const res = await fetch('/admin/accounts', { headers: { 'X-Admin-Key': adminKey } });
+        const data = await res.json();
+        
+        const container = document.getElementById('accountsList');
+        if (!data.accounts || data.accounts.length === 0) {
+          container.innerHTML = `
+            <div class="text-center py-8 text-gray-500">
+              <i class="fas fa-link text-3xl mb-3 block text-gray-600"></i>
+              <p>No accounts connected</p>
+              <p class="text-xs mt-1">Add an account to use OAuth providers</p>
+            </div>
+          `;
+          return;
+        }
+        
+        container.innerHTML = data.accounts.map(acc => {
+          const providerIcon = {
+            'antigravity': '🔥',
+            'openrouter': '🌐',
+            'huggingface': '🤗',
+            'moonshotai': '🌙'
+          }[acc.provider] || '🔑';
+          
+          const statusColors = {
+            'connected': 'bg-success/20 text-success',
+            'expired': 'bg-warning/20 text-warning',
+            'error': 'bg-danger/20 text-danger'
+          }[acc.status] || 'bg-gray-700 text-gray-400';
+          
+          const expiresIn = acc.expiresAt ? formatTimeRemaining(acc.expiresAt) : 'Unknown';
+          
+          return `
+            <div class="flex items-center justify-between p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-all">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center text-lg">
+                  ${providerIcon}
+                </div>
+                <div>
+                  <div class="flex items-center gap-2">
+                    <span class="font-medium">${escapeHtml(acc.name)}</span>
+                    <span class="px-2 py-0.5 rounded-full text-xs ${statusColors}">${acc.status}</span>
+                  </div>
+                  <p class="text-sm text-gray-400">${escapeHtml(acc.email)}</p>
+                  <p class="text-xs text-gray-500">Expires: ${expiresIn}</p>
+                </div>
+              </div>
+              <div class="flex items-center gap-2">
+                <button onclick="refreshAccount('${acc.id}')" class="px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-sm" title="Refresh Token">
+                  <i class="fas fa-sync-alt"></i>
+                </button>
+                <button onclick="deleteAccount('${acc.id}', '${escapeHtml(acc.name)}')" class="px-3 py-2 rounded-lg bg-danger/10 hover:bg-danger/20 text-danger text-sm" title="Delete">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
+            </div>
+          `;
+        }).join('');
+        
+      } catch (e) {
+        console.error('Failed to load accounts', e);
+        document.getElementById('accountsList').innerHTML = `
+          <div class="text-center py-8 text-gray-500">
+            <i class="fas fa-exclamation-circle text-danger mb-2"></i>
+            <p>Failed to load accounts</p>
+          </div>
+        `;
+      }
+    }
+    
+    function formatTimeRemaining(timestamp) {
+      const diff = timestamp - Date.now();
+      if (diff <= 0) return 'Expired';
+      
+      const minutes = Math.floor(diff / 60000);
+      const hours = Math.floor(diff / 3600000);
+      const days = Math.floor(diff / 86400000);
+      
+      if (days > 0) return `${days}d ${hours % 24}h`;
+      if (hours > 0) return `${hours}h ${minutes % 60}m`;
+      return `${minutes}m`;
+    }
+    
+    function openAddAccountModal() {
+      document.getElementById('addAccountModal').classList.remove('hidden');
+      document.getElementById('accountStep1').classList.remove('hidden');
+      document.getElementById('accountStep2').classList.add('hidden');
+      document.getElementById('accountStep3').classList.add('hidden');
+      document.getElementById('accountName').value = '';
+      document.getElementById('callbackUrl').value = '';
+      currentOAuthState = null;
+      currentAccountName = '';
+      oauthCode = '';
+    }
+    
+    function closeAddAccountModal() {
+      document.getElementById('addAccountModal').classList.add('hidden');
+      loadAccounts();
+    }
+    
+    async function generateOAuthUrl() {
+      const provider = document.getElementById('accountProvider').value;
+      const accountName = document.getElementById('accountName').value.trim();
+      
+      if (!accountName) {
+        showToast('Please enter an account name', 'error');
+        return;
+      }
+      
+      currentAccountName = accountName;
+      
+      try {
+        const res = await fetch('/admin/oauth/url', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-Admin-Key': adminKey },
+          body: JSON.stringify({ provider, accountName })
+        });
+        
+        const data = await res.json();
+        if (data.error) {
+          showToast(data.error, 'error');
+          return;
+        }
+        
+        currentOAuthState = data.state;
+        document.getElementById('oauthUrl').value = data.url;
+        
+        document.getElementById('accountStep1').classList.add('hidden');
+        document.getElementById('accountStep2').classList.remove('hidden');
+        
+      } catch (e) {
+        showToast('Failed to generate OAuth URL', 'error');
+        console.error(e);
+      }
+    }
+    
+    function copyOAuthUrl() {
+      const url = document.getElementById('oauthUrl').value;
+      navigator.clipboard.writeText(url);
+      showToast('OAuth URL copied to clipboard', 'success');
+    }
+    
+    function backToStep1() {
+      document.getElementById('accountStep2').classList.add('hidden');
+      document.getElementById('accountStep1').classList.remove('hidden');
+    }
+    
+    async function connectAccount() {
+      const callbackUrl = document.getElementById('callbackUrl').value.trim();
+      
+      if (!callbackUrl) {
+        showToast('Please paste the callback URL', 'error');
+        return;
+      }
+      
+      // Extract code from callback URL
+      let code = '';
+      try {
+        const url = new URL(callbackUrl);
+        code = url.searchParams.get('code');
+        if (!code) {
+          // Try parsing as query string
+          const params = new URLSearchParams(callbackUrl.split('?')[1]);
+          code = params.get('code');
+        }
+      } catch (e) {
+        // Try extracting code with regex
+        const match = callbackUrl.match(/[?&]code=([^&]+)/);
+        if (match) code = decodeURIComponent(match[1]);
+      }
+      
+      if (!code) {
+        showToast('Could not extract authorization code from URL', 'error');
+        return;
+      }
+      
+      oauthCode = code;
+      
+      try {
+        const res = await fetch('/admin/oauth/exchange', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-Admin-Key': adminKey },
+          body: JSON.stringify({
+            code: oauthCode,
+            state: currentOAuthState,
+            callbackUrl,
+            accountName: currentAccountName
+          })
+        });
+        
+        const data = await res.json();
+        if (data.success) {
+          document.getElementById('accountStep2').classList.add('hidden');
+          document.getElementById('accountStep3').classList.remove('hidden');
+          loadAccounts();
+        } else {
+          showToast(data.error || 'Failed to connect account', 'error');
+        }
+      } catch (e) {
+        showToast('Failed to connect account', 'error');
+        console.error(e);
+      }
+    }
+    
+    async function refreshAccount(accountId) {
+      try {
+        const res = await fetch(`/admin/accounts/${accountId}/refresh`, {
+          method: 'POST',
+          headers: { 'X-Admin-Key': adminKey }
+        });
+        
+        const data = await res.json();
+        if (data.success) {
+          showToast('Token refreshed successfully', 'success');
+          loadAccounts();
+        } else {
+          showToast(data.error || 'Failed to refresh token', 'error');
+        }
+      } catch (e) {
+        showToast('Failed to refresh token', 'error');
+        console.error(e);
+      }
+    }
+    
+    async function deleteAccount(accountId, accountName) {
+      if (!confirm(`Delete account "${accountName}"? This cannot be undone.`)) return;
+      
+      try {
+        const res = await fetch(`/admin/accounts/${accountId}`, {
+          method: 'DELETE',
+          headers: { 'X-Admin-Key': adminKey }
+        });
+        
+        const data = await res.json();
+        if (data.success) {
+          showToast('Account deleted', 'success');
+          loadAccounts();
+        } else {
+          showToast(data.error || 'Failed to delete account', 'error');
+        }
+      } catch (e) {
+        showToast('Failed to delete account', 'error');
+        console.error(e);
+      }
+    }
+    
+    // Auto-refresh accounts every 5 minutes when on settings tab
+    setInterval(() => {
+      const settingsTab = document.getElementById('tab-settings');
+      if (settingsTab && !settingsTab.classList.contains('hidden')) {
+        loadAccounts();
+      }
+    }, 300000);
+
+    // ==================== BILLING FUNCTIONS ====================
+    
+    let currentBillingEnv = 'sandbox';
+    
+    // Load billing configuration
+    async function loadBillingConfig() {
+      try {
+        const res = await fetch('/admin/billing/config', {
+          headers: { 'X-Admin-Key': adminKey }
+        });
+        const data = await res.json();
+        
+        if (data.success) {
+          currentBillingEnv = data.config.environment;
+          updateBillingUI();
+        }
+      } catch (e) {
+        console.error('[BILLING] Failed to load config:', e);
+      }
+    }
+    
+    // Update billing UI based on environment
+    function updateBillingUI() {
+      const isSandbox = currentBillingEnv === 'sandbox';
+      
+      // Update toggle button
+      const toggle = document.getElementById('billingEnvToggle');
+      const icon = document.getElementById('billingEnvIcon');
+      const status = document.getElementById('billingEnvStatus');
+      
+      if (isSandbox) {
+        toggle.className = 'px-4 py-2 rounded-xl bg-success/20 text-success text-sm font-medium hover:bg-success/30 transition-all';
+        toggle.innerHTML = '<i class="fas fa-toggle-on mr-2"></i>Sandbox';
+        icon.className = 'fas fa-flask text-accent';
+        status.textContent = 'Sandbox Mode (Testing)';
+        status.className = 'text-xs text-gray-500';
+      } else {
+        toggle.className = 'px-4 py-2 rounded-xl bg-warning/20 text-warning text-sm font-medium hover:bg-warning/30 transition-all';
+        toggle.innerHTML = '<i class="fas fa-toggle-off mr-2"></i>Production';
+        icon.className = 'fas fa-lock text-warning';
+        status.textContent = 'Production Mode (Live Payments)';
+        status.className = 'text-xs text-warning';
+      }
+      
+      // Show/hide credential sections
+      document.getElementById('sandboxCredentials').classList.toggle('hidden', !isSandbox);
+      document.getElementById('productionCredentials').classList.toggle('hidden', isSandbox);
+    }
+    
+    // Toggle between sandbox and production
+    async function toggleBillingEnvironment() {
+      const newEnv = currentBillingEnv === 'sandbox' ? 'production' : 'sandbox';
+      
+      try {
+        const res = await fetch('/admin/billing/environment', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'X-Admin-Key': adminKey 
+          },
+          body: JSON.stringify({ environment: newEnv })
+        });
+        
+        const data = await res.json();
+        if (data.success) {
+          currentBillingEnv = newEnv;
+          updateBillingUI();
+          showToast(`Switched to ${newEnv} mode`, 'success');
+        } else {
+          showToast(data.error || 'Failed to switch environment', 'error');
+        }
+      } catch (e) {
+        showToast('Failed to switch environment', 'error');
+        console.error(e);
+      }
+    }
+    
+    // Test DirectPay connection
+    async function testDirectPayConnection() {
+      try {
+        showToast('Testing connection...', 'info');
+        
+        const res = await fetch('/admin/billing/test', {
+          method: 'POST',
+          headers: { 'X-Admin-Key': adminKey }
+        });
+        
+        const data = await res.json();
+        if (data.success) {
+          showToast(`Connection successful (${data.environment})`, 'success');
+        } else {
+          showToast(data.error || 'Connection failed', 'error');
+        }
+      } catch (e) {
+        showToast('Connection test failed', 'error');
+        console.error(e);
+      }
+    }
+    
+    // Save production credentials
+    async function saveProductionCredentials() {
+      const merchantId = document.getElementById('prodMerchantId').value.trim();
+      const merchantKey = document.getElementById('prodMerchantKey').value.trim();
+      const apiBase = document.getElementById('prodApiBase').value.trim();
+      const dashboard = document.getElementById('prodDashboard').value.trim();
+      
+      if (!merchantId || !merchantKey) {
+        showToast('Merchant ID and Key are required', 'error');
+        return;
+      }
+      
+      try {
+        const res = await fetch('/admin/billing/credentials', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'X-Admin-Key': adminKey 
+          },
+          body: JSON.stringify({
+            merchantId,
+            merchantKey,
+            apiBase,
+            dashboard
+          })
+        });
+        
+        const data = await res.json();
+        if (data.success) {
+          showToast('Production credentials saved', 'success');
+          // Clear sensitive fields
+          document.getElementById('prodMerchantKey').value = '';
+        } else {
+          showToast(data.error || 'Failed to save credentials', 'error');
+        }
+      } catch (e) {
+        showToast('Failed to save credentials', 'error');
+        console.error(e);
+      }
+    }
+    
+    // Create test payment
+    async function createTestPayment() {
+      const amount = document.getElementById('testAmount').value;
+      const description = document.getElementById('testDescription').value;
+      
+      if (!amount || amount < 100) {
+        showToast('Minimum amount is ₱100', 'error');
+        return;
+      }
+      
+      try {
+        showToast('Creating checkout session...', 'info');
+        
+        const res = await fetch('/admin/billing/payment', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'X-Admin-Key': adminKey 
+          },
+          body: JSON.stringify({
+            amount: parseFloat(amount),
+            description,
+            metadata: { test: true, created_by: 'admin' }
+          })
+        });
+        
+        const data = await res.json();
+        if (data.success && data.checkoutUrl) {
+          showToast('Checkout created! Opening payment page...', 'success');
+          // Open checkout in new tab
+          window.open(data.checkoutUrl, '_blank');
+          // Reload transactions after a delay
+          setTimeout(loadTransactions, 5000);
+        } else {
+          showToast(data.error || 'Failed to create checkout', 'error');
+        }
+      } catch (e) {
+        showToast('Failed to create checkout', 'error');
+        console.error(e);
+      }
+    }
+    
+    // Load transactions
+    async function loadTransactions() {
+      try {
+        const res = await fetch('/admin/billing/transactions?limit=20', {
+          headers: { 'X-Admin-Key': adminKey }
+        });
+        
+        const data = await res.json();
+        const container = document.getElementById('transactionsList');
+        
+        if (data.success && data.transactions.length > 0) {
+          container.innerHTML = data.transactions.map(tx => {
+            const statusColors = {
+              'completed': 'text-success',
+              'pending': 'text-warning',
+              'failed': 'text-danger',
+              'cancelled': 'text-gray-500',
+              'refunded': 'text-accent'
+            };
+            const statusIcon = {
+              'completed': 'fa-check-circle',
+              'pending': 'fa-clock',
+              'failed': 'fa-times-circle',
+              'cancelled': 'fa-ban',
+              'refunded': 'fa-undo'
+            };
+            
+            return `
+              <div class="flex items-center justify-between p-3 rounded-xl bg-white/5">
+                <div class="flex items-center gap-3">
+                  <i class="fas ${statusIcon[tx.status] || 'fa-receipt'} ${statusColors[tx.status] || 'text-gray-400'}"></i>
+                  <div>
+                    <p class="text-sm font-medium">${tx.description || 'Payment'}</p>
+                    <p class="text-xs text-gray-500">${new Date(tx.created_at).toLocaleString()}</p>
+                  </div>
+                </div>
+                <div class="text-right">
+                  <p class="text-sm font-medium">₱${parseFloat(tx.amount).toFixed(2)}</p>
+                  <p class="text-xs ${statusColors[tx.status] || 'text-gray-500'} capitalize">${tx.status}</p>
+                </div>
+              </div>
+            `;
+          }).join('');
+        } else {
+          container.innerHTML = `
+            <div class="text-center py-8 text-gray-500">
+              <i class="fas fa-receipt text-4xl mb-3 opacity-30"></i>
+              <p>No transactions yet</p>
+              <p class="text-xs mt-1">Create a test payment to see it here</p>
+            </div>
+          `;
+        }
+      } catch (e) {
+        console.error('[BILLING] Failed to load transactions:', e);
+        document.getElementById('transactionsList').innerHTML = `
+          <div class="text-center py-8 text-gray-500">
+            <p>Failed to load transactions</p>
+          </div>
+        `;
+      }
+    }
+    
+    // Load billing data when billing tab is shown
+    document.addEventListener('DOMContentLoaded', () => {
+      // Load billing config on page load
+      loadBillingConfig();
+      loadTransactions();
+    });
+    
+    // Auto-refresh transactions when billing tab is active
+    setInterval(() => {
+      const billingTab = document.getElementById('tab-billing');
+      if (billingTab && !billingTab.classList.contains('hidden')) {
+        loadTransactions();
+      }
+    }, 30000); // Refresh every 30 seconds
+  </script>
+</body>
+</html>

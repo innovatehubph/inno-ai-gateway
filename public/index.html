@@ -1,0 +1,1388 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0f172a">
+  <meta name="description" content="InnoAI - AI Models for Every Filipino. Access 200+ AI models including Claude, GPT, FLUX, and more with Philippine Peso pricing.">
+  <meta name="keywords" content="AI API Philippines, Claude API, GPT API, Image Generation, Filipino AI, DirectPay">
+  
+  <title>InnoAI | AI Models for Every Filipino</title>
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="/images/logo.png">
+  <link rel="apple-touch-icon" href="/images/logo.png">
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- GSAP for Advanced Animations -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+  
+  <!-- Three.js for 3D Effects -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            display: ['Space Grotesk', 'sans-serif'],
+          },
+          colors: {
+            primary: '#57317A',
+            'primary-light': '#7C4FB0',
+            'primary-dark': '#3D1F58',
+            accent: '#00D9FF',
+            'accent-pink': '#FF006E',
+            'accent-purple': '#8338EC',
+            'accent-orange': '#FB5607',
+            dark: '#0a0a0f',
+            'dark-lighter': '#13131f',
+            'dark-card': '#1a1a2e',
+          },
+          animation: {
+            'float': 'float 6s ease-in-out infinite',
+            'pulse-glow': 'pulse-glow 2s ease-in-out infinite',
+            'gradient-x': 'gradient-x 15s ease infinite',
+            'spin-slow': 'spin 20s linear infinite',
+            'bounce-slow': 'bounce 3s ease-in-out infinite',
+          },
+          keyframes: {
+            float: {
+              '0%, 100%': { transform: 'translateY(0px)' },
+              '50%': { transform: 'translateY(-20px)' },
+            },
+            'pulse-glow': {
+              '0%, 100%': { boxShadow: '0 0 20px rgba(87, 49, 122, 0.5)' },
+              '50%': { boxShadow: '0 0 40px rgba(87, 49, 122, 0.8)' },
+            },
+            'gradient-x': {
+              '0%, 100%': { backgroundPosition: '0% 50%' },
+              '50%': { backgroundPosition: '100% 50%' },
+            },
+          },
+        },
+      },
+    }
+  </script>
+  
+  <style>
+    * { box-sizing: border-box; }
+    
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #0a0a0f;
+      color: #ffffff;
+      overflow-x: hidden;
+    }
+    
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: #0a0a0f; }
+    ::-webkit-scrollbar-thumb { background: linear-gradient(180deg, #57317A, #8338EC); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: linear-gradient(180deg, #7C4FB0, #9B4DFF); }
+    
+    /* Gradient Text */
+    .gradient-text {
+      background: linear-gradient(135deg, #00D9FF, #FF006E, #8338EC, #FB5607);
+      background-size: 300% 300%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: gradient-x 8s ease infinite;
+    }
+    
+    .gradient-text-subtle {
+      background: linear-gradient(135deg, #ffffff, #a5b4fc);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    /* Glass Effect */
+    .glass {
+      background: rgba(26, 26, 46, 0.6);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .glass-strong {
+      background: rgba(19, 19, 31, 1);
+      backdrop-filter: blur(30px);
+      -webkit-backdrop-filter: blur(30px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+    
+    /* Mobile menu specific - solid background */
+    .mobile-menu {
+      background: #13131f !important;
+    }
+    
+    /* Glow Effects */
+    .glow-primary { box-shadow: 0 0 30px rgba(87, 49, 122, 0.4); }
+    .glow-accent { box-shadow: 0 0 30px rgba(0, 217, 255, 0.4); }
+    .glow-pink { box-shadow: 0 0 30px rgba(255, 0, 110, 0.4); }
+    
+    /* Button Styles */
+    .btn-primary {
+      background: linear-gradient(135deg, #57317A, #7C4FB0);
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .btn-primary::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+      transition: left 0.5s;
+    }
+    
+    .btn-primary:hover::before { left: 100%; }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 40px rgba(87, 49, 122, 0.4); }
+    
+    /* Particle Canvas */
+    #particle-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+    }
+    
+    /* Aurora Background */
+    .aurora-bg {
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: 
+        radial-gradient(ellipse at 20% 20%, rgba(87, 49, 122, 0.15) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 80%, rgba(131, 56, 236, 0.1) 0%, transparent 50%),
+        radial-gradient(ellipse at 40% 60%, rgba(0, 217, 255, 0.08) 0%, transparent 40%);
+      animation: aurora 20s ease-in-out infinite;
+    }
+    
+    @keyframes aurora {
+      0%, 100% { transform: rotate(0deg) scale(1); }
+      33% { transform: rotate(120deg) scale(1.1); }
+      66% { transform: rotate(240deg) scale(0.9); }
+    }
+    
+    /* Grid Background */
+    .grid-bg {
+      background-image: 
+        linear-gradient(rgba(87, 49, 122, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(87, 49, 122, 0.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+    }
+    
+    /* Floating Elements */
+    .float-element { animation: float 6s ease-in-out infinite; }
+    .float-element-delay-1 { animation-delay: -1s; }
+    .float-element-delay-2 { animation-delay: -2s; }
+    .float-element-delay-3 { animation-delay: -3s; }
+    
+    /* Card Hover Effects */
+    .feature-card {
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+    }
+    
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(87, 49, 122, 0.2), transparent);
+      opacity: 0;
+      transition: opacity 0.4s;
+      border-radius: inherit;
+    }
+    
+    .feature-card:hover::before { opacity: 1; }
+    .feature-card:hover { transform: translateY(-8px) scale(1.02); }
+    
+    /* Model Card Glow */
+    .model-card {
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .model-card::after {
+      content: '';
+      position: absolute;
+      top: -2px;
+      left: -2px;
+      right: -2px;
+      bottom: -2px;
+      background: linear-gradient(45deg, #00D9FF, #FF006E, #8338EC, #FB5607);
+      border-radius: inherit;
+      z-index: -1;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    
+    .model-card:hover::after { opacity: 1; }
+    
+    /* Text Reveal Animation */
+    .reveal-text {
+      overflow: hidden;
+    }
+    
+    .reveal-text span {
+      display: inline-block;
+      transform: translateY(100%);
+      opacity: 0;
+    }
+    
+    /* Price Tag */
+    .price-tag {
+      background: linear-gradient(135deg, rgba(0, 217, 255, 0.2), rgba(131, 56, 236, 0.2));
+      border: 1px solid rgba(0, 217, 255, 0.3);
+    }
+    
+    /* Nav Glass */
+    .nav-glass {
+      background: rgba(10, 10, 15, 0.8);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    
+    /* Mobile Menu */
+    .mobile-menu {
+      transform: translateX(100%);
+      transition: transform 0.3s ease;
+    }
+    
+    .mobile-menu.open { transform: translateX(0); }
+    
+    /* Stat Counter */
+    .stat-number {
+      font-variant-numeric: tabular-nums;
+    }
+    
+    /* Section Transition */
+    .section-reveal {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    
+    /* Gradient Border */
+    .gradient-border {
+      position: relative;
+      background: #1a1a2e;
+      border-radius: 16px;
+    }
+    
+    .gradient-border::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 16px;
+      padding: 1px;
+      background: linear-gradient(135deg, #00D9FF, #FF006E, #8338EC);
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+    }
+    
+    /* Rotating Shiny Silver Border */
+    /* Subtle Rotating Border - Dark Theme Compatible */
+    .silver-border {
+      position: relative;
+      border-radius: 16px;
+      overflow: hidden;
+    }
+    
+    .silver-border::before {
+      content: '';
+      position: absolute;
+      inset: -2px;
+      background: conic-gradient(
+        from 0deg,
+        rgba(87, 49, 122, 0.8),
+        rgba(124, 79, 176, 0.6),
+        rgba(0, 217, 255, 0.5),
+        rgba(124, 79, 176, 0.6),
+        rgba(87, 49, 122, 0.8)
+      );
+      border-radius: 18px;
+      z-index: 0;
+      animation: rotate-silver 4s linear infinite;
+    }
+    
+    .silver-border > * {
+      position: relative;
+      z-index: 1;
+    }
+    
+    @keyframes rotate-silver {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    
+    /* 3D Card Effect */
+    .card-3d {
+      transform-style: preserve-3d;
+      transition: transform 0.5s ease;
+    }
+    
+    .card-3d:hover {
+      transform: rotateY(10deg) rotateX(5deg) translateZ(20px);
+    }
+    
+    /* Glow Animation */
+    .glow-animate {
+      animation: glow-pulse 2s ease-in-out infinite;
+    }
+    
+    @keyframes glow-pulse {
+      0%, 100% { box-shadow: 0 0 20px rgba(87, 49, 122, 0.4), 0 0 40px rgba(87, 49, 122, 0.2); }
+      50% { box-shadow: 0 0 30px rgba(87, 49, 122, 0.6), 0 0 60px rgba(87, 49, 122, 0.3); }
+    }
+    
+    /* Filipino Pride */
+    .filipino-gradient {
+      background: linear-gradient(135deg, #0038A8, #CE1126, #FCD116);
+      background-size: 200% 200%;
+      animation: gradient-x 5s ease infinite;
+    }
+  </style>
+</head>
+<body class="antialiased">
+  
+  <!-- Navigation -->
+  <nav id="navbar" class="fixed top-0 left-0 right-0 z-50 nav-glass transition-all duration-300">
+    <div class="max-w-7xl mx-auto px-6 py-4">
+      <div class="flex items-center justify-between">
+        <!-- Logo -->
+        <a href="#" class="flex items-center gap-3 group">
+          <div class="w-10 h-10 rounded-xl overflow-hidden glow-primary group-hover:scale-110 transition-transform">
+            <img src="/images/logo.png" alt="InnovateHub" class="w-full h-full object-contain">
+          </div>
+          <div class="hidden sm:block">
+            <span class="font-display font-bold text-lg">InnovateHub</span>
+            <span class="text-xs text-gray-400 block -mt-1">AI Gateway</span>
+          </div>
+        </a>
+        
+        <!-- Desktop Nav -->
+        <div class="hidden md:flex items-center gap-8">
+          <a href="#features" class="text-sm text-gray-300 hover:text-white transition-colors">Features</a>
+          <a href="#models" class="text-sm text-gray-300 hover:text-white transition-colors">Models</a>
+          <a href="#pricing" class="text-sm text-gray-300 hover:text-white transition-colors">Pricing</a>
+          <a href="#docs" class="text-sm text-gray-300 hover:text-white transition-colors">Docs</a>
+        </div>
+        
+        <!-- CTA Buttons -->
+        <div class="hidden md:flex items-center gap-4">
+          <a href="/portal/login" class="text-sm text-gray-300 hover:text-white transition-colors">Sign In</a>
+          <a href="/portal" class="btn-primary px-6 py-2.5 rounded-full text-sm font-medium">
+            Get Started
+          </a>
+        </div>
+        
+        <!-- Mobile Menu Button -->
+        <button id="mobile-menu-btn" class="md:hidden p-2 text-white">
+          <i data-lucide="menu" class="w-6 h-6"></i>
+        </button>
+      </div>
+    </div>
+    
+    <!-- Mobile Menu -->
+    <div id="mobile-menu" class="mobile-menu fixed top-0 right-0 w-80 h-full glass-strong z-50 p-6">
+      <div class="flex justify-between items-center mb-8">
+        <span class="font-display font-bold text-lg">Menu</span>
+        <button id="mobile-menu-close" class="p-2 text-white">
+          <i data-lucide="x" class="w-6 h-6"></i>
+        </button>
+      </div>
+      <div class="flex flex-col gap-4">
+        <a href="#features" class="text-lg text-gray-300 hover:text-white transition-colors py-2">Features</a>
+        <a href="#models" class="text-lg text-gray-300 hover:text-white transition-colors py-2">Models</a>
+        <a href="#pricing" class="text-lg text-gray-300 hover:text-white transition-colors py-2">Pricing</a>
+        <a href="#docs" class="text-lg text-gray-300 hover:text-white transition-colors py-2">Documentation</a>
+        <hr class="border-white/10 my-4">
+        <a href="/portal/login" class="text-lg text-gray-300 hover:text-white transition-colors py-2">Sign In</a>
+        <a href="/portal" class="btn-primary px-6 py-3 rounded-full text-center font-medium">
+          Get Started Free
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section id="hero" class="relative min-h-screen flex items-center justify-center overflow-hidden">
+    <!-- Aurora Background -->
+    <div class="aurora-bg"></div>
+    
+    <!-- Grid Background -->
+    <div class="absolute inset-0 grid-bg opacity-50"></div>
+    
+    <!-- Particle Canvas -->
+    <canvas id="particle-canvas"></canvas>
+    
+    <!-- 3D Scene Container -->
+    <div id="three-container" class="absolute inset-0 pointer-events-none z-0 opacity-60"></div>
+    
+    <!-- Floating Elements -->
+    <div class="absolute inset-0 pointer-events-none overflow-hidden">
+      <div class="absolute top-20 left-10 w-72 h-72 bg-primary/20 rounded-full blur-3xl float-element"></div>
+      <div class="absolute bottom-20 right-10 w-96 h-96 bg-accent-purple/20 rounded-full blur-3xl float-element float-element-delay-2"></div>
+      <div class="absolute top-1/2 left-1/3 w-64 h-64 bg-accent/10 rounded-full blur-3xl float-element float-element-delay-1"></div>
+    </div>
+    
+    <!-- Hero Content -->
+    <div class="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-32 text-center overflow-hidden">
+      <!-- Badge -->
+      <div class="hero-badge inline-flex items-center gap-2 px-4 py-2 rounded-full glass mb-8 opacity-0">
+        <span class="w-2 h-2 bg-success rounded-full animate-pulse"></span>
+        <span class="text-sm text-gray-300">Now serving 500+ Filipino developers</span>
+      </div>
+      
+      <!-- Main Heading -->
+      <h1 class="hero-title font-display font-bold text-5xl sm:text-6xl md:text-7xl lg:text-8xl leading-tight mb-6">
+        <span class="block reveal-text">
+          <span>The Philippines'</span>
+        </span>
+        <span class="block reveal-text">
+          <span class="gradient-text">Premier AI</span>
+        </span>
+        <span class="block reveal-text">
+          <span>Platform</span>
+        </span>
+      </h1>
+      
+      <!-- Subtitle -->
+      <p class="hero-subtitle text-xl md:text-2xl text-gray-400 max-w-3xl mx-auto mb-10 opacity-0">
+        Access <span class="text-white font-semibold">200+ AI models</span> including Claude, GPT, FLUX, and more. 
+        Pay in <span class="text-accent font-semibold">Philippine Pesos</span>. No credit card required.
+      </p>
+      
+      <!-- CTA Buttons -->
+      <div class="hero-cta flex flex-col sm:flex-row items-center justify-center gap-4 opacity-0">
+        <a href="/portal" class="btn-primary px-8 py-4 rounded-full text-lg font-semibold flex items-center gap-2 glow-primary">
+          <span>Start Building Free</span>
+          <i data-lucide="arrow-right" class="w-5 h-5"></i>
+        </a>
+        <a href="#demo" class="px-8 py-4 rounded-full text-lg font-medium border border-white/20 hover:bg-white/5 transition-all flex items-center gap-2">
+          <i data-lucide="play" class="w-5 h-5"></i>
+          <span>Watch Demo</span>
+        </a>
+      </div>
+      
+      <!-- Code Preview -->
+      <div class="hero-code mt-16 max-w-2xl mx-auto opacity-0">
+        <div class="glass rounded-2xl p-1 gradient-border">
+          <div class="bg-dark-card rounded-xl p-6 text-left font-mono text-sm overflow-x-auto">
+            <div class="flex items-center gap-2 mb-4 text-gray-500">
+              <div class="w-3 h-3 rounded-full bg-danger"></div>
+              <div class="w-3 h-3 rounded-full bg-warning"></div>
+              <div class="w-3 h-3 rounded-full bg-success"></div>
+              <span class="ml-4 text-xs">example.js</span>
+            </div>
+            <pre class="text-gray-300"><code><span class="text-accent-purple">const</span> <span class="text-accent">response</span> = <span class="text-accent-purple">await</span> <span class="text-white">fetch</span>(<span class="text-accent-pink">'https://ai-gateway.innoserver.cloud/v1/chat/completions'</span>, {
+  <span class="text-gray-400">method</span>: <span class="text-accent-pink">'POST'</span>,
+  <span class="text-gray-400">headers</span>: {
+    <span class="text-accent-pink">'Authorization'</span>: <span class="text-accent-pink">'Bearer ik_...'</span>,
+    <span class="text-accent-pink">'Content-Type'</span>: <span class="text-accent-pink">'application/json'</span>
+  },
+  <span class="text-gray-400">body</span>: <span class="text-white">JSON</span>.<span class="text-white">stringify</span>({
+    <span class="text-gray-400">model</span>: <span class="text-accent-pink">'inno-ai-boyong-4.5'</span>,
+    <span class="text-gray-400">messages</span>: [{ <span class="text-gray-400">role</span>: <span class="text-accent-pink">'user'</span>, <span class="text-gray-400">content</span>: <span class="text-accent-pink">'Hello!'</span> }]
+  })
+});</code></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Scroll Indicator -->
+    <div class="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
+      <i data-lucide="chevron-down" class="w-6 h-6 text-gray-500"></i>
+    </div>
+  </section>
+
+  <!-- Stats Section -->
+  <section id="stats" class="py-20 relative">
+    <div class="max-w-7xl mx-auto px-6">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
+        <div class="stat-item text-center section-reveal">
+          <div class="text-4xl md:text-5xl font-display font-bold gradient-text mb-2 stat-number" data-target="200">0</div>
+          <div class="text-sm text-gray-400">AI Models</div>
+        </div>
+        <div class="stat-item text-center section-reveal">
+          <div class="text-4xl md:text-5xl font-display font-bold gradient-text mb-2 stat-number" data-target="500">0</div>
+          <div class="text-sm text-gray-400">Filipino Developers</div>
+        </div>
+        <div class="stat-item text-center section-reveal">
+          <div class="text-4xl md:text-5xl font-display font-bold gradient-text mb-2 stat-number" data-target="99.9">0</div>
+          <div class="text-sm text-gray-400">% Uptime</div>
+        </div>
+        <div class="stat-item text-center section-reveal">
+          <div class="text-4xl md:text-5xl font-display font-bold gradient-text mb-2">₱<span class="stat-number" data-target="0.50">0</span></div>
+          <div class="text-sm text-gray-400">Starting Price</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section id="features" class="py-32 relative">
+    <div class="max-w-7xl mx-auto px-6">
+      <!-- Section Header -->
+      <div class="text-center mb-20 section-reveal">
+        <span class="inline-block px-4 py-2 rounded-full glass text-sm text-accent mb-4">Features</span>
+        <h2 class="font-display font-bold text-4xl md:text-5xl lg:text-6xl mb-6">
+          Everything You Need to<br>
+          <span class="gradient-text">Build with AI</span>
+        </h2>
+        <p class="text-xl text-gray-400 max-w-2xl mx-auto">
+          From text generation to video creation, access the world's best AI models through a single API.
+        </p>
+      </div>
+      
+      <!-- Features Grid -->
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Feature 1 -->
+        <div class="feature-card glass silver-border rounded-2xl p-8 section-reveal group cursor-pointer glow-animate">
+          <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-accent/20 to-accent/5 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+            <i data-lucide="message-square" class="w-7 h-7 text-accent"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-3">Chat & Conversations</h3>
+          <p class="text-gray-400 mb-4">Access Claude, GPT, Gemini, and more with a single API. Build chatbots, assistants, and conversational AI.</p>
+          <div class="flex items-center gap-2 text-accent text-sm">
+            <span>Learn more</span>
+            <i data-lucide="arrow-right" class="w-4 h-4 group-hover:translate-x-1 transition-transform"></i>
+          </div>
+        </div>
+        
+        <!-- Feature 2 -->
+        <div class="feature-card glass rounded-2xl p-8 section-reveal group cursor-pointer">
+          <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-accent-pink/20 to-accent-pink/5 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+            <i data-lucide="image" class="w-7 h-7 text-accent-pink"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-3">Image Generation</h3>
+          <p class="text-gray-400 mb-4">Create stunning images with FLUX, DALL-E, Stable Diffusion. From photorealistic to artistic styles.</p>
+          <div class="flex items-center gap-2 text-accent-pink text-sm">
+            <span>Learn more</span>
+            <i data-lucide="arrow-right" class="w-4 h-4 group-hover:translate-x-1 transition-transform"></i>
+          </div>
+        </div>
+        
+        <!-- Feature 3 -->
+        <div class="feature-card glass rounded-2xl p-8 section-reveal group cursor-pointer">
+          <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-accent-purple/20 to-accent-purple/5 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+            <i data-lucide="video" class="w-7 h-7 text-accent-purple"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-3">Video Creation</h3>
+          <p class="text-gray-400 mb-4">Generate videos from text or images. Create marketing content, animations, and visual stories.</p>
+          <div class="flex items-center gap-2 text-accent-purple text-sm">
+            <span>Learn more</span>
+            <i data-lucide="arrow-right" class="w-4 h-4 group-hover:translate-x-1 transition-transform"></i>
+          </div>
+        </div>
+        
+        <!-- Feature 4 -->
+        <div class="feature-card glass rounded-2xl p-8 section-reveal group cursor-pointer">
+          <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-accent-orange/20 to-accent-orange/5 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+            <i data-lucide="box" class="w-7 h-7 text-accent-orange"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-3">3D Generation</h3>
+          <p class="text-gray-400 mb-4">Create 3D models from text or images. Perfect for gaming, VR/AR, and product visualization.</p>
+          <div class="flex items-center gap-2 text-accent-orange text-sm">
+            <span>Learn more</span>
+            <i data-lucide="arrow-right" class="w-4 h-4 group-hover:translate-x-1 transition-transform"></i>
+          </div>
+        </div>
+        
+        <!-- Feature 5 -->
+        <div class="feature-card glass rounded-2xl p-8 section-reveal group cursor-pointer">
+          <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-success/20 to-success/5 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+            <i data-lucide="mic" class="w-7 h-7 text-success"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-3">Audio & Voice</h3>
+          <p class="text-gray-400 mb-4">Text-to-speech, voice cloning, and audio processing. Create podcasts, voiceovers, and audio content.</p>
+          <div class="flex items-center gap-2 text-success text-sm">
+            <span>Learn more</span>
+            <i data-lucide="arrow-right" class="w-4 h-4 group-hover:translate-x-1 transition-transform"></i>
+          </div>
+        </div>
+        
+        <!-- Feature 6 -->
+        <div class="feature-card glass rounded-2xl p-8 section-reveal group cursor-pointer">
+          <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-warning/20 to-warning/5 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+            <i data-lucide=" Philippine Peso" class="w-7 h-7 text-warning"></i>
+          </div>
+          <h3 class="text-xl font-bold mb-3">Philippine Peso Pricing</h3>
+          <p class="text-gray-400 mb-4">Pay in PHP via GCash, PayMaya, or DirectPay. No foreign transaction fees. Budget-friendly for local developers.</p>
+          <div class="flex items-center gap-2 text-warning text-sm">
+            <span>Learn more</span>
+            <i data-lucide="arrow-right" class="w-4 h-4 group-hover:translate-x-1 transition-transform"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Models Showcase -->
+  <section id="models" class="py-32 relative overflow-hidden">
+    <!-- Background Gradient -->
+    <div class="absolute inset-0 bg-gradient-to-b from-transparent via-primary/5 to-transparent"></div>
+    
+    <div class="max-w-7xl mx-auto px-6 relative z-10">
+      <!-- Section Header -->
+      <div class="text-center mb-20 section-reveal">
+        <span class="inline-block px-4 py-2 rounded-full glass text-sm text-accent-pink mb-4">Model Gallery</span>
+        <h2 class="font-display font-bold text-4xl md:text-5xl lg:text-6xl mb-6">
+          200+ AI Models<br>
+          <span class="gradient-text">One API</span>
+        </h2>
+        <p class="text-xl text-gray-400 max-w-2xl mx-auto">
+          From open-source to proprietary, access the best AI models without managing multiple accounts.
+        </p>
+      </div>
+      
+      <!-- Models Grid -->
+      <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <!-- Model Card 1 -->
+        <div class="model-card glass rounded-2xl p-6 section-reveal hover:scale-105 transition-transform">
+          <div class="flex items-center justify-between mb-4">
+            <span class="px-3 py-1 rounded-full text-xs bg-accent/20 text-accent border border-accent/30">Chat</span>
+            <i data-lucide="sparkles" class="w-5 h-5 text-accent"></i>
+          </div>
+          <h3 class="font-bold text-lg mb-2">Claude 4.5 Opus</h3>
+          <p class="text-sm text-gray-400 mb-4">Most capable Claude model for complex tasks</p>
+          <div class="price-tag rounded-lg px-3 py-2 text-sm">
+            <span class="text-gray-400">From </span>
+            <span class="font-bold text-white">₱465</span>
+            <span class="text-gray-400">/million tokens</span>
+          </div>
+        </div>
+        
+        <!-- Model Card 2 -->
+        <div class="model-card glass rounded-2xl p-6 section-reveal hover:scale-105 transition-transform">
+          <div class="flex items-center justify-between mb-4">
+            <span class="px-3 py-1 rounded-full text-xs bg-accent-pink/20 text-accent-pink border border-accent-pink/30">Image</span>
+            <i data-lucide="image" class="w-5 h-5 text-accent-pink"></i>
+          </div>
+          <h3 class="font-bold text-lg mb-2">FLUX 1.1 Pro</h3>
+          <p class="text-sm text-gray-400 mb-4">State-of-the-art image generation</p>
+          <div class="price-tag rounded-lg px-3 py-2 text-sm">
+            <span class="text-gray-400">From </span>
+            <span class="font-bold text-white">₱3.75</span>
+            <span class="text-gray-400">/image</span>
+          </div>
+        </div>
+        
+        <!-- Model Card 3 -->
+        <div class="model-card glass rounded-2xl p-6 section-reveal hover:scale-105 transition-transform">
+          <div class="flex items-center justify-between mb-4">
+            <span class="px-3 py-1 rounded-full text-xs bg-accent-purple/20 text-accent-purple border border-accent-purple/30">Video</span>
+            <i data-lucide="video" class="w-5 h-5 text-accent-purple"></i>
+          </div>
+          <h3 class="font-bold text-lg mb-2">Wan 2.1</h3>
+          <p class="text-sm text-gray-400 mb-4">High-quality video generation</p>
+          <div class="price-tag rounded-lg px-3 py-2 text-sm">
+            <span class="text-gray-400">From </span>
+            <span class="font-bold text-white">₱4.68</span>
+            <span class="text-gray-400">/second</span>
+          </div>
+        </div>
+        
+        <!-- Model Card 4 -->
+        <div class="model-card glass rounded-2xl p-6 section-reveal hover:scale-105 transition-transform">
+          <div class="flex items-center justify-between mb-4">
+            <span class="px-3 py-1 rounded-full text-xs bg-success/20 text-success border border-success/30">Free</span>
+            <i data-lucide="gift" class="w-5 h-5 text-success"></i>
+          </div>
+          <h3 class="font-bold text-lg mb-2">Gemini Pro</h3>
+          <p class="text-sm text-gray-400 mb-4">Google's powerful multimodal model</p>
+          <div class="price-tag rounded-lg px-3 py-2 text-sm">
+            <span class="font-bold text-success">FREE</span>
+            <span class="text-gray-400"> via OAuth</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- View All Button -->
+      <div class="text-center mt-12 section-reveal">
+        <a href="#" class="inline-flex items-center gap-2 px-8 py-4 rounded-full border border-white/20 hover:bg-white/5 transition-all text-lg">
+          <span>View All 200+ Models</span>
+          <i data-lucide="arrow-right" class="w-5 h-5"></i>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pricing Section -->
+  <section id="pricing" class="py-32 relative">
+    <div class="max-w-7xl mx-auto px-6">
+      <!-- Section Header -->
+      <div class="text-center mb-20 section-reveal">
+        <span class="inline-block px-4 py-2 rounded-full glass text-sm text-warning mb-4">Pricing</span>
+        <h2 class="font-display font-bold text-4xl md:text-5xl lg:text-6xl mb-6">
+          Simple, Transparent<br>
+          <span class="gradient-text">Philippine Pricing</span>
+        </h2>
+        <p class="text-xl text-gray-400 max-w-2xl mx-auto">
+          No hidden fees. No foreign transaction charges. Pay in PHP and get started instantly.
+        </p>
+      </div>
+      
+      <!-- Pricing Cards -->
+      <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+        <!-- Free Tier -->
+        <div class="glass rounded-2xl p-8 section-reveal relative">
+          <div class="mb-6">
+            <h3 class="text-xl font-bold mb-2">Free</h3>
+            <div class="flex items-baseline gap-1">
+              <span class="text-4xl font-display font-bold">₱0</span>
+              <span class="text-gray-400">/month</span>
+            </div>
+          </div>
+          <ul class="space-y-3 mb-8">
+            <li class="flex items-center gap-3 text-sm">
+              <i data-lucide="check" class="w-5 h-5 text-success"></i>
+              <span>100 requests/day</span>
+            </li>
+            <li class="flex items-center gap-3 text-sm">
+              <i data-lucide="check" class="w-5 h-5 text-success"></i>
+              <span>10K tokens/month</span>
+            </li>
+            <li class="flex items-center gap-3 text-sm">
+              <i data-lucide="check" class="w-5 h-5 text-success"></i>
+              <span>Basic models only</span>
+            </li>
+            <li class="flex items-center gap-3 text-sm">
+              <i data-lucide="check" class="w-5 h-5 text-success"></i>
+              <span>Community support</span>
+            </li>
+          </ul>
+          <a href="/portal" class="block w-full py-3 rounded-xl border border-white/20 text-center font-medium hover:bg-white/5 transition-all">
+            Get Started
+          </a>
+        </div>
+        
+        <!-- Starter Tier -->
+        <div class="glass rounded-2xl p-8 section-reveal relative">
+          <div class="mb-6">
+            <h3 class="text-xl font-bold mb-2">Starter</h3>
+            <div class="flex items-baseline gap-1">
+              <span class="text-4xl font-display font-bold">₱499</span>
+              <span class="text-gray-400">/month</span>
+            </div>
+          </div>
+          <ul class="space-y-3 mb-8">
+            <li class="flex items-center gap-3 text-sm">
+              <i data-lucide="check" class="w-5 h-5 text-success"></i>
+              <span>1,000 requests/day</span>
+            </li>
+            <li class="flex items-center gap-3 text-sm">
+              <i data-lucide="check" class="w-5 h-5 text-success"></i>
+              <span>100K tokens/month</span>
+            </li>
+            <li class="flex items-center gap-3 text-sm">
+              <i data-lucide="check" class="w-5 h-5 text-success"></i>
+              <span>All chat models</span>
+            </li>
+            <li class="flex items-center gap-3 text-sm">
+              <i data-lucide="check" class="w-5 h-5 text-success"></i>
+              <span>Email support</span>
+            </li>
+          </ul>
+          <a href="/portal" class="block w-full py-3 rounded-xl bg-primary/20 text-primary text-center font-medium hover:bg-primary/30 transition-all">
+            Choose Starter
+          </a>
+        </div>
+        
+        <!-- Professional Tier -->
+        <div class="glass rounded-2xl p-8 section-reveal relative border-2 border-primary">
+          <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-primary text-white text-sm rounded-full font-medium">
+            Most Popular
+          </div>
+          <div class="mb-6">
+            <h3 class="text-xl font-bold mb-2">Professional</h3>
+            <div class="flex items-baseline gap-1">
+              <span class="text-4xl font-display font-bold">₱1,499</span>
+              <span class="text-gray-400">/month</span>
+            </div>
+          </div>
+          <ul class="space-y-3 mb-8">
+            <li class="flex items-center gap-3 text-sm">
+              <i data-lucide="check" class="w-5 h-5 text-success"></i>
+              <span>10,000 requests/day</span>
+            </li>
+            <li class="flex items-center gap-3 text-sm">
+              <i data-lucide="check" class="w-5 h-5 text-success"></i>
+              <span>1M tokens/month</span>
+            </li>
+            <li class="flex items-center gap-3 text-sm">
+              <i data-lucide="check" class="w-5 h-5 text-success"></i>
+              <span>All models (inc. premium)</span>
+            </li>
+            <li class="flex items-center gap-3 text-sm">
+              <i data-lucide="check" class="w-5 h-5 text-success"></i>
+              <span>Priority support</span>
+            </li>
+          </ul>
+          <a href="/portal" class="block w-full py-3 rounded-xl btn-primary text-center font-medium">
+            Choose Professional
+          </a>
+        </div>
+        
+        <!-- Enterprise Tier -->
+        <div class="glass rounded-2xl p-8 section-reveal relative">
+          <div class="mb-6">
+            <h3 class="text-xl font-bold mb-2">Enterprise</h3>
+            <div class="flex items-baseline gap-1">
+              <span class="text-4xl font-display font-bold">₱4,999</span>
+              <span class="text-gray-400">/month</span>
+            </div>
+          </div>
+          <ul class="space-y-3 mb-8">
+            <li class="flex items-center gap-3 text-sm">
+              <i data-lucide="check" class="w-5 h-5 text-success"></i>
+              <span>100,000 requests/day</span>
+            </li>
+            <li class="flex items-center gap-3 text-sm">
+              <i data-lucide="check" class="w-5 h-5 text-success"></i>
+              <span>10M tokens/month</span>
+            </li>
+            <li class="flex items-center gap-3 text-sm">
+              <i data-lucide="check" class="w-5 h-5 text-success"></i>
+              <span>Custom deployments</span>
+            </li>
+            <li class="flex items-center gap-3 text-sm">
+              <i data-lucide="check" class="w-5 h-5 text-success"></i>
+              <span>Dedicated support</span>
+            </li>
+          </ul>
+          <a href="mailto:sales@innovatehub.ph" class="block w-full py-3 rounded-xl border border-white/20 text-center font-medium hover:bg-white/5 transition-all">
+            Contact Sales
+          </a>
+        </div>
+      </div>
+      
+      <!-- Pay As You Go -->
+      <div class="glass rounded-2xl p-8 section-reveal text-center">
+        <h3 class="text-2xl font-bold mb-4">Prefer Pay-As-You-Go?</h3>
+        <p class="text-gray-400 mb-6">Top up your account and pay only for what you use. No monthly commitment.</p>
+        <div class="flex flex-wrap justify-center gap-4">
+          <div class="price-tag rounded-xl px-6 py-4 text-center">
+            <div class="font-bold text-lg">₱500</div>
+            <div class="text-sm text-gray-400">Starter</div>
+          </div>
+          <div class="price-tag rounded-xl px-6 py-4 text-center border border-success/30">
+            <div class="font-bold text-lg">₱1,000</div>
+            <div class="text-sm text-success">+₱100 bonus</div>
+          </div>
+          <div class="price-tag rounded-xl px-6 py-4 text-center border border-success/30">
+            <div class="font-bold text-lg">₱2,500</div>
+            <div class="text-sm text-success">+₱500 bonus</div>
+          </div>
+          <div class="price-tag rounded-xl px-6 py-4 text-center border border-success/30">
+            <div class="font-bold text-lg">₱5,000</div>
+            <div class="text-sm text-success">+₱1,500 bonus</div>
+          </div>
+          <div class="price-tag rounded-xl px-6 py-4 text-center border border-success/30">
+            <div class="font-bold text-lg">₱10,000</div>
+            <div class="text-sm text-success">+₱4,000 bonus</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="py-32 relative overflow-hidden">
+    <!-- Background -->
+    <div class="absolute inset-0 bg-gradient-to-r from-primary/20 via-accent-purple/20 to-accent-pink/20"></div>
+    <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iMC4wMyI+PGNpcmNsZSBjeD0iMzAiIGN5PSIzMCIgcj0iMiIvPjwvZz48L2c+PC9zdmc+')] opacity-30"></div>
+    
+    <div class="max-w-4xl mx-auto px-6 text-center relative z-10">
+      <h2 class="font-display font-bold text-4xl md:text-5xl lg:text-6xl mb-6 section-reveal">
+        Ready to Build the<br>
+        <span class="gradient-text">Future with AI?</span>
+      </h2>
+      <p class="text-xl text-gray-400 mb-10 section-reveal">
+        Join 500+ Filipino developers already using InnoAI. 
+        Start free, upgrade when you're ready.
+      </p>
+      <div class="flex flex-col sm:flex-row items-center justify-center gap-4 section-reveal">
+        <a href="/portal" class="btn-primary px-10 py-4 rounded-full text-lg font-semibold flex items-center gap-2 glow-primary">
+          <span>Start Building Free</span>
+          <i data-lucide="arrow-right" class="w-5 h-5"></i>
+        </a>
+        <a href="mailto:sales@innovatehub.ph" class="px-10 py-4 rounded-full text-lg font-medium border border-white/20 hover:bg-white/5 transition-all">
+          Contact Sales
+        </a>
+      </div>
+      <p class="mt-8 text-sm text-gray-500 section-reveal">No credit card required • Instant access • Cancel anytime</p>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="border-t border-white/5 py-16">
+    <div class="max-w-7xl mx-auto px-6">
+      <div class="grid md:grid-cols-4 gap-12 mb-12">
+        <!-- Brand -->
+        <div class="md:col-span-1">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-xl overflow-hidden">
+              <img src="/images/logo.png" alt="InnovateHub" class="w-full h-full object-contain">
+            </div>
+            <span class="font-display font-bold text-lg">InnovateHub</span>
+          </div>
+          <p class="text-gray-400 text-sm mb-6">
+            The Philippines' premier AI API platform. Making AI accessible to every Filipino developer.
+          </p>
+          <div class="flex gap-4">
+            <a href="#" class="w-10 h-10 rounded-full glass flex items-center justify-center hover:bg-white/10 transition-all">
+              <i data-lucide="twitter" class="w-5 h-5"></i>
+            </a>
+            <a href="#" class="w-10 h-10 rounded-full glass flex items-center justify-center hover:bg-white/10 transition-all">
+              <i data-lucide="github" class="w-5 h-5"></i>
+            </a>
+            <a href="#" class="w-10 h-10 rounded-full glass flex items-center justify-center hover:bg-white/10 transition-all">
+              <i data-lucide="linkedin" class="w-5 h-5"></i>
+            </a>
+          </div>
+        </div>
+        
+        <!-- Product -->
+        <div>
+          <h4 class="font-semibold mb-4">Product</h4>
+          <ul class="space-y-3 text-sm text-gray-400">
+            <li><a href="#features" class="hover:text-white transition-colors">Features</a></li>
+            <li><a href="#models" class="hover:text-white transition-colors">Models</a></li>
+            <li><a href="#pricing" class="hover:text-white transition-colors">Pricing</a></li>
+            <li><a href="/docs" class="hover:text-white transition-colors">Documentation</a></li>
+            <li><a href="/portal" class="hover:text-white transition-colors">API Status</a></li>
+          </ul>
+        </div>
+        
+        <!-- Company -->
+        <div>
+          <h4 class="font-semibold mb-4">Company</h4>
+          <ul class="space-y-3 text-sm text-gray-400">
+            <li><a href="#" class="hover:text-white transition-colors">About Us</a></li>
+            <li><a href="#" class="hover:text-white transition-colors">Blog</a></li>
+            <li><a href="#" class="hover:text-white transition-colors">Careers</a></li>
+            <li><a href="#" class="hover:text-white transition-colors">Contact</a></li>
+          </ul>
+        </div>
+        
+        <!-- Legal -->
+        <div>
+          <h4 class="font-semibold mb-4">Legal</h4>
+          <ul class="space-y-3 text-sm text-gray-400">
+            <li><a href="#" class="hover:text-white transition-colors">Privacy Policy</a></li>
+            <li><a href="#" class="hover:text-white transition-colors">Terms of Service</a></li>
+            <li><a href="#" class="hover:text-white transition-colors">Cookie Policy</a></li>
+          </ul>
+        </div>
+      </div>
+      
+      <!-- Bottom -->
+      <div class="pt-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-4">
+        <p class="text-sm text-gray-500">
+          © 2026 InnovateHub Inc. All rights reserved. Made with ❤️ in the Philippines.
+        </p>
+        <div class="flex items-center gap-2">
+          <span class="text-sm text-gray-500">Proudly Filipino</span>
+          <span class="text-xl">🇵🇭</span>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- JavaScript -->
+  <script>
+    // Initialize Lucide Icons
+    lucide.createIcons();
+    
+    // Register GSAP ScrollTrigger
+    gsap.registerPlugin(ScrollTrigger);
+    
+    // Particle System
+    const canvas = document.getElementById('particle-canvas');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+    let mouseX = 0;
+    let mouseY = 0;
+    
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    
+    class Particle {
+      constructor() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
+        this.size = Math.random() * 2 + 0.5;
+        this.speedX = Math.random() * 1 - 0.5;
+        this.speedY = Math.random() * 1 - 0.5;
+        this.opacity = Math.random() * 0.5 + 0.2;
+      }
+      
+      update() {
+        this.x += this.speedX;
+        this.y += this.speedY;
+        
+        // Mouse interaction
+        const dx = mouseX - this.x;
+        const dy = mouseY - this.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        if (distance < 100) {
+          this.x -= dx * 0.02;
+          this.y -= dy * 0.02;
+        }
+        
+        // Wrap around screen
+        if (this.x > canvas.width) this.x = 0;
+        if (this.x < 0) this.x = canvas.width;
+        if (this.y > canvas.height) this.y = 0;
+        if (this.y < 0) this.y = canvas.height;
+      }
+      
+      draw() {
+        ctx.fillStyle = `rgba(87, 49, 122, ${this.opacity})`;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+    
+    function initParticles() {
+      particles = [];
+      const particleCount = Math.min(window.innerWidth / 10, 100);
+      for (let i = 0; i < particleCount; i++) {
+        particles.push(new Particle());
+      }
+    }
+    
+    function connectParticles() {
+      for (let i = 0; i < particles.length; i++) {
+        for (let j = i + 1; j < particles.length; j++) {
+          const dx = particles[i].x - particles[j].x;
+          const dy = particles[i].y - particles[j].y;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+          
+          if (distance < 100) {
+            ctx.strokeStyle = `rgba(87, 49, 122, ${0.1 * (1 - distance / 100)})`;
+            ctx.lineWidth = 0.5;
+            ctx.beginPath();
+            ctx.moveTo(particles[i].x, particles[i].y);
+            ctx.lineTo(particles[j].x, particles[j].y);
+            ctx.stroke();
+          }
+        }
+      }
+    }
+    
+    function animateParticles() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      particles.forEach(particle => {
+        particle.update();
+        particle.draw();
+      });
+      
+      connectParticles();
+      requestAnimationFrame(animateParticles);
+    }
+    
+    // Track mouse
+    document.addEventListener('mousemove', (e) => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+    });
+    
+    // Initialize
+    resizeCanvas();
+    initParticles();
+    animateParticles();
+    
+    window.addEventListener('resize', () => {
+      resizeCanvas();
+      initParticles();
+    });
+    
+    // GSAP Animations
+    
+    // Hero Animations
+    gsap.timeline()
+      .to('.hero-badge', { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out', delay: 0.2 })
+      .to('.reveal-text span', { 
+        y: 0, 
+        opacity: 1, 
+        duration: 1, 
+        stagger: 0.1, 
+        ease: 'power3.out' 
+      }, '-=0.4')
+      .to('.hero-subtitle', { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out' }, '-=0.6')
+      .to('.hero-cta', { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out' }, '-=0.6')
+      .to('.hero-code', { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out' }, '-=0.4');
+    
+    // Scroll Reveal Animations
+    gsap.utils.toArray('.section-reveal').forEach((element) => {
+      gsap.fromTo(element, 
+        { opacity: 0, y: 30 },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.8,
+          ease: 'power3.out',
+          scrollTrigger: {
+            trigger: element,
+            start: 'top 85%',
+            toggleActions: 'play none none reverse'
+          }
+        }
+      );
+    });
+    
+    // Stat Counter Animation
+    gsap.utils.toArray('.stat-number').forEach((stat) => {
+      const target = parseFloat(stat.getAttribute('data-target'));
+      gsap.fromTo(stat,
+        { innerText: 0 },
+        {
+          innerText: target,
+          duration: 2,
+          ease: 'power2.out',
+          snap: { innerText: target % 1 === 0 ? 1 : 0.1 },
+          scrollTrigger: {
+            trigger: stat,
+            start: 'top 80%',
+            toggleActions: 'play none none reverse'
+          },
+          onUpdate: function() {
+            if (target % 1 !== 0) {
+              stat.innerText = parseFloat(stat.innerText).toFixed(1);
+            }
+          }
+        }
+      );
+    });
+    
+    // Navbar scroll effect
+    const navbar = document.getElementById('navbar');
+    let lastScroll = 0;
+    
+    window.addEventListener('scroll', () => {
+      const currentScroll = window.pageYOffset;
+      
+      if (currentScroll > 100) {
+        navbar.classList.add('shadow-lg');
+        navbar.style.background = 'rgba(10, 10, 15, 0.95)';
+      } else {
+        navbar.classList.remove('shadow-lg');
+        navbar.style.background = 'rgba(10, 10, 15, 0.8)';
+      }
+      
+      lastScroll = currentScroll;
+    });
+    
+    // Mobile Menu
+    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+    const mobileMenu = document.getElementById('mobile-menu');
+    const mobileMenuClose = document.getElementById('mobile-menu-close');
+    
+    mobileMenuBtn.addEventListener('click', () => {
+      mobileMenu.classList.add('open');
+    });
+    
+    mobileMenuClose.addEventListener('click', () => {
+      mobileMenu.classList.remove('open');
+    });
+    
+    // Close mobile menu on link click
+    mobileMenu.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => {
+        mobileMenu.classList.remove('open');
+      });
+    });
+    
+    // Smooth scroll for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function(e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          target.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+          });
+        }
+      });
+    });
+    
+    // Three.js 3D Scene
+    (function() {
+      const container = document.getElementById('three-container');
+      if (!container) return;
+      
+      // Scene setup
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+      const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      container.appendChild(renderer.domElement);
+      
+      // Create Neural Network Sphere
+      const group = new THREE.Group();
+      scene.add(group);
+      
+      // Core sphere
+      const coreGeometry = new THREE.IcosahedronGeometry(2, 2);
+      const coreMaterial = new THREE.MeshBasicMaterial({
+        color: 0x57317A,
+        wireframe: true,
+        transparent: true,
+        opacity: 0.6
+      });
+      const core = new THREE.Mesh(coreGeometry, coreMaterial);
+      group.add(core);
+      
+      // Outer sphere
+      const outerGeometry = new THREE.IcosahedronGeometry(3.5, 1);
+      const outerMaterial = new THREE.MeshBasicMaterial({
+        color: 0x00D9FF,
+        wireframe: true,
+        transparent: true,
+        opacity: 0.3
+      });
+      const outer = new THREE.Mesh(outerGeometry, outerMaterial);
+      group.add(outer);
+      
+      // Nodes (particles)
+      const nodesGeometry = new THREE.BufferGeometry();
+      const nodeCount = 50;
+      const positions = new Float32Array(nodeCount * 3);
+      
+      for (let i = 0; i < nodeCount * 3; i += 3) {
+        const theta = Math.random() * Math.PI * 2;
+        const phi = Math.acos((Math.random() * 2) - 1);
+        const radius = 2.5 + Math.random() * 2;
+        
+        positions[i] = radius * Math.sin(phi) * Math.cos(theta);
+        positions[i + 1] = radius * Math.sin(phi) * Math.sin(theta);
+        positions[i + 2] = radius * Math.cos(phi);
+      }
+      
+      nodesGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      
+      const nodesMaterial = new THREE.PointsMaterial({
+        color: 0xFFFFFF,
+        size: 0.08,
+        transparent: true,
+        opacity: 0.8
+      });
+      
+      const nodes = new THREE.Points(nodesGeometry, nodesMaterial);
+      group.add(nodes);
+      
+      // Lines connecting nodes
+      const linesMaterial = new THREE.LineBasicMaterial({
+        color: 0x57317A,
+        transparent: true,
+        opacity: 0.2
+      });
+      
+      for (let i = 0; i < nodeCount; i++) {
+        for (let j = i + 1; j < nodeCount; j++) {
+          const distance = Math.sqrt(
+            Math.pow(positions[i * 3] - positions[j * 3], 2) +
+            Math.pow(positions[i * 3 + 1] - positions[j * 3 + 1], 2) +
+            Math.pow(positions[i * 3 + 2] - positions[j * 3 + 2], 2)
+          );
+          
+          if (distance < 2) {
+            const lineGeometry = new THREE.BufferGeometry().setFromPoints([
+              new THREE.Vector3(positions[i * 3], positions[i * 3 + 1], positions[i * 3 + 2]),
+              new THREE.Vector3(positions[j * 3], positions[j * 3 + 1], positions[j * 3 + 2])
+            ]);
+            const line = new THREE.Line(lineGeometry, linesMaterial);
+            group.add(line);
+          }
+        }
+      }
+      
+      // Lighting
+      const ambientLight = new THREE.AmbientLight(0x404040, 2);
+      scene.add(ambientLight);
+      
+      const pointLight = new THREE.PointLight(0x57317A, 2, 100);
+      pointLight.position.set(10, 10, 10);
+      scene.add(pointLight);
+      
+      camera.position.z = 8;
+      
+      // Animation
+      let mouseX = 0;
+      let mouseY = 0;
+      
+      document.addEventListener('mousemove', (e) => {
+        mouseX = (e.clientX / window.innerWidth) * 2 - 1;
+        mouseY = -(e.clientY / window.innerHeight) * 2 + 1;
+      });
+      
+      function animate() {
+        requestAnimationFrame(animate);
+        
+        // Rotate core
+        core.rotation.x += 0.003;
+        core.rotation.y += 0.005;
+        
+        // Rotate outer sphere in opposite direction
+        outer.rotation.x -= 0.002;
+        outer.rotation.y -= 0.003;
+        
+        // Rotate nodes
+        nodes.rotation.y += 0.001;
+        
+        // Mouse interaction
+        group.rotation.x += (mouseY * 0.2 - group.rotation.x) * 0.05;
+        group.rotation.y += (mouseX * 0.2 - group.rotation.y) * 0.05;
+        
+        renderer.render(scene, camera);
+      }
+      
+      animate();
+      
+      // Handle resize
+      window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+    })();
+  </script>
+</body>
+</html>

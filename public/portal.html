@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0f172a">
+  <title>InnoAI - Customer Portal</title>
+  <link rel="icon" type="image/png" href="/images/logo.png">
+  <link rel="apple-touch-icon" href="/images/logo.png">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'sans-serif'] },
+          colors: {
+            accent: '#57317A',
+            'accent-light': '#6b3d94',
+            success: '#28a745',
+            warning: '#ffc107',
+            danger: '#dc3545'
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: 'Inter', sans-serif; background: #0f172a; color: #e2e8f0; }
+    .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
+    .glass-strong { background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); }
+    .glow-accent { box-shadow: 0 0 20px rgba(87, 49, 122, 0.3); }
+    .nav-btn.active { background: linear-gradient(135deg, #57317A, #6b3d94); color: white; }
+    .fade-in { animation: fadeIn 0.3s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  </style>
+</head>
+<body class="min-h-screen">
+  
+  <!-- Login Screen -->
+  <div id="loginScreen" class="min-h-screen flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-gradient-to-br from-accent/20 via-transparent to-purple-900/20"></div>
+    <div class="glass-strong rounded-3xl p-8 w-full max-w-md relative fade-in">
+      <div class="text-center mb-8">
+        <div class="w-20 h-20 mx-auto mb-4 rounded-2xl overflow-hidden glow-accent">
+          <img src="/images/logo.png" alt="InnovateHub" class="w-full h-full object-contain">
+        </div>
+        <h1 class="text-2xl font-bold">InnoAI</h1>
+        <p class="text-gray-400 text-sm">Customer Portal</p>
+      </div>
+
+      <div id="loginForm" class="space-y-4">
+        <div>
+          <label class="block text-sm text-gray-400 mb-2">Email</label>
+          <input type="email" id="loginEmail" placeholder="you@company.com" 
+            class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-accent/50">
+        </div>
+        <div>
+          <label class="block text-sm text-gray-400 mb-2">Password</label>
+          <input type="password" id="loginPassword" placeholder="••••••••" 
+            class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-accent/50">
+        </div>
+        <button onclick="login()" class="w-full bg-gradient-to-r from-accent to-purple-600 hover:from-accent-light hover:to-purple-500 rounded-xl py-3 font-semibold transition-all">
+          Sign In
+        </button>
+        <p class="text-center text-sm text-gray-500">
+          Don't have an account? <a href="#" onclick="showRegister()" class="text-accent hover:underline">Sign up</a>
+        </p>
+      </div>
+
+      <div id="registerForm" class="space-y-4 hidden">
+        <div>
+          <label class="block text-sm text-gray-400 mb-2">Full Name</label>
+          <input type="text" id="regName" placeholder="John Doe" 
+            class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-accent/50">
+        </div>
+        <div>
+          <label class="block text-sm text-gray-400 mb-2">Email</label>
+          <input type="email" id="regEmail" placeholder="you@company.com" 
+            class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-accent/50">
+        </div>
+        <div>
+          <label class="block text-sm text-gray-400 mb-2">Password</label>
+          <input type="password" id="regPassword" placeholder="Min 8 characters" 
+            class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-accent/50">
+        </div>
+        <div>
+          <label class="block text-sm text-gray-400 mb-2">Company (Optional)</label>
+          <input type="text" id="regCompany" placeholder="Your Company" 
+            class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-accent/50">
+        </div>
+        <button onclick="register()" class="w-full bg-gradient-to-r from-accent to-purple-600 hover:from-accent-light hover:to-purple-500 rounded-xl py-3 font-semibold transition-all">
+          Create Account
+        </button>
+        <p class="text-center text-sm text-gray-500">
+          Already have an account? <a href="#" onclick="showLogin()" class="text-accent hover:underline">Sign in</a>
+        </p>
+      </div>
+
+      <div id="loginError" class="mt-4 p-3 rounded-xl bg-danger/10 text-danger text-sm hidden"></div>
+    </div>
+  </div>
+
+  <!-- Main Dashboard -->
+  <div id="dashboard" class="hidden min-h-screen">
+    <!-- Header -->
+    <header class="glass sticky top-0 z-40 px-6 py-4">
+      <div class="flex items-center justify-between max-w-7xl mx-auto">
+        <div class="flex items-center gap-4">
+          <div class="w-10 h-10 rounded-xl overflow-hidden">
+            <img src="/images/logo.png" alt="InnovateHub" class="w-full h-full object-contain">
+          </div>
+          <span class="font-bold text-lg hidden sm:block">InnoAI</span>
+        </div>
+
+        <nav class="hidden md:flex items-center gap-1 bg-white/5 rounded-xl p-1">
+          <button onclick="showDashboardTab('overview')" id="nav-overview" class="nav-btn active px-4 py-2 rounded-lg text-sm font-medium transition-all">
+            <i class="fas fa-chart-line mr-2"></i>Overview
+          </button>
+          <button onclick="showDashboardTab('api-keys')" id="nav-api-keys" class="nav-btn px-4 py-2 rounded-lg text-sm font-medium transition-all text-gray-400 hover:text-white">
+            <i class="fas fa-key mr-2"></i>API Keys
+          </button>
+          <button onclick="showDashboardTab('usage')" id="nav-usage" class="nav-btn px-4 py-2 rounded-lg text-sm font-medium transition-all text-gray-400 hover:text-white">
+            <i class="fas fa-chart-bar mr-2"></i>Usage
+          </button>
+          <button onclick="showDashboardTab('pricing')" id="nav-pricing" class="nav-btn px-4 py-2 rounded-lg text-sm font-medium transition-all text-gray-400 hover:text-white">
+            <i class="fas fa-tag mr-2"></i>Pricing
+          </button>
+          <button onclick="showDashboardTab('settings')" id="nav-settings" class="nav-btn px-4 py-2 rounded-lg text-sm font-medium transition-all text-gray-400 hover:text-white">
+            <i class="fas fa-cog mr-2"></i>Settings
+          </button>
+        </nav>
+
+        <div class="flex items-center gap-3">
+          <div class="text-right hidden sm:block">
+            <p id="userName" class="text-sm font-medium">Loading...</p>
+            <p id="userTier" class="text-xs text-gray-500">Free Tier</p>
+          </div>
+          <button onclick="logout()" class="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center transition-all">
+            <i class="fas fa-sign-out-alt text-gray-400"></i>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto p-6">
+      
+      <!-- Overview Tab -->
+      <div id="tab-overview" class="dashboard-tab fade-in">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div class="glass rounded-2xl p-6">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center">
+                <i class="fas fa-bolt text-accent text-xl"></i>
+              </div>
+              <div>
+                <p class="text-gray-400 text-sm">API Requests (30d)</p>
+                <p id="statRequests" class="text-3xl font-bold">0</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="glass rounded-2xl p-6">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="w-12 h-12 rounded-xl bg-success/10 flex items-center justify-center">
+                <i class="fas fa-coins text-success text-xl"></i>
+              </div>
+              <div>
+                <p class="text-gray-400 text-sm">Current Usage</p>
+                <p id="statCost" class="text-3xl font-bold">₱0.00</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="glass rounded-2xl p-6">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="w-12 h-12 rounded-xl bg-warning/10 flex items-center justify-center">
+                <i class="fas fa-layer-group text-warning text-xl"></i>
+              </div>
+              <div>
+                <p class="text-gray-400 text-sm">Current Tier</p>
+                <p id="statTier" class="text-3xl font-bold capitalize">Free</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass rounded-2xl p-6">
+          <h2 class="text-xl font-bold mb-4">Quick Start</h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-all cursor-pointer" onclick="showDashboardTab('api-keys')">
+              <i class="fas fa-key text-accent text-2xl mb-3"></i>
+              <h3 class="font-semibold mb-1">Create API Key</h3>
+              <p class="text-sm text-gray-400">Generate your first API key to start using our models</p>
+            </div>
+            <div class="p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-all cursor-pointer" onclick="showDashboardTab('pricing')">
+              <i class="fas fa-rocket text-success text-2xl mb-3"></i>
+              <h3 class="font-semibold mb-1">Upgrade Plan</h3>
+              <p class="text-sm text-gray-400">Unlock more requests and premium models</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- API Keys Tab -->
+      <div id="tab-api-keys" class="dashboard-tab hidden fade-in">
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-2xl font-bold">API Keys</h2>
+          <button onclick="createApiKey()" class="px-6 py-3 bg-gradient-to-r from-accent to-purple-600 rounded-xl font-medium hover:opacity-90 transition-all">
+            <i class="fas fa-plus mr-2"></i>Create New Key
+          </button>
+        </div>
+
+        <div id="apiKeysList" class="space-y-4">
+          <div class="text-center py-12 text-gray-500">
+            <i class="fas fa-spinner fa-spin text-2xl"></i>
+            <p class="mt-2">Loading API keys...</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Usage Tab -->
+      <div id="tab-usage" class="dashboard-tab hidden fade-in">
+        <h2 class="text-2xl font-bold mb-6">Usage Analytics</h2>
+        
+        <div class="glass rounded-2xl p-6 mb-6">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="font-semibold">Daily Usage (Last 30 Days)</h3>
+            <select id="usagePeriod" onchange="loadUsage()" class="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm">
+              <option value="7d">Last 7 days</option>
+              <option value="30d" selected>Last 30 days</option>
+              <option value="90d">Last 90 days</option>
+            </select>
+          </div>
+          <div id="usageChart" class="h-64 flex items-center justify-center text-gray-500">
+            <i class="fas fa-spinner fa-spin mr-2"></i> Loading chart...
+          </div>
+        </div>
+
+        <div class="glass rounded-2xl p-6">
+          <h3 class="font-semibold mb-4">Usage by Model</h3>
+          <div id="usageByModel" class="space-y-2">
+            <p class="text-gray-500 text-center py-8">No usage data yet</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pricing Tab -->
+      <div id="tab-pricing" class="dashboard-tab hidden fade-in">
+        <h2 class="text-2xl font-bold mb-6">Pricing Plans</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <!-- Free Tier -->
+          <div class="glass rounded-2xl p-6 border-2 border-transparent hover:border-accent/30 transition-all">
+            <h3 class="text-xl font-bold mb-2">Free</h3>
+            <p class="text-3xl font-bold text-accent mb-4">₱0<span class="text-base font-normal text-gray-400">/mo</span></p>
+            <ul class="space-y-2 text-sm text-gray-300 mb-6">
+              <li><i class="fas fa-check text-success mr-2"></i>100 requests/day</li>
+              <li><i class="fas fa-check text-success mr-2"></i>10K tokens/month</li>
+              <li><i class="fas fa-check text-success mr-2"></i>Basic models</li>
+              <li><i class="fas fa-check text-success mr-2"></i>Community support</li>
+            </ul>
+            <button class="w-full py-3 rounded-xl border border-white/20 hover:bg-white/5 transition-all" disabled>
+              Current Plan
+            </button>
+          </div>
+
+          <!-- Starter Tier -->
+          <div class="glass rounded-2xl p-6 border-2 border-transparent hover:border-accent/30 transition-all">
+            <h3 class="text-xl font-bold mb-2">Starter</h3>
+            <p class="text-3xl font-bold text-accent mb-4">₱499<span class="text-base font-normal text-gray-400">/mo</span></p>
+            <ul class="space-y-2 text-sm text-gray-300 mb-6">
+              <li><i class="fas fa-check text-success mr-2"></i>1,000 requests/day</li>
+              <li><i class="fas fa-check text-success mr-2"></i>100K tokens/month</li>
+              <li><i class="fas fa-check text-success mr-2"></i>All chat models</li>
+              <li><i class="fas fa-check text-success mr-2"></i>Email support</li>
+            </ul>
+            <button onclick="upgradePlan('starter')" class="w-full py-3 rounded-xl bg-accent/20 text-accent hover:bg-accent/30 transition-all">
+              Upgrade
+            </button>
+          </div>
+
+          <!-- Pro Tier -->
+          <div class="glass rounded-2xl p-6 border-2 border-accent relative">
+            <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-accent text-white text-xs rounded-full">
+              Popular
+            </div>
+            <h3 class="text-xl font-bold mb-2">Professional</h3>
+            <p class="text-3xl font-bold text-accent mb-4">₱1,499<span class="text-base font-normal text-gray-400">/mo</span></p>
+            <ul class="space-y-2 text-sm text-gray-300 mb-6">
+              <li><i class="fas fa-check text-success mr-2"></i>10,000 requests/day</li>
+              <li><i class="fas fa-check text-success mr-2"></i>1M tokens/month</li>
+              <li><i class="fas fa-check text-success mr-2"></i>All models</li>
+              <li><i class="fas fa-check text-success mr-2"></i>Priority support</li>
+            </ul>
+            <button onclick="upgradePlan('professional')" class="w-full py-3 rounded-xl bg-gradient-to-r from-accent to-purple-600 hover:opacity-90 transition-all">
+              Upgrade
+            </button>
+          </div>
+
+          <!-- Enterprise Tier -->
+          <div class="glass rounded-2xl p-6 border-2 border-transparent hover:border-accent/30 transition-all">
+            <h3 class="text-xl font-bold mb-2">Enterprise</h3>
+            <p class="text-3xl font-bold text-accent mb-4">₱4,999<span class="text-base font-normal text-gray-400">/mo</span></p>
+            <ul class="space-y-2 text-sm text-gray-300 mb-6">
+              <li><i class="fas fa-check text-success mr-2"></i>100,000 requests/day</li>
+              <li><i class="fas fa-check text-success mr-2"></i>10M tokens/month</li>
+              <li><i class="fas fa-check text-success mr-2"></i>Custom deployments</li>
+              <li><i class="fas fa-check text-success mr-2"></i>Dedicated support</li>
+            </ul>
+            <button onclick="upgradePlan('enterprise')" class="w-full py-3 rounded-xl bg-white/10 hover:bg-white/20 transition-all">
+              Contact Sales
+            </button>
+          </div>
+        </div>
+
+        <div class="glass rounded-2xl p-6">
+          <h3 class="font-semibold mb-4">Pay-As-You-Go</h3>
+          <p class="text-gray-400 mb-4">Prefer usage-based billing? Top up your account and pay only for what you use.</p>
+          <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <button onclick="topUp(500)" class="p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-all text-center">
+              <p class="font-bold">₱500</p>
+              <p class="text-xs text-gray-500">Starter</p>
+            </button>
+            <button onclick="topUp(1000)" class="p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-all text-center">
+              <p class="font-bold">₱1,000</p>
+              <p class="text-xs text-success">+₱100 bonus</p>
+            </button>
+            <button onclick="topUp(2500)" class="p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-all text-center">
+              <p class="font-bold">₱2,500</p>
+              <p class="text-xs text-success">+₱500 bonus</p>
+            </button>
+            <button onclick="topUp(5000)" class="p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-all text-center">
+              <p class="font-bold">₱5,000</p>
+              <p class="text-xs text-success">+₱1,500 bonus</p>
+            </button>
+            <button onclick="topUp(10000)" class="p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-all text-center">
+              <p class="font-bold">₱10,000</p>
+              <p class="text-xs text-success">+₱4,000 bonus</p>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Settings Tab -->
+      <div id="tab-settings" class="dashboard-tab hidden fade-in">
+        <h2 class="text-2xl font-bold mb-6">Account Settings</h2>
+        
+        <div class="max-w-2xl space-y-6">
+          <div class="glass rounded-2xl p-6">
+            <h3 class="font-semibold mb-4">Profile Information</h3>
+            <div class="space-y-4">
+              <div>
+                <label class="block text-sm text-gray-400 mb-2">Full Name</label>
+                <input type="text" id="settingsName" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-accent/50">
+              </div>
+              <div>
+                <label class="block text-sm text-gray-400 mb-2">Company</label>
+                <input type="text" id="settingsCompany" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-accent/50">
+              </div>
+              <button onclick="updateProfile()" class="px-6 py-3 bg-accent/20 text-accent rounded-xl hover:bg-accent/30 transition-all">
+                Save Changes
+              </button>
+            </div>
+          </div>
+
+          <div class="glass rounded-2xl p-6">
+            <h3 class="font-semibold mb-4">Change Password</h3>
+            <div class="space-y-4">
+              <div>
+                <label class="block text-sm text-gray-400 mb-2">Current Password</label>
+                <input type="password" id="currentPassword" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-accent/50">
+              </div>
+              <div>
+                <label class="block text-sm text-gray-400 mb-2">New Password</label>
+                <input type="password" id="newPassword" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-accent/50">
+              </div>
+              <button onclick="changePassword()" class="px-6 py-3 bg-accent/20 text-accent rounded-xl hover:bg-accent/30 transition-all">
+                Update Password
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toastContainer" class="fixed bottom-6 right-6 space-y-2 z-50"></div>
+
+  <script>
+    // Global state
+    let authToken = localStorage.getItem('customerToken');
+    let currentCustomer = null;
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+      // Check for payment redirect params first
+      checkPaymentRedirect();
+      
+      if (authToken) {
+        verifyToken();
+      }
+    });
+
+    // Auth functions
+    function showLogin() {
+      document.getElementById('loginForm').classList.remove('hidden');
+      document.getElementById('registerForm').classList.add('hidden');
+      document.getElementById('loginError').classList.add('hidden');
+    }
+
+    function showRegister() {
+      document.getElementById('loginForm').classList.add('hidden');
+      document.getElementById('registerForm').classList.remove('hidden');
+      document.getElementById('loginError').classList.add('hidden');
+    }
+
+    async function login() {
+      const email = document.getElementById('loginEmail').value;
+      const password = document.getElementById('loginPassword').value;
+      
+      console.log('Login attempt:', { email: email, passwordLength: password ? password.length : 0 });
+
+      if (!email || !password) {
+        showError('Please enter both email and password');
+        return;
+      }
+
+      try {
+        console.log('Sending request to /api/customer/auth/login');
+        const res = await fetch('/api/customer/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        
+        console.log('Response status:', res.status);
+
+        const data = await res.json();
+        console.log('Response data:', data);
+        
+        if (data.success) {
+          authToken = data.token;
+          localStorage.setItem('customerToken', authToken);
+          currentCustomer = data.customer;
+          showDashboard();
+        } else {
+          showError(data.error || 'Login failed');
+        }
+      } catch (e) {
+        console.error('Login error:', e);
+        showError('Network error. Please try again. Error: ' + e.message);
+      }
+    }
+
+    async function register() {
+      const name = document.getElementById('regName').value;
+      const email = document.getElementById('regEmail').value;
+      const password = document.getElementById('regPassword').value;
+      const company = document.getElementById('regCompany').value;
+
+      try {
+        const res = await fetch('/api/customer/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email, password, company })
+        });
+
+        const data = await res.json();
+        if (data.success) {
+          showToast('Registration successful! Please sign in.', 'success');
+          showLogin();
+        } else {
+          showError(data.error || 'Registration failed');
+        }
+      } catch (e) {
+        showError('Network error. Please try again.');
+      }
+    }
+
+    async function verifyToken() {
+      try {
+        const res = await fetch('/api/customer/auth/profile', {
+          headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          currentCustomer = data.customer;
+          showDashboard();
+        } else {
+          logout();
+        }
+      } catch (e) {
+        logout();
+      }
+    }
+
+    function showDashboard() {
+      document.getElementById('loginScreen').classList.add('hidden');
+      document.getElementById('dashboard').classList.remove('hidden');
+      
+      // Update UI
+      document.getElementById('userName').textContent = currentCustomer.name;
+      document.getElementById('userTier').textContent = currentCustomer.tier + ' Tier';
+      
+      // Load initial data
+      loadApiKeys();
+      loadUsage();
+      loadProfile();
+    }
+
+    function logout() {
+      authToken = null;
+      currentCustomer = null;
+      localStorage.removeItem('customerToken');
+      document.getElementById('dashboard').classList.add('hidden');
+      document.getElementById('loginScreen').classList.remove('hidden');
+      showLogin();
+    }
+
+    // Dashboard navigation
+    function showDashboardTab(tab) {
+      // Hide all tabs
+      document.querySelectorAll('.dashboard-tab').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.nav-btn').forEach(el => {
+        el.classList.remove('active');
+        el.classList.add('text-gray-400');
+      });
+
+      // Show selected tab
+      document.getElementById(`tab-${tab}`).classList.remove('hidden');
+      const navBtn = document.getElementById(`nav-${tab}`);
+      navBtn.classList.add('active');
+      navBtn.classList.remove('text-gray-400');
+
+      // Load tab data
+      if (tab === 'api-keys') loadApiKeys();
+      if (tab === 'usage') loadUsage();
+      if (tab === 'settings') loadProfile();
+    }
+
+    // API Keys
+    async function loadApiKeys() {
+      try {
+        const res = await fetch('/api/v1/customers/api-keys', {
+          headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+
+        const data = await res.json();
+        const container = document.getElementById('apiKeysList');
+
+        if (data.apiKeys && data.apiKeys.length > 0) {
+          container.innerHTML = data.apiKeys.map(key => `
+            <div class="glass rounded-xl p-4 flex justify-between items-center">
+              <div>
+                <h4 class="font-semibold">${key.name}</h4>
+                <p class="text-sm text-gray-400">Created: ${new Date(key.createdAt).toLocaleDateString()}</p>
+                ${key.lastUsed ? `<p class="text-xs text-gray-500">Last used: ${new Date(key.lastUsed).toLocaleDateString()}</p>` : ''}
+              </div>
+              <div class="flex items-center gap-3">
+                <span class="px-3 py-1 rounded-full text-xs ${key.status === 'active' ? 'bg-success/20 text-success' : 'bg-gray-500/20 text-gray-400'}">
+                  ${key.status}
+                </span>
+                <button onclick="revokeApiKey('${key.id}')" class="text-danger hover:text-danger/80" title="Revoke">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
+            </div>
+          `).join('');
+        } else {
+          container.innerHTML = `
+            <div class="text-center py-12 text-gray-500">
+              <i class="fas fa-key text-4xl mb-4 opacity-30"></i>
+              <p>No API keys yet</p>
+              <p class="text-sm mt-1">Create your first key to get started</p>
+            </div>
+          `;
+        }
+      } catch (e) {
+        showToast('Failed to load API keys', 'error');
+      }
+    }
+
+    async function createApiKey() {
+      const name = prompt('Enter a name for this API key:', 'Production');
+      if (!name) return;
+
+      try {
+        const res = await fetch('/api/v1/customers/api-keys', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken}`
+          },
+          body: JSON.stringify({ name })
+        });
+
+        const data = await res.json();
+        if (data.success) {
+          prompt('Copy your API key (shown only once):', data.apiKey.key);
+          loadApiKeys();
+          showToast('API key created', 'success');
+        } else {
+          showToast(data.error || 'Failed to create API key', 'error');
+        }
+      } catch (e) {
+        showToast('Failed to create API key', 'error');
+      }
+    }
+
+    async function revokeApiKey(keyId) {
+      if (!confirm('Are you sure? This cannot be undone.')) return;
+
+      try {
+        const res = await fetch(`/api/v1/customers/api-keys/${keyId}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+
+        const data = await res.json();
+        if (data.success) {
+          loadApiKeys();
+          showToast('API key revoked', 'success');
+        }
+      } catch (e) {
+        showToast('Failed to revoke API key', 'error');
+      }
+    }
+
+    // Usage
+    async function loadUsage() {
+      try {
+        const period = document.getElementById('usagePeriod')?.value || '30d';
+        const res = await fetch(`/api/v1/customers/usage?period=${period}`, {
+          headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+
+        const data = await res.json();
+        if (data.success) {
+          // Update stats
+          document.getElementById('statRequests').textContent = data.usage.totalRequests.toLocaleString();
+          document.getElementById('statCost').textContent = '₱' + data.usage.totalCost.toFixed(2);
+
+          // Render chart (simplified)
+          const chartContainer = document.getElementById('usageChart');
+          if (data.usage.recentDaily && data.usage.recentDaily.length > 0) {
+            const maxValue = Math.max(...data.usage.recentDaily.map(d => d.requests));
+            chartContainer.innerHTML = `
+              <div class="flex items-end justify-between h-full gap-1">
+                ${data.usage.recentDaily.map(day => `
+                  <div class="flex-1 flex flex-col items-center gap-1">
+                    <div class="w-full bg-accent/30 rounded-t" style="height: ${maxValue > 0 ? (day.requests / maxValue * 100) : 0}%"></div>
+                    <span class="text-xs text-gray-500">${day.date.split('-')[2]}</span>
+                  </div>
+                `).join('')}
+              </div>
+            `;
+          } else {
+            chartContainer.innerHTML = '<p class="text-gray-500">No usage data yet</p>';
+          }
+
+          // Update model usage
+          const modelContainer = document.getElementById('usageByModel');
+          if (Object.keys(data.usage.requestsByModel).length > 0) {
+            modelContainer.innerHTML = Object.entries(data.usage.requestsByModel).map(([model, stats]) => `
+              <div class="flex justify-between items-center p-3 rounded-xl bg-white/5">
+                <span class="font-medium">${model}</span>
+                <div class="text-right">
+                  <p class="text-sm">${stats.requests.toLocaleString()} requests</p>
+                  <p class="text-xs text-gray-500">₱${stats.cost.toFixed(2)}</p>
+                </div>
+              </div>
+            `).join('');
+          }
+        }
+      } catch (e) {
+        console.error('Failed to load usage:', e);
+      }
+    }
+
+    // Settings
+    function loadProfile() {
+      if (currentCustomer) {
+        document.getElementById('settingsName').value = currentCustomer.name;
+        document.getElementById('settingsCompany').value = currentCustomer.company || '';
+      }
+    }
+
+    async function updateProfile() {
+      const name = document.getElementById('settingsName').value;
+      const company = document.getElementById('settingsCompany').value;
+
+      try {
+        const res = await fetch('/api/customer/auth/profile', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken}`
+          },
+          body: JSON.stringify({ name, company })
+        });
+
+        const data = await res.json();
+        if (data.success) {
+          currentCustomer = data.customer;
+          document.getElementById('userName').textContent = currentCustomer.name;
+          showToast('Profile updated', 'success');
+        }
+      } catch (e) {
+        showToast('Failed to update profile', 'error');
+      }
+    }
+
+    async function changePassword() {
+      const currentPassword = document.getElementById('currentPassword').value;
+      const newPassword = document.getElementById('newPassword').value;
+
+      try {
+        const res = await fetch('/api/customer/auth/change-password', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken}`
+          },
+          body: JSON.stringify({ currentPassword, newPassword })
+        });
+
+        const data = await res.json();
+        if (data.success) {
+          document.getElementById('currentPassword').value = '';
+          document.getElementById('newPassword').value = '';
+          showToast('Password updated', 'success');
+        } else {
+          showToast(data.error || 'Failed to update password', 'error');
+        }
+      } catch (e) {
+        showToast('Failed to update password', 'error');
+      }
+    }
+
+    // Billing
+    async function upgradePlan(plan) {
+      if (!authToken) {
+        showToast('Please log in to upgrade your plan', 'error');
+        return;
+      }
+
+      // Show loading state
+      const buttons = document.querySelectorAll(`button[onclick="upgradePlan('${plan}')"]`);
+      buttons.forEach(btn => {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Processing...';
+      });
+
+      try {
+        const res = await fetch('/api/v1/customers/billing/subscribe', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken}`
+          },
+          body: JSON.stringify({ tier: plan })
+        });
+
+        const data = await res.json();
+
+        if (data.success && data.checkoutUrl) {
+          showToast('Redirecting to payment...', 'info');
+          window.location.href = data.checkoutUrl;
+        } else {
+          throw new Error(data.error || 'Failed to initiate payment');
+        }
+      } catch (error) {
+        showToast(error.message || 'Failed to process upgrade. Please try again.', 'error');
+        console.error('Upgrade error:', error);
+      } finally {
+        // Restore button state
+        buttons.forEach(btn => {
+          btn.disabled = false;
+          btn.innerHTML = plan === 'enterprise' ? 'Contact Sales' : 'Upgrade';
+        });
+      }
+    }
+
+    async function topUp(amount) {
+      if (!authToken) {
+        showToast('Please log in to top up your account', 'error');
+        return;
+      }
+
+      // Show loading state
+      const buttons = document.querySelectorAll(`button[onclick="topUp(${amount})"]`);
+      buttons.forEach(btn => {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+      });
+
+      try {
+        const res = await fetch('/api/v1/customers/billing/subscribe', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken}`
+          },
+          body: JSON.stringify({ tier: 'payg', amount: amount })
+        });
+
+        const data = await res.json();
+
+        if (data.success && data.checkoutUrl) {
+          showToast('Redirecting to payment...', 'info');
+          window.location.href = data.checkoutUrl;
+        } else {
+          throw new Error(data.error || 'Failed to initiate top-up');
+        }
+      } catch (error) {
+        showToast(error.message || 'Failed to process top-up. Please try again.', 'error');
+        console.error('Top-up error:', error);
+      } finally {
+        // Restore button state with original content
+        buttons.forEach(btn => {
+          btn.disabled = false;
+          if (amount === 500) {
+            btn.innerHTML = '<p class="font-bold">₱500</p><p class="text-xs text-gray-500">Starter</p>';
+          } else {
+            const bonus = amount === 1000 ? 100 : amount === 2500 ? 500 : amount === 5000 ? 1500 : 4000;
+            btn.innerHTML = `<p class="font-bold">₱${amount.toLocaleString()}</p><p class="text-xs text-success">+₱${bonus} bonus</p>`;
+          }
+        });
+      }
+    }
+
+    // Check for payment redirect params
+    function checkPaymentRedirect() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const paymentStatus = urlParams.get('payment');
+      
+      if (paymentStatus === 'success') {
+        showToast('Payment successful! Your subscription has been updated.', 'success');
+        // Clear the params from URL
+        window.history.replaceState({}, document.title, window.location.pathname);
+        // Reload usage data to reflect new tier
+        if (authToken) {
+          loadUsage();
+          verifyToken(); // Refresh customer data
+        }
+      } else if (paymentStatus === 'cancelled') {
+        showToast('Payment was cancelled. You can try again anytime.', 'info');
+        // Clear the params from URL
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    }
+
+    // Utilities
+    function showError(message) {
+      const errorEl = document.getElementById('loginError');
+      errorEl.textContent = message;
+      errorEl.classList.remove('hidden');
+    }
+
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      
+      const colors = {
+        success: 'bg-success/20 text-success border-success/30',
+        error: 'bg-danger/20 text-danger border-danger/30',
+        info: 'bg-accent/20 text-accent border-accent/30'
+      };
+
+      toast.className = `px-6 py-4 rounded-xl border ${colors[type]} fade-in flex items-center gap-3`;
+      toast.innerHTML = `
+        <i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'}"></i>
+        <span>${message}</span>
+      `;
+
+      container.appendChild(toast);
+      setTimeout(() => toast.remove(), 5000);
+    }
+  </script>
+</body>
+</html>

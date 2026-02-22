@@ -1,0 +1,56 @@
+:root {
+  /* Filipino Brand Colors */
+  --vp-c-brand-1: #6366f1;
+  --vp-c-brand-2: #818cf8;
+  --vp-c-brand-3: #a5b4fc;
+  --vp-c-brand-soft: #e0e7ff;
+  
+  /* Filipino accent colors from BRANDING.md */
+  --innoai-primary: #57317A;
+  --innoai-gold: #FFD700;
+  --innoai-teal: #00D4AA;
+  --innoai-cyan: #00D9FF;
+  --innoai-pink: #FF006E;
+}
+
+/* Custom button styles */
+.VPButton {
+  border-radius: 8px;
+}
+
+/* Filipino flag emoji styling */
+.🇵🇭 {
+  font-size: 1.2em;
+}
+
+/* Custom hero section */
+.VPHero {
+  background: linear-gradient(135deg, var(--vp-c-brand-soft) 0%, transparent 100%);
+}
+
+/* Filipino-themed accent */
+.vp-doc a {
+  color: var(--vp-c-brand-1);
+  text-decoration: none;
+}
+
+.vp-doc a:hover {
+  color: var(--vp-c-brand-2);
+  text-decoration: underline;
+}
+
+/* Custom badge styles */
+.VPBadge {
+  font-weight: 600;
+}
+
+/* Sidebar active item */
+.VPSidebarItem.is-active > .item > .link {
+  color: var(--vp-c-brand-1);
+}
+
+/* Search results highlight */
+.DocSearch-Hit--active .DocSearch-Hit-title,
+.DocSearch-Hit--active .DocSearch-Hit-path {
+  color: var(--vp-c-brand-1);
+}

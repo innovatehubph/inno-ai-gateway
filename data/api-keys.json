@@ -1,0 +1,15 @@
+{
+  "keys": {
+    "masipag-ai-gateway-2026": {
+      "id": "key_default",
+      "name": "Default API Key",
+      "created": "2026-02-21T07:05:20.435Z",
+      "lastUsed": null,
+      "requests": 0,
+      "tokens": 0,
+      "rateLimit": 100,
+      "monthlyLimit": 1000000,
+      "enabled": true
+    }
+  }
+}
