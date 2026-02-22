@@ -1,4 +1,5 @@
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '..', '..', '.env') });
 
 const HF_API_KEY = process.env.HF_API_KEY || '';
 const HF_API_TOKEN = process.env.HF_API_TOKEN || HF_API_KEY;

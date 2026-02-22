@@ -13,5 +13,33 @@
     "fullPrompt": "Hi",
     "fullResponse": "⚠️ API rate limit reached. Please try again later.",
     "timestamp": "2026-02-22T04:33:32.660Z"
+  },
+  {
+    "id": "5a7ca244-75de-46b3-8fa5-f2a743cf5bd8",
+    "model": "or-mistralai/mistral-7b-instruct",
+    "source": "api",
+    "apiKey": "ik_IWYqtBun-czSJUGOEaeW89vT85iTgf3P",
+    "promptPreview": "Say hello",
+    "responsePreview": "Hello! 👋 How can I brighten your day today? Whether it's with a fun",
+    "promptTokens": 8,
+    "completionTokens": 20,
+    "totalTokens": 28,
+    "latency": 1758,
+    "status": "success",
+    "timestamp": "2026-02-22T05:01:04.665Z"
+  },
+  {
+    "id": "fab14e8f-60c0-44f9-950f-e35d31cfa1b8",
+    "model": "or-mistralai/mistral-7b-instruct",
+    "source": "api",
+    "apiKey": "ik_IWYqtBun-czSJUGOEaeW89vT85iTgf3P",
+    "promptPreview": "Say hello from Mistral via OpenRouter",
+    "responsePreview": "Hello! 👋 I’m here via **OpenRouter**—a powerful, flexible API that connects you to a wide range of ",
+    "promptTokens": 14,
+    "completionTokens": 30,
+    "totalTokens": 44,
+    "latency": 2199,
+    "status": "success",
+    "timestamp": "2026-02-22T05:05:26.687Z"
   }
 ]

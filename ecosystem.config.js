@@ -21,10 +21,12 @@ module.exports = {
     // Memory management
     max_memory_restart: '500M',
     
-    // Environment variables from .env file (loaded by dotenv in app)
+    // Environment variables loaded from .env file
     env: {
       NODE_ENV: 'production',
       PORT: 3456
+      // Note: API keys are loaded from .env file by dotenv
+      // Make sure .env exists in the project root with all required variables
     },
     
     // Error handling

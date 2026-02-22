@@ -34,6 +34,11 @@ const {
 const { runOpenClaw } = require('../services/openclaw');
 const { loadApiKeys, logRequest, checkRateLimit } = require('../utils/data-helpers');
 
+// Debug: Log provider API keys status (remove in production)
+console.log('[INFERENCE] OPENROUTER_API_KEY loaded:', OPENROUTER_API_KEY ? 'YES (length: ' + OPENROUTER_API_KEY.length + ')' : 'NO');
+console.log('[INFERENCE] HF_API_KEY loaded:', HF_API_KEY ? 'YES (length: ' + HF_API_KEY.length + ')' : 'NO');
+console.log('[INFERENCE] MOONSHOT_API_KEY loaded:', MOONSHOT_API_KEY ? 'YES (length: ' + MOONSHOT_API_KEY.length + ')' : 'NO');
+
 // API key authentication middleware
 function authenticate(req, res, next) {
   const authHeader = req.headers.authorization;

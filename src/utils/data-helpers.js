@@ -52,25 +52,32 @@ function saveLogs(logs) {
 
 function loadApiKeys() { 
   const data = loadJSON(API_KEYS_FILE);
-  if (!data || !data.data) return { keys: {} };
   
-  // Convert array format to object format expected by authenticate middleware
-  const keys = {};
-  data.data.forEach(keyData => {
-    if (keyData.key && keyData.status === 'active') {
-      keys[keyData.key] = {
-        customerId: keyData.customerId,
-        name: keyData.name,
-        enabled: keyData.status === 'active',
-        createdAt: keyData.createdAt,
-        lastUsed: keyData.lastUsed,
-        usageCount: keyData.usageCount || 0,
-        rateLimit: 100 // Default rate limit
-      };
-    }
-  });
+  // Check if already in object format (new format)
+  if (data && data.keys && typeof data.keys === 'object') {
+    return { keys: data.keys };
+  }
   
-  return { keys };
+  // Legacy: Convert array format to object format
+  if (data && data.data && Array.isArray(data.data)) {
+    const keys = {};
+    data.data.forEach(keyData => {
+      if (keyData.key && keyData.status === 'active') {
+        keys[keyData.key] = {
+          customerId: keyData.customerId,
+          name: keyData.name,
+          enabled: keyData.status === 'active',
+          createdAt: keyData.createdAt,
+          lastUsed: keyData.lastUsed,
+          usageCount: keyData.usageCount || 0,
+          rateLimit: 100
+        };
+      }
+    });
+    return { keys };
+  }
+  
+  return { keys: {} };
 }
 
 function saveApiKeys(data) { 

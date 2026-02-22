@@ -1,9 +1,15 @@
 const express = require('express');
 const router = express.Router();
 const crypto = require('crypto');
+const fs = require('fs');
+const path = require('path');
 const axios = require('axios');
 const { v4: uuidv4 } = require('uuid');
 const { execSync } = require('child_process');
+
+// Config paths
+const BASE_DIR = path.resolve(__dirname, '..', '..');
+const CONFIG_DIR = path.join(BASE_DIR, 'config');
 const { 
   loadAnalytics, 
   saveAnalytics, 
@@ -507,6 +513,228 @@ router.post('/accounts/:id/refresh', adminAuth, async (req, res) => {
       error: 'Failed to refresh token', 
       message: e.response?.data?.error_description || e.message 
     });
+  }
+});
+
+// ==================== PROVIDER MANAGEMENT ====================
+
+const PROVIDERS_FILE = path.join(CONFIG_DIR, 'providers.json');
+const MODELS_FILE = path.join(CONFIG_DIR, 'models.json');
+const AUDIT_LOGS_FILE = path.join(CONFIG_DIR, 'audit-logs.json');
+
+function loadProviders() {
+  try {
+    return JSON.parse(fs.readFileSync(PROVIDERS_FILE, 'utf8'));
+  } catch {
+    return {
+      openrouter: {
+        id: 'openrouter',
+        name: 'OpenRouter',
+        enabled: true,
+        apiKey: process.env.OPENROUTER_API_KEY || '',
+        baseUrl: 'https://openrouter.ai/api/v1',
+        capabilities: ['chat', 'image'],
+        rateLimit: 1000,
+        status: 'unknown',
+        lastTested: null
+      },
+      huggingface: {
+        id: 'huggingface',
+        name: 'Hugging Face',
+        enabled: true,
+        apiKey: process.env.HF_API_KEY || '',
+        baseUrl: 'https://router.huggingface.co',
+        capabilities: ['chat', 'image', 'audio', 'embeddings'],
+        rateLimit: 500,
+        status: 'unknown',
+        lastTested: null
+      },
+      openai: {
+        id: 'openai',
+        name: 'OpenAI',
+        enabled: false,
+        apiKey: process.env.OPENAI_API_KEY || '',
+        baseUrl: 'https://api.openai.com/v1',
+        capabilities: ['chat', 'audio', 'embeddings'],
+        rateLimit: 2000,
+        status: 'unknown',
+        lastTested: null
+      },
+      moonshot: {
+        id: 'moonshot',
+        name: 'MoonshotAI',
+        enabled: true,
+        apiKey: process.env.MOONSHOT_API_KEY || '',
+        baseUrl: 'https://api.moonshot.cn/v1',
+        capabilities: ['chat'],
+        rateLimit: 100,
+        status: 'unknown',
+        lastTested: null
+      }
+    };
+  }
+}
+
+function saveProviders(providers) {
+  fs.writeFileSync(PROVIDERS_FILE, JSON.stringify(providers, null, 2));
+}
+
+router.get('/providers', adminAuth, (req, res) => {
+  const providers = loadProviders();
+  const sanitized = {};
+  Object.keys(providers).forEach(key => {
+    const p = providers[key];
+    sanitized[key] = { ...p, apiKey: p.apiKey ? '••••' + p.apiKey.slice(-4) : '' };
+  });
+  res.json({ providers: sanitized });
+});
+
+router.put('/providers/:providerId', adminAuth, (req, res) => {
+  const providers = loadProviders();
+  const { providerId } = req.params;
+  if (!providers[providerId]) return res.status(404).json({ error: 'Provider not found' });
+  
+  const { enabled, apiKey, rateLimit } = req.body;
+  if (enabled !== undefined) providers[providerId].enabled = enabled;
+  if (apiKey && !apiKey.startsWith('••••')) providers[providerId].apiKey = apiKey;
+  if (rateLimit !== undefined) providers[providerId].rateLimit = rateLimit;
+  providers[providerId].updatedAt = new Date().toISOString();
+  saveProviders(providers);
+  
+  res.json({ success: true, provider: { ...providers[providerId], apiKey: '••••' + providers[providerId].apiKey.slice(-4) } });
+});
+
+router.post('/providers/:providerId/test', adminAuth, async (req, res) => {
+  const providers = loadProviders();
+  const provider = providers[req.params.providerId];
+  if (!provider) return res.status(404).json({ error: 'Provider not found' });
+  
+  try {
+    let status = 'error';
+    let message = '';
+    
+    switch (provider.id) {
+      case 'openrouter':
+        const orRes = await axios.get('https://openrouter.ai/api/v1/models', {
+          headers: { 'Authorization': `Bearer ${provider.apiKey}` },
+          timeout: 10000
+        });
+        status = orRes.status === 200 ? 'active' : 'error';
+        message = orRes.status === 200 ? 'Connected' : 'API error';
+        break;
+      case 'huggingface':
+        const hfRes = await axios.get('https://huggingface.co/api/models?limit=1', { timeout: 10000 });
+        status = hfRes.status === 200 ? 'active' : 'error';
+        message = hfRes.status === 200 ? 'Connected' : 'API error';
+        break;
+      default:
+        message = 'Test not implemented';
+    }
+    
+    provider.status = status;
+    provider.lastTested = new Date().toISOString();
+    saveProviders(providers);
+    res.json({ success: status === 'active', status, message });
+  } catch (e) {
+    provider.status = 'error';
+    provider.lastTested = new Date().toISOString();
+    saveProviders(providers);
+    res.json({ success: false, status: 'error', message: e.message });
+  }
+});
+
+// ==================== MODEL MANAGEMENT ====================
+
+function loadModels() {
+  try {
+    return JSON.parse(fs.readFileSync(MODELS_FILE, 'utf8'));
+  } catch {
+    return {
+      models: [
+        {
+          id: 'inno-ai-boyong-4.5',
+          name: 'InnoAI Boyong 4.5',
+          provider: 'openrouter',
+          providerModelId: 'anthropic/claude-3-opus',
+          aliases: ['boyong-4.5'],
+          pricing: { input: 0.000015, output: 0.000075 },
+          capabilities: ['chat', 'function_calling'],
+          maxTokens: 4096,
+          contextWindow: 200000,
+          enabled: true
+        }
+      ],
+      lastUpdated: new Date().toISOString()
+    };
+  }
+}
+
+function saveModels(data) {
+  data.lastUpdated = new Date().toISOString();
+  fs.writeFileSync(MODELS_FILE, JSON.stringify(data, null, 2));
+}
+
+router.get('/models', adminAuth, (req, res) => {
+  const data = loadModels();
+  res.json({ models: data.models, lastUpdated: data.lastUpdated });
+});
+
+router.post('/models', adminAuth, (req, res) => {
+  const data = loadModels();
+  const { id, name, provider, pricing, capabilities, maxTokens } = req.body;
+  
+  if (!id || !name || !provider) {
+    return res.status(400).json({ error: 'id, name, and provider are required' });
+  }
+  
+  if (data.models.find(m => m.id === id)) {
+    return res.status(400).json({ error: 'Model ID already exists' });
+  }
+  
+  const newModel = {
+    id, name, provider, providerModelId: id,
+    aliases: [],
+    pricing: pricing || { input: 0, output: 0 },
+    capabilities: capabilities || ['chat'],
+    maxTokens: maxTokens || 4096,
+    contextWindow: 8192,
+    enabled: true,
+    createdAt: new Date().toISOString()
+  };
+  
+  data.models.push(newModel);
+  saveModels(data);
+  res.json({ success: true, model: newModel });
+});
+
+router.put('/models/:modelId', adminAuth, (req, res) => {
+  const data = loadModels();
+  const model = data.models.find(m => m.id === req.params.modelId);
+  if (!model) return res.status(404).json({ error: 'Model not found' });
+  
+  Object.assign(model, req.body, { updatedAt: new Date().toISOString() });
+  saveModels(data);
+  res.json({ success: true, model });
+});
+
+router.delete('/models/:modelId', adminAuth, (req, res) => {
+  const data = loadModels();
+  const index = data.models.findIndex(m => m.id === req.params.modelId);
+  if (index === -1) return res.status(404).json({ error: 'Model not found' });
+  
+  data.models.splice(index, 1);
+  saveModels(data);
+  res.json({ success: true, message: 'Model deleted' });
+});
+
+// ==================== AUDIT LOGS ====================
+
+router.get('/audit-logs', adminAuth, (req, res) => {
+  try {
+    const logs = JSON.parse(fs.readFileSync(AUDIT_LOGS_FILE, 'utf8') || '[]');
+    res.json({ logs: logs.slice(-100).reverse() });
+  } catch {
+    res.json({ logs: [] });
   }
 });
 

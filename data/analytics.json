@@ -1,16 +1,18 @@
 {
-  "totalRequests": 1,
-  "totalTokens": 0,
-  "totalPromptTokens": 0,
-  "totalCompletionTokens": 0,
+  "totalRequests": 3,
+  "totalTokens": 72,
+  "totalPromptTokens": 22,
+  "totalCompletionTokens": 50,
   "requestsByModel": {
-    "inno-ai-boyong-4.5": 1
+    "inno-ai-boyong-4.5": 1,
+    "or-mistralai/mistral-7b-instruct": 2
   },
   "requestsByHour": {
-    "2026-02-22T04": 1
+    "2026-02-22T04": 1,
+    "2026-02-22T05": 2
   },
   "requestsByDay": {
-    "2026-02-22": 1
+    "2026-02-22": 3
   },
   "startTime": 1771657520435
 }
