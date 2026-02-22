@@ -3,9 +3,10 @@ const path = require('path');
 
 const BASE_DIR = path.resolve(__dirname, '..', '..');
 const DATA_DIR = path.join(BASE_DIR, 'data');
+const CONFIG_DIR = path.join(BASE_DIR, 'config');
 const ANALYTICS_FILE = path.join(DATA_DIR, 'analytics.json');
 const LOGS_FILE = path.join(DATA_DIR, 'logs.json');
-const API_KEYS_FILE = path.join(DATA_DIR, 'api-keys.json');
+const API_KEYS_FILE = path.join(CONFIG_DIR, 'customer-api-keys.json');
 
 // Ensure data directory exists
 if (!fs.existsSync(DATA_DIR)) {
@@ -50,7 +51,26 @@ function saveLogs(logs) {
 }
 
 function loadApiKeys() { 
-  return loadJSON(API_KEYS_FILE) || { keys: {} }; 
+  const data = loadJSON(API_KEYS_FILE);
+  if (!data || !data.data) return { keys: {} };
+  
+  // Convert array format to object format expected by authenticate middleware
+  const keys = {};
+  data.data.forEach(keyData => {
+    if (keyData.key && keyData.status === 'active') {
+      keys[keyData.key] = {
+        customerId: keyData.customerId,
+        name: keyData.name,
+        enabled: keyData.status === 'active',
+        createdAt: keyData.createdAt,
+        lastUsed: keyData.lastUsed,
+        usageCount: keyData.usageCount || 0,
+        rateLimit: 100 // Default rate limit
+      };
+    }
+  });
+  
+  return { keys };
 }
 
 function saveApiKeys(data) { 

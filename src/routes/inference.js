@@ -243,7 +243,168 @@ router.post('/chat/completions', authenticate, async (req, res) => {
     }
   }
 
-  // --- Default: OpenClaw/Claude ---
+  // --- OpenAI/GPT Models ---
+  const openaiModels = ['gpt-4o', 'gpt-4', 'gpt-3.5-turbo', 'gpt-4o-mini'];
+  if (openaiModels.includes(requestedModel) || requestedModel.startsWith('gpt-')) {
+    try {
+      const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: requestedModel,
+          messages: messages,
+          temperature: temperature || 0.7,
+          max_tokens: max_tokens || 4096,
+          stream: stream
+        })
+      });
+
+      if (!openaiResponse.ok) {
+        const error = await openaiResponse.text();
+        throw new Error(`OpenAI API error: ${error}`);
+      }
+
+      if (stream) {
+        res.setHeader('Content-Type', 'text/event-stream');
+        res.setHeader('Cache-Control', 'no-cache');
+        res.setHeader('Connection', 'keep-alive');
+        
+        const reader = openaiResponse.body.getReader();
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          res.write(Buffer.from(value));
+        }
+        res.end();
+      } else {
+        const data = await openaiResponse.json();
+        
+        logRequest({
+          id: requestId, model: requestedModel, source: 'api', apiKey: req.apiKey,
+          promptPreview: messages[messages.length - 1]?.content?.substring(0, 100) || '',
+          responsePreview: data.choices?.[0]?.message?.content?.substring(0, 100) || '',
+          promptTokens: data.usage?.prompt_tokens || 0,
+          completionTokens: data.usage?.completion_tokens || 0,
+          totalTokens: data.usage?.total_tokens || 0,
+          latency: Date.now() - startTime,
+          status: 'success'
+        });
+
+        res.json({
+          id: `chatcmpl-${requestId}`,
+          object: 'chat.completion',
+          created: Math.floor(Date.now() / 1000),
+          model: requestedModel,
+          choices: data.choices,
+          usage: data.usage
+        });
+      }
+    } catch (e) {
+      if (stream) {
+        res.write(`data: ${JSON.stringify({ error: e.message })}\\n\\n`);
+        res.end();
+      } else {
+        res.status(500).json({ error: 'OpenAI API error', message: e.message });
+      }
+    }
+    return;
+  }
+
+  // --- Claude Models via OpenRouter ---
+  const claudeModels = ['claude-opus-4-5', 'claude-sonnet-4-5', 'claude-haiku-4-5', 'claude-3-opus', 'claude-3-sonnet', 'claude-3-haiku'];
+  if (claudeModels.includes(requestedModel) || requestedModel.includes('claude')) {
+    try {
+      const openrouterResponse = await callOpenRouterChat(
+        requestedModel,
+        messages,
+        temperature || 0.7,
+        max_tokens || 4096
+      );
+
+      const responseText = openrouterResponse.choices?.[0]?.message?.content || '';
+      const usage = openrouterResponse.usage || { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 };
+
+      logRequest({
+        id: requestId, model: requestedModel, source: 'api', apiKey: req.apiKey,
+        promptPreview: messages[messages.length - 1]?.content?.substring(0, 100) || '',
+        responsePreview: responseText.substring(0, 100),
+        promptTokens: usage.prompt_tokens,
+        completionTokens: usage.completion_tokens,
+        totalTokens: usage.total_tokens,
+        latency: Date.now() - startTime,
+        status: 'success'
+      });
+
+      res.json({
+        id: `chatcmpl-${requestId}`,
+        object: 'chat.completion',
+        created: Math.floor(Date.now() / 1000),
+        model: requestedModel,
+        choices: [{
+          index: 0,
+          message: { role: 'assistant', content: responseText.trim() },
+          finish_reason: 'stop'
+        }],
+        usage
+      });
+    } catch (e) {
+      res.status(500).json({ error: 'Claude API error', message: e.message });
+    }
+    return;
+  }
+
+  // --- InnoAI Branded Models (map to OpenRouter) ---
+  const innoAiModelMap = {
+    'inno-ai-boyong-4.5': 'anthropic/claude-3-opus',
+    'inno-ai-boyong-4.0': 'anthropic/claude-3-sonnet',
+    'inno-ai-boyong-mini': 'anthropic/claude-3-haiku'
+  };
+  
+  if (innoAiModelMap[requestedModel]) {
+    try {
+      const openrouterResponse = await callOpenRouterChat(
+        innoAiModelMap[requestedModel],
+        messages,
+        temperature || 0.7,
+        max_tokens || 4096
+      );
+
+      const responseText = openrouterResponse.choices?.[0]?.message?.content || '';
+      const usage = openrouterResponse.usage || { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 };
+
+      logRequest({
+        id: requestId, model: requestedModel, source: 'api', apiKey: req.apiKey,
+        promptPreview: messages[messages.length - 1]?.content?.substring(0, 100) || '',
+        responsePreview: responseText.substring(0, 100),
+        promptTokens: usage.prompt_tokens,
+        completionTokens: usage.completion_tokens,
+        totalTokens: usage.total_tokens,
+        latency: Date.now() - startTime,
+        status: 'success'
+      });
+
+      res.json({
+        id: `chatcmpl-${requestId}`,
+        object: 'chat.completion',
+        created: Math.floor(Date.now() / 1000),
+        model: requestedModel,
+        choices: [{
+          index: 0,
+          message: { role: 'assistant', content: responseText.trim() },
+          finish_reason: 'stop'
+        }],
+        usage
+      });
+    } catch (e) {
+      res.status(500).json({ error: 'API error', message: e.message });
+    }
+    return;
+  }
+
+  // --- Default: OpenClaw/Claude (fallback) ---
   const lastUserMessage = messages.filter(m => m.role === 'user').pop();
   const prompt = lastUserMessage?.content || '';
   const brandedModel = MODEL_BRANDING[requestedModel] || 'inno-ai-boyong-4.5';
@@ -496,20 +657,66 @@ router.post('/audio/speech', authenticate, async (req, res) => {
     return res.status(400).json({ error: 'input text is required' });
   }
 
+  // Voice mapping to OpenAI-compatible voice names
+  const voiceMap = {
+    'alloy': 'alloy',
+    'echo': 'echo', 
+    'fable': 'fable',
+    'onyx': 'onyx',
+    'nova': 'nova',
+    'shimmer': 'shimmer'
+  };
+  
+  const selectedVoice = voiceMap[voice] || 'alloy';
+
   try {
-    const hfResponse = await callHuggingFace(HF_MODELS.tts, input);
-    const audioBuffer = await hfResponse.arrayBuffer();
-    
-    logRequest({
-      id: requestId, model: 'inno-ai-voice-1', source: 'api', apiKey: req.apiKey,
-      promptPreview: input.substring(0, 100), type: 'text_to_speech',
-      latency: Date.now() - startTime, status: 'success'
-    });
-    
-    res.set('Content-Type', 'audio/mpeg');
-    res.send(Buffer.from(audioBuffer));
+    // Use OpenAI's TTS API if available, otherwise return a helpful error
+    if (process.env.OPENAI_API_KEY) {
+      const openaiResponse = await fetch('https://api.openai.com/v1/audio/speech', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: 'tts-1',
+          input: input,
+          voice: selectedVoice,
+          response_format: response_format || 'mp3'
+        })
+      });
+
+      if (!openaiResponse.ok) {
+        const error = await openaiResponse.text();
+        throw new Error(`OpenAI TTS error: ${error}`);
+      }
+
+      const audioBuffer = await openaiResponse.arrayBuffer();
+      
+      logRequest({
+        id: requestId, model: 'inno-ai-voice-1', source: 'api', apiKey: req.apiKey,
+        promptPreview: input.substring(0, 100), type: 'text_to_speech',
+        latency: Date.now() - startTime, status: 'success'
+      });
+      
+      res.set('Content-Type', `audio/${response_format || 'mpeg'}`);
+      res.send(Buffer.from(audioBuffer));
+    } else {
+      // Fallback: Return a helpful message about TTS configuration
+      res.status(503).json({ 
+        error: 'Text-to-speech not configured', 
+        message: 'TTS service is not configured. Please contact support or use the chat completions API instead.',
+        supported_models: ['inno-ai-voice-1', 'inno-ai-whisper-1'],
+        note: 'Voice parameter accepted: ' + selectedVoice
+      });
+    }
   } catch (e) {
-    res.status(500).json({ error: 'Text to speech failed', message: e.message });
+    console.error('[TTS] Error:', e.message);
+    res.status(500).json({ 
+      error: 'Text to speech failed', 
+      message: e.message,
+      hint: 'TTS service may be temporarily unavailable. Please try again later.'
+    });
   }
 });
 

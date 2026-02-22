@@ -2,8 +2,10 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="theme-color" content="#0f172a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>InnoAI - Customer Portal</title>
   <link rel="icon" type="image/png" href="/images/logo.png">
   <link rel="apple-touch-icon" href="/images/logo.png">
@@ -27,6 +29,7 @@
     }
   </script>
   <style>
+    * { -webkit-tap-highlight-color: transparent; }
     body { font-family: 'Inter', sans-serif; background: #0f172a; color: #e2e8f0; }
     .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
     .glass-strong { background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); }
@@ -34,6 +37,40 @@
     .nav-btn.active { background: linear-gradient(135deg, #57317A, #6b3d94); color: white; }
     .fade-in { animation: fadeIn 0.3s ease-out; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    
+    /* Mobile Bottom Navigation */
+    @media (max-width: 768px) {
+      .mobile-nav { display: flex !important; }
+      .desktop-nav { display: none !important; }
+      .mobile-bottom-nav { display: flex !important; }
+    }
+    @media (min-width: 769px) {
+      .mobile-nav { display: none !important; }
+      .desktop-nav { display: flex !important; }
+      .mobile-bottom-nav { display: none !important; }
+    }
+    
+    /* Touch-friendly inputs */
+    input, button, select { touch-action: manipulation; }
+    input { font-size: 16px !important; } /* Prevents zoom on iOS */
+    
+    /* Smooth scrolling */
+    html { scroll-behavior: smooth; }
+    
+    /* Mobile card improvements */
+    .mobile-card { transition: transform 0.2s ease; }
+    .mobile-card:active { transform: scale(0.98); }
+    
+    /* Swipe gesture support */
+    .swipe-container { overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+    .swipe-container::-webkit-scrollbar { display: none; }
+    
+    /* Table horizontal scroll */
+    .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    
+    /* Touch feedback */
+    .touch-feedback { transition: opacity 0.15s ease; }
+    .touch-feedback:active { opacity: 0.7; }
   </style>
 </head>
 <body class="min-h-screen">
@@ -41,9 +78,9 @@
   <!-- Login Screen -->
   <div id="loginScreen" class="min-h-screen flex items-center justify-center p-4">
     <div class="absolute inset-0 bg-gradient-to-br from-accent/20 via-transparent to-purple-900/20"></div>
-    <div class="glass-strong rounded-3xl p-8 w-full max-w-md relative fade-in">
+    <div class="glass-strong rounded-3xl p-6 md:p-8 w-full max-w-md relative fade-in">
       <div class="text-center mb-8">
-        <div class="w-20 h-20 mx-auto mb-4 rounded-2xl overflow-hidden glow-accent">
+        <div class="w-16 md:w-20 h-16 md:h-20 mx-auto mb-4 rounded-2xl overflow-hidden glow-accent">
           <img src="/images/logo.png" alt="InnovateHub" class="w-full h-full object-contain">
         </div>
         <h1 class="text-2xl font-bold">InnoAI</h1>
@@ -53,15 +90,15 @@
       <div id="loginForm" class="space-y-4">
         <div>
           <label class="block text-sm text-gray-400 mb-2">Email</label>
-          <input type="email" id="loginEmail" placeholder="you@company.com" 
-            class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-accent/50">
+          <input type="email" id="loginEmail" placeholder="you@company.com" inputmode="email" autocomplete="email"
+            class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 md:py-3.5 focus:outline-none focus:border-accent/50 focus:bg-white/10 transition-all">
         </div>
         <div>
           <label class="block text-sm text-gray-400 mb-2">Password</label>
-          <input type="password" id="loginPassword" placeholder="••••••••" 
-            class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-accent/50">
+          <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password"
+            class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 md:py-3.5 focus:outline-none focus:border-accent/50 focus:bg-white/10 transition-all">
         </div>
-        <button onclick="login()" class="w-full bg-gradient-to-r from-accent to-purple-600 hover:from-accent-light hover:to-purple-500 rounded-xl py-3 font-semibold transition-all">
+        <button onclick="login()" class="touch-feedback w-full bg-gradient-to-r from-accent to-purple-600 hover:from-accent-light hover:to-purple-500 rounded-xl py-3.5 md:py-4 font-semibold transition-all active:scale-[0.98]">
           Sign In
         </button>
         <p class="text-center text-sm text-gray-500">
@@ -72,25 +109,25 @@
       <div id="registerForm" class="space-y-4 hidden">
         <div>
           <label class="block text-sm text-gray-400 mb-2">Full Name</label>
-          <input type="text" id="regName" placeholder="John Doe" 
-            class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-accent/50">
+          <input type="text" id="regName" placeholder="John Doe" autocomplete="name"
+            class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 md:py-3.5 focus:outline-none focus:border-accent/50 focus:bg-white/10 transition-all">
         </div>
         <div>
           <label class="block text-sm text-gray-400 mb-2">Email</label>
-          <input type="email" id="regEmail" placeholder="you@company.com" 
-            class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-accent/50">
+          <input type="email" id="regEmail" placeholder="you@company.com" inputmode="email" autocomplete="email"
+            class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 md:py-3.5 focus:outline-none focus:border-accent/50 focus:bg-white/10 transition-all">
         </div>
         <div>
           <label class="block text-sm text-gray-400 mb-2">Password</label>
-          <input type="password" id="regPassword" placeholder="Min 8 characters" 
-            class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-accent/50">
+          <input type="password" id="regPassword" placeholder="Min 8 characters" autocomplete="new-password"
+            class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 md:py-3.5 focus:outline-none focus:border-accent/50 focus:bg-white/10 transition-all">
         </div>
         <div>
           <label class="block text-sm text-gray-400 mb-2">Company (Optional)</label>
-          <input type="text" id="regCompany" placeholder="Your Company" 
-            class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-accent/50">
+          <input type="text" id="regCompany" placeholder="Your Company" autocomplete="organization"
+            class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 md:py-3.5 focus:outline-none focus:border-accent/50 focus:bg-white/10 transition-all">
         </div>
-        <button onclick="register()" class="w-full bg-gradient-to-r from-accent to-purple-600 hover:from-accent-light hover:to-purple-500 rounded-xl py-3 font-semibold transition-all">
+        <button onclick="register()" class="touch-feedback w-full bg-gradient-to-r from-accent to-purple-600 hover:from-accent-light hover:to-purple-500 rounded-xl py-3.5 md:py-4 font-semibold transition-all active:scale-[0.98]">
           Create Account
         </button>
         <p class="text-center text-sm text-gray-500">
@@ -103,102 +140,128 @@
   </div>
 
   <!-- Main Dashboard -->
-  <div id="dashboard" class="hidden min-h-screen">
-    <!-- Header -->
-    <header class="glass sticky top-0 z-40 px-6 py-4">
+  <div id="dashboard" class="hidden min-h-screen pb-20 md:pb-0">
+    <!-- Desktop Header -->
+    <header class="glass sticky top-0 z-40 px-4 md:px-6 py-3 md:py-4">
       <div class="flex items-center justify-between max-w-7xl mx-auto">
-        <div class="flex items-center gap-4">
-          <div class="w-10 h-10 rounded-xl overflow-hidden">
+        <div class="flex items-center gap-3 md:gap-4">
+          <div class="w-8 md:w-10 h-8 md:h-10 rounded-xl overflow-hidden">
             <img src="/images/logo.png" alt="InnovateHub" class="w-full h-full object-contain">
           </div>
-          <span class="font-bold text-lg hidden sm:block">InnoAI</span>
+          <span class="font-bold text-base md:text-lg">InnoAI</span>
         </div>
 
-        <nav class="hidden md:flex items-center gap-1 bg-white/5 rounded-xl p-1">
-          <button onclick="showDashboardTab('overview')" id="nav-overview" class="nav-btn active px-4 py-2 rounded-lg text-sm font-medium transition-all">
-            <i class="fas fa-chart-line mr-2"></i>Overview
+        <!-- Desktop Navigation -->
+        <nav class="desktop-nav items-center gap-1 bg-white/5 rounded-xl p-1">
+          <button onclick="showDashboardTab('overview')" id="nav-overview" class="nav-btn active px-3 md:px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap">
+            <i class="fas fa-chart-line md:mr-2"></i><span class="hidden md:inline">Overview</span>
           </button>
-          <button onclick="showDashboardTab('api-keys')" id="nav-api-keys" class="nav-btn px-4 py-2 rounded-lg text-sm font-medium transition-all text-gray-400 hover:text-white">
-            <i class="fas fa-key mr-2"></i>API Keys
+          <button onclick="showDashboardTab('api-keys')" id="nav-api-keys" class="nav-btn px-3 md:px-4 py-2 rounded-lg text-sm font-medium transition-all text-gray-400 hover:text-white whitespace-nowrap">
+            <i class="fas fa-key md:mr-2"></i><span class="hidden md:inline">API Keys</span>
           </button>
-          <button onclick="showDashboardTab('usage')" id="nav-usage" class="nav-btn px-4 py-2 rounded-lg text-sm font-medium transition-all text-gray-400 hover:text-white">
-            <i class="fas fa-chart-bar mr-2"></i>Usage
+          <button onclick="showDashboardTab('usage')" id="nav-usage" class="nav-btn px-3 md:px-4 py-2 rounded-lg text-sm font-medium transition-all text-gray-400 hover:text-white whitespace-nowrap">
+            <i class="fas fa-chart-bar md:mr-2"></i><span class="hidden md:inline">Usage</span>
           </button>
-          <button onclick="showDashboardTab('pricing')" id="nav-pricing" class="nav-btn px-4 py-2 rounded-lg text-sm font-medium transition-all text-gray-400 hover:text-white">
-            <i class="fas fa-tag mr-2"></i>Pricing
+          <button onclick="showDashboardTab('pricing')" id="nav-pricing" class="nav-btn px-3 md:px-4 py-2 rounded-lg text-sm font-medium transition-all text-gray-400 hover:text-white whitespace-nowrap">
+            <i class="fas fa-tag md:mr-2"></i><span class="hidden md:inline">Pricing</span>
           </button>
-          <button onclick="showDashboardTab('settings')" id="nav-settings" class="nav-btn px-4 py-2 rounded-lg text-sm font-medium transition-all text-gray-400 hover:text-white">
-            <i class="fas fa-cog mr-2"></i>Settings
+          <button onclick="showDashboardTab('settings')" id="nav-settings" class="nav-btn px-3 md:px-4 py-2 rounded-lg text-sm font-medium transition-all text-gray-400 hover:text-white whitespace-nowrap">
+            <i class="fas fa-cog md:mr-2"></i><span class="hidden md:inline">Settings</span>
           </button>
         </nav>
 
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2 md:gap-3">
           <div class="text-right hidden sm:block">
             <p id="userName" class="text-sm font-medium">Loading...</p>
             <p id="userTier" class="text-xs text-gray-500">Free Tier</p>
           </div>
-          <button onclick="logout()" class="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center transition-all">
-            <i class="fas fa-sign-out-alt text-gray-400"></i>
+          <button onclick="logout()" class="touch-feedback w-9 md:w-10 h-9 md:h-10 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center transition-all">
+            <i class="fas fa-sign-out-alt text-gray-400 text-sm md:text-base"></i>
           </button>
         </div>
       </div>
     </header>
 
+    <!-- Mobile User Info Bar -->
+    <div class="md:hidden px-4 py-3 glass border-b border-white/5">
+      <div class="flex items-center justify-between">
+        <div>
+          <p id="userNameMobile" class="font-medium">Loading...</p>
+          <p id="userTierMobile" class="text-xs text-gray-500">Free Tier</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <span id="mobileCredit" class="text-sm font-semibold text-success">₱0.00</span>
+        </div>
+      </div>
+    </div>
+
     <!-- Main Content -->
-    <main class="max-w-7xl mx-auto p-6">
+    <main class="max-w-7xl mx-auto p-4 md:p-6">
       
       <!-- Overview Tab -->
       <div id="tab-overview" class="dashboard-tab fade-in">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div class="glass rounded-2xl p-6">
-            <div class="flex items-center gap-3 mb-4">
-              <div class="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center">
-                <i class="fas fa-bolt text-accent text-xl"></i>
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-6 mb-6 md:mb-8">
+          <div class="mobile-card glass rounded-2xl p-4 md:p-6">
+            <div class="flex items-center gap-2 md:gap-3 mb-2 md:mb-4">
+              <div class="w-10 md:w-12 h-10 md:h-12 rounded-xl bg-accent/10 flex items-center justify-center flex-shrink-0">
+                <i class="fas fa-bolt text-accent text-lg md:text-xl"></i>
               </div>
-              <div>
-                <p class="text-gray-400 text-sm">API Requests (30d)</p>
-                <p id="statRequests" class="text-3xl font-bold">0</p>
-              </div>
-            </div>
-          </div>
-
-          <div class="glass rounded-2xl p-6">
-            <div class="flex items-center gap-3 mb-4">
-              <div class="w-12 h-12 rounded-xl bg-success/10 flex items-center justify-center">
-                <i class="fas fa-coins text-success text-xl"></i>
-              </div>
-              <div>
-                <p class="text-gray-400 text-sm">Current Usage</p>
-                <p id="statCost" class="text-3xl font-bold">₱0.00</p>
+              <div class="min-w-0">
+                <p class="text-gray-400 text-xs md:text-sm truncate">API Requests (30d)</p>
+                <p id="statRequests" class="text-xl md:text-3xl font-bold">0</p>
               </div>
             </div>
           </div>
 
-          <div class="glass rounded-2xl p-6">
-            <div class="flex items-center gap-3 mb-4">
-              <div class="w-12 h-12 rounded-xl bg-warning/10 flex items-center justify-center">
-                <i class="fas fa-layer-group text-warning text-xl"></i>
+          <div class="mobile-card glass rounded-2xl p-4 md:p-6">
+            <div class="flex items-center gap-2 md:gap-3 mb-2 md:mb-4">
+              <div class="w-10 md:w-12 h-10 md:h-12 rounded-xl bg-success/10 flex items-center justify-center flex-shrink-0">
+                <i class="fas fa-coins text-success text-lg md:text-xl"></i>
               </div>
-              <div>
-                <p class="text-gray-400 text-sm">Current Tier</p>
-                <p id="statTier" class="text-3xl font-bold capitalize">Free</p>
+              <div class="min-w-0">
+                <p class="text-gray-400 text-xs md:text-sm truncate">Current Usage</p>
+                <p id="statCost" class="text-xl md:text-3xl font-bold">₱0.00</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="mobile-card glass rounded-2xl p-4 md:p-6 col-span-2 md:col-span-1">
+            <div class="flex items-center gap-2 md:gap-3 mb-2 md:mb-4">
+              <div class="w-10 md:w-12 h-10 md:h-12 rounded-xl bg-warning/10 flex items-center justify-center flex-shrink-0">
+                <i class="fas fa-layer-group text-warning text-lg md:text-xl"></i>
+              </div>
+              <div class="min-w-0">
+                <p class="text-gray-400 text-xs md:text-sm truncate">Current Tier</p>
+                <p id="statTier" class="text-xl md:text-3xl font-bold capitalize">Free</p>
               </div>
             </div>
           </div>
         </div>
 
-        <div class="glass rounded-2xl p-6">
-          <h2 class="text-xl font-bold mb-4">Quick Start</h2>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-all cursor-pointer" onclick="showDashboardTab('api-keys')">
-              <i class="fas fa-key text-accent text-2xl mb-3"></i>
-              <h3 class="font-semibold mb-1">Create API Key</h3>
-              <p class="text-sm text-gray-400">Generate your first API key to start using our models</p>
+        <div class="glass rounded-2xl p-4 md:p-6">
+          <h2 class="text-lg md:text-xl font-bold mb-4">Quick Start</h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+            <div class="mobile-card touch-feedback p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-all cursor-pointer" onclick="showDashboardTab('api-keys')">
+              <div class="flex items-start gap-3">
+                <div class="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center flex-shrink-0">
+                  <i class="fas fa-key text-accent text-lg"></i>
+                </div>
+                <div>
+                  <h3 class="font-semibold mb-1">Create API Key</h3>
+                  <p class="text-xs md:text-sm text-gray-400">Generate your first API key to start using our models</p>
+                </div>
+              </div>
             </div>
-            <div class="p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-all cursor-pointer" onclick="showDashboardTab('pricing')">
-              <i class="fas fa-rocket text-success text-2xl mb-3"></i>
-              <h3 class="font-semibold mb-1">Upgrade Plan</h3>
-              <p class="text-sm text-gray-400">Unlock more requests and premium models</p>
+            <div class="mobile-card touch-feedback p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-all cursor-pointer" onclick="showDashboardTab('pricing')">
+              <div class="flex items-start gap-3">
+                <div class="w-10 h-10 rounded-xl bg-success/10 flex items-center justify-center flex-shrink-0">
+                  <i class="fas fa-rocket text-success text-lg"></i>
+                </div>
+                <div>
+                  <h3 class="font-semibold mb-1">Upgrade Plan</h3>
+                  <p class="text-xs md:text-sm text-gray-400">Unlock more requests and premium models</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -206,138 +269,138 @@
 
       <!-- API Keys Tab -->
       <div id="tab-api-keys" class="dashboard-tab hidden fade-in">
-        <div class="flex justify-between items-center mb-6">
-          <h2 class="text-2xl font-bold">API Keys</h2>
-          <button onclick="createApiKey()" class="px-6 py-3 bg-gradient-to-r from-accent to-purple-600 rounded-xl font-medium hover:opacity-90 transition-all">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 md:mb-6 gap-3">
+          <h2 class="text-xl md:text-2xl font-bold">API Keys</h2>
+          <button onclick="createApiKey()" class="touch-feedback w-full md:w-auto px-4 md:px-6 py-3 bg-gradient-to-r from-accent to-purple-600 rounded-xl font-medium hover:opacity-90 transition-all text-sm md:text-base">
             <i class="fas fa-plus mr-2"></i>Create New Key
           </button>
         </div>
 
-        <div id="apiKeysList" class="space-y-4">
+        <div id="apiKeysList" class="space-y-3 md:space-y-4">
           <div class="text-center py-12 text-gray-500">
             <i class="fas fa-spinner fa-spin text-2xl"></i>
-            <p class="mt-2">Loading API keys...</p>
+            <p class="mt-2 text-sm">Loading API keys...</p>
           </div>
         </div>
       </div>
 
       <!-- Usage Tab -->
       <div id="tab-usage" class="dashboard-tab hidden fade-in">
-        <h2 class="text-2xl font-bold mb-6">Usage Analytics</h2>
+        <h2 class="text-xl md:text-2xl font-bold mb-4 md:mb-6">Usage Analytics</h2>
         
-        <div class="glass rounded-2xl p-6 mb-6">
-          <div class="flex justify-between items-center mb-4">
-            <h3 class="font-semibold">Daily Usage (Last 30 Days)</h3>
-            <select id="usagePeriod" onchange="loadUsage()" class="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm">
+        <div class="glass rounded-2xl p-4 md:p-6 mb-4 md:mb-6">
+          <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-3">
+            <h3 class="font-semibold text-base md:text-base">Daily Usage (Last 30 Days)</h3>
+            <select id="usagePeriod" onchange="loadUsage()" class="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm w-full md:w-auto">
               <option value="7d">Last 7 days</option>
               <option value="30d" selected>Last 30 days</option>
               <option value="90d">Last 90 days</option>
             </select>
           </div>
-          <div id="usageChart" class="h-64 flex items-center justify-center text-gray-500">
+          <div id="usageChart" class="h-48 md:h-64 flex items-center justify-center text-gray-500">
             <i class="fas fa-spinner fa-spin mr-2"></i> Loading chart...
           </div>
         </div>
 
-        <div class="glass rounded-2xl p-6">
+        <div class="glass rounded-2xl p-4 md:p-6">
           <h3 class="font-semibold mb-4">Usage by Model</h3>
           <div id="usageByModel" class="space-y-2">
-            <p class="text-gray-500 text-center py-8">No usage data yet</p>
+            <p class="text-gray-500 text-center py-8 text-sm">No usage data yet</p>
           </div>
         </div>
       </div>
 
       <!-- Pricing Tab -->
       <div id="tab-pricing" class="dashboard-tab hidden fade-in">
-        <h2 class="text-2xl font-bold mb-6">Pricing Plans</h2>
+        <h2 class="text-xl md:text-2xl font-bold mb-4 md:mb-6">Pricing Plans</h2>
         
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div class="swipe-container flex gap-3 md:gap-6 pb-4 md:grid md:grid-cols-2 lg:grid-cols-4">
           <!-- Free Tier -->
-          <div class="glass rounded-2xl p-6 border-2 border-transparent hover:border-accent/30 transition-all">
-            <h3 class="text-xl font-bold mb-2">Free</h3>
-            <p class="text-3xl font-bold text-accent mb-4">₱0<span class="text-base font-normal text-gray-400">/mo</span></p>
+          <div class="mobile-card glass rounded-2xl p-5 md:p-6 border-2 border-transparent hover:border-accent/30 transition-all flex-shrink-0 w-[280px] md:w-auto">
+            <h3 class="text-lg md:text-xl font-bold mb-2">Free</h3>
+            <p class="text-2xl md:text-3xl font-bold text-accent mb-4">₱0<span class="text-sm font-normal text-gray-400">/mo</span></p>
             <ul class="space-y-2 text-sm text-gray-300 mb-6">
-              <li><i class="fas fa-check text-success mr-2"></i>100 requests/day</li>
-              <li><i class="fas fa-check text-success mr-2"></i>10K tokens/month</li>
-              <li><i class="fas fa-check text-success mr-2"></i>Basic models</li>
-              <li><i class="fas fa-check text-success mr-2"></i>Community support</li>
+              <li class="flex items-center gap-2"><i class="fas fa-check text-success text-xs"></i><span>100 requests/day</span></li>
+              <li class="flex items-center gap-2"><i class="fas fa-check text-success text-xs"></i><span>10K tokens/month</span></li>
+              <li class="flex items-center gap-2"><i class="fas fa-check text-success text-xs"></i><span>Basic models</span></li>
+              <li class="flex items-center gap-2"><i class="fas fa-check text-success text-xs"></i><span>Community support</span></li>
             </ul>
-            <button class="w-full py-3 rounded-xl border border-white/20 hover:bg-white/5 transition-all" disabled>
+            <button class="w-full py-3 rounded-xl border border-white/20 hover:bg-white/5 transition-all text-sm" disabled>
               Current Plan
             </button>
           </div>
 
           <!-- Starter Tier -->
-          <div class="glass rounded-2xl p-6 border-2 border-transparent hover:border-accent/30 transition-all">
-            <h3 class="text-xl font-bold mb-2">Starter</h3>
-            <p class="text-3xl font-bold text-accent mb-4">₱499<span class="text-base font-normal text-gray-400">/mo</span></p>
+          <div class="mobile-card glass rounded-2xl p-5 md:p-6 border-2 border-transparent hover:border-accent/30 transition-all flex-shrink-0 w-[280px] md:w-auto">
+            <h3 class="text-lg md:text-xl font-bold mb-2">Starter</h3>
+            <p class="text-2xl md:text-3xl font-bold text-accent mb-4">₱499<span class="text-sm font-normal text-gray-400">/mo</span></p>
             <ul class="space-y-2 text-sm text-gray-300 mb-6">
-              <li><i class="fas fa-check text-success mr-2"></i>1,000 requests/day</li>
-              <li><i class="fas fa-check text-success mr-2"></i>100K tokens/month</li>
-              <li><i class="fas fa-check text-success mr-2"></i>All chat models</li>
-              <li><i class="fas fa-check text-success mr-2"></i>Email support</li>
+              <li class="flex items-center gap-2"><i class="fas fa-check text-success text-xs"></i><span>1,000 requests/day</span></li>
+              <li class="flex items-center gap-2"><i class="fas fa-check text-success text-xs"></i><span>100K tokens/month</span></li>
+              <li class="flex items-center gap-2"><i class="fas fa-check text-success text-xs"></i><span>All chat models</span></li>
+              <li class="flex items-center gap-2"><i class="fas fa-check text-success text-xs"></i><span>Email support</span></li>
             </ul>
-            <button onclick="upgradePlan('starter')" class="w-full py-3 rounded-xl bg-accent/20 text-accent hover:bg-accent/30 transition-all">
+            <button onclick="upgradePlan('starter')" class="touch-feedback w-full py-3 rounded-xl bg-accent/20 text-accent hover:bg-accent/30 transition-all text-sm font-medium">
               Upgrade
             </button>
           </div>
 
           <!-- Pro Tier -->
-          <div class="glass rounded-2xl p-6 border-2 border-accent relative">
+          <div class="mobile-card glass rounded-2xl p-5 md:p-6 border-2 border-accent relative flex-shrink-0 w-[280px] md:w-auto">
             <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-accent text-white text-xs rounded-full">
               Popular
             </div>
-            <h3 class="text-xl font-bold mb-2">Professional</h3>
-            <p class="text-3xl font-bold text-accent mb-4">₱1,499<span class="text-base font-normal text-gray-400">/mo</span></p>
+            <h3 class="text-lg md:text-xl font-bold mb-2">Professional</h3>
+            <p class="text-2xl md:text-3xl font-bold text-accent mb-4">₱1,499<span class="text-sm font-normal text-gray-400">/mo</span></p>
             <ul class="space-y-2 text-sm text-gray-300 mb-6">
-              <li><i class="fas fa-check text-success mr-2"></i>10,000 requests/day</li>
-              <li><i class="fas fa-check text-success mr-2"></i>1M tokens/month</li>
-              <li><i class="fas fa-check text-success mr-2"></i>All models</li>
-              <li><i class="fas fa-check text-success mr-2"></i>Priority support</li>
+              <li class="flex items-center gap-2"><i class="fas fa-check text-success text-xs"></i><span>10,000 requests/day</span></li>
+              <li class="flex items-center gap-2"><i class="fas fa-check text-success text-xs"></i><span>1M tokens/month</span></li>
+              <li class="flex items-center gap-2"><i class="fas fa-check text-success text-xs"></i><span>All models</span></li>
+              <li class="flex items-center gap-2"><i class="fas fa-check text-success text-xs"></i><span>Priority support</span></li>
             </ul>
-            <button onclick="upgradePlan('professional')" class="w-full py-3 rounded-xl bg-gradient-to-r from-accent to-purple-600 hover:opacity-90 transition-all">
+            <button onclick="upgradePlan('professional')" class="touch-feedback w-full py-3 rounded-xl bg-gradient-to-r from-accent to-purple-600 hover:opacity-90 transition-all text-sm font-medium">
               Upgrade
             </button>
           </div>
 
           <!-- Enterprise Tier -->
-          <div class="glass rounded-2xl p-6 border-2 border-transparent hover:border-accent/30 transition-all">
-            <h3 class="text-xl font-bold mb-2">Enterprise</h3>
-            <p class="text-3xl font-bold text-accent mb-4">₱4,999<span class="text-base font-normal text-gray-400">/mo</span></p>
+          <div class="mobile-card glass rounded-2xl p-5 md:p-6 border-2 border-transparent hover:border-accent/30 transition-all flex-shrink-0 w-[280px] md:w-auto">
+            <h3 class="text-lg md:text-xl font-bold mb-2">Enterprise</h3>
+            <p class="text-2xl md:text-3xl font-bold text-accent mb-4">₱4,999<span class="text-sm font-normal text-gray-400">/mo</span></p>
             <ul class="space-y-2 text-sm text-gray-300 mb-6">
-              <li><i class="fas fa-check text-success mr-2"></i>100,000 requests/day</li>
-              <li><i class="fas fa-check text-success mr-2"></i>10M tokens/month</li>
-              <li><i class="fas fa-check text-success mr-2"></i>Custom deployments</li>
-              <li><i class="fas fa-check text-success mr-2"></i>Dedicated support</li>
+              <li class="flex items-center gap-2"><i class="fas fa-check text-success text-xs"></i><span>100,000 requests/day</span></li>
+              <li class="flex items-center gap-2"><i class="fas fa-check text-success text-xs"></i><span>10M tokens/month</span></li>
+              <li class="flex items-center gap-2"><i class="fas fa-check text-success text-xs"></i><span>Custom deployments</span></li>
+              <li class="flex items-center gap-2"><i class="fas fa-check text-success text-xs"></i><span>Dedicated support</span></li>
             </ul>
-            <button onclick="upgradePlan('enterprise')" class="w-full py-3 rounded-xl bg-white/10 hover:bg-white/20 transition-all">
+            <button onclick="upgradePlan('enterprise')" class="touch-feedback w-full py-3 rounded-xl bg-white/10 hover:bg-white/20 transition-all text-sm font-medium">
               Contact Sales
             </button>
           </div>
         </div>
 
-        <div class="glass rounded-2xl p-6">
-          <h3 class="font-semibold mb-4">Pay-As-You-Go</h3>
-          <p class="text-gray-400 mb-4">Prefer usage-based billing? Top up your account and pay only for what you use.</p>
-          <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
-            <button onclick="topUp(500)" class="p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-all text-center">
-              <p class="font-bold">₱500</p>
+        <div class="glass rounded-2xl p-4 md:p-6 mt-6">
+          <h3 class="font-semibold mb-3 md:mb-4">Pay-As-You-Go</h3>
+          <p class="text-gray-400 text-sm mb-4">Prefer usage-based billing? Top up your account and pay only for what you use.</p>
+          <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+            <button onclick="topUp(500)" class="mobile-card touch-feedback p-3 md:p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-all text-center">
+              <p class="font-bold text-base md:text-lg">₱500</p>
               <p class="text-xs text-gray-500">Starter</p>
             </button>
-            <button onclick="topUp(1000)" class="p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-all text-center">
-              <p class="font-bold">₱1,000</p>
+            <button onclick="topUp(1000)" class="mobile-card touch-feedback p-3 md:p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-all text-center">
+              <p class="font-bold text-base md:text-lg">₱1,000</p>
               <p class="text-xs text-success">+₱100 bonus</p>
             </button>
-            <button onclick="topUp(2500)" class="p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-all text-center">
-              <p class="font-bold">₱2,500</p>
+            <button onclick="topUp(2500)" class="mobile-card touch-feedback p-3 md:p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-all text-center">
+              <p class="font-bold text-base md:text-lg">₱2,500</p>
               <p class="text-xs text-success">+₱500 bonus</p>
             </button>
-            <button onclick="topUp(5000)" class="p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-all text-center">
-              <p class="font-bold">₱5,000</p>
+            <button onclick="topUp(5000)" class="mobile-card touch-feedback p-3 md:p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-all text-center">
+              <p class="font-bold text-base md:text-lg">₱5,000</p>
               <p class="text-xs text-success">+₱1,500 bonus</p>
             </button>
-            <button onclick="topUp(10000)" class="p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-all text-center">
-              <p class="font-bold">₱10,000</p>
+            <button onclick="topUp(10000)" class="mobile-card touch-feedback p-3 md:p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-all text-center col-span-2 md:col-span-1">
+              <p class="font-bold text-base md:text-lg">₱10,000</p>
               <p class="text-xs text-success">+₱4,000 bonus</p>
             </button>
           </div>
@@ -346,10 +409,10 @@
 
       <!-- Settings Tab -->
       <div id="tab-settings" class="dashboard-tab hidden fade-in">
-        <h2 class="text-2xl font-bold mb-6">Account Settings</h2>
+        <h2 class="text-xl md:text-2xl font-bold mb-4 md:mb-6">Account Settings</h2>
         
-        <div class="max-w-2xl space-y-6">
-          <div class="glass rounded-2xl p-6">
+        <div class="max-w-none md:max-w-2xl space-y-4 md:space-y-6">
+          <div class="glass rounded-2xl p-4 md:p-6">
             <h3 class="font-semibold mb-4">Profile Information</h3>
             <div class="space-y-4">
               <div>
@@ -360,13 +423,13 @@
                 <label class="block text-sm text-gray-400 mb-2">Company</label>
                 <input type="text" id="settingsCompany" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-accent/50">
               </div>
-              <button onclick="updateProfile()" class="px-6 py-3 bg-accent/20 text-accent rounded-xl hover:bg-accent/30 transition-all">
+              <button onclick="updateProfile()" class="touch-feedback w-full md:w-auto px-6 py-3 bg-accent/20 text-accent rounded-xl hover:bg-accent/30 transition-all">
                 Save Changes
               </button>
             </div>
           </div>
 
-          <div class="glass rounded-2xl p-6">
+          <div class="glass rounded-2xl p-4 md:p-6">
             <h3 class="font-semibold mb-4">Change Password</h3>
             <div class="space-y-4">
               <div>
@@ -377,7 +440,7 @@
                 <label class="block text-sm text-gray-400 mb-2">New Password</label>
                 <input type="password" id="newPassword" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-accent/50">
               </div>
-              <button onclick="changePassword()" class="px-6 py-3 bg-accent/20 text-accent rounded-xl hover:bg-accent/30 transition-all">
+              <button onclick="changePassword()" class="touch-feedback w-full md:w-auto px-6 py-3 bg-accent/20 text-accent rounded-xl hover:bg-accent/30 transition-all">
                 Update Password
               </button>
             </div>
@@ -385,15 +448,58 @@
         </div>
       </div>
     </main>
+
+    <!-- Mobile Bottom Navigation -->
+    <nav class="mobile-bottom-nav fixed bottom-0 left-0 right-0 glass-strong border-t border-white/10 z-50 safe-area-pb">
+      <div class="flex justify-around items-center py-2">
+        <button onclick="showDashboardTab('overview')" class="nav-btn-mobile flex flex-col items-center gap-1 py-2 px-4 rounded-lg" data-tab="overview">
+          <i class="fas fa-chart-line text-lg"></i>
+          <span class="text-[10px]">Overview</span>
+        </button>
+        <button onclick="showDashboardTab('api-keys')" class="nav-btn-mobile flex flex-col items-center gap-1 py-2 px-4 rounded-lg text-gray-400" data-tab="api-keys">
+          <i class="fas fa-key text-lg"></i>
+          <span class="text-[10px]">API Keys</span>
+        </button>
+        <button onclick="showDashboardTab('usage')" class="nav-btn-mobile flex flex-col items-center gap-1 py-2 px-4 rounded-lg text-gray-400" data-tab="usage">
+          <i class="fas fa-chart-bar text-lg"></i>
+          <span class="text-[10px]">Usage</span>
+        </button>
+        <button onclick="showDashboardTab('pricing')" class="nav-btn-mobile flex flex-col items-center gap-1 py-2 px-4 rounded-lg text-gray-400" data-tab="pricing">
+          <i class="fas fa-tag text-lg"></i>
+          <span class="text-[10px]">Pricing</span>
+        </button>
+        <button onclick="showDashboardTab('settings')" class="nav-btn-mobile flex flex-col items-center gap-1 py-2 px-4 rounded-lg text-gray-400" data-tab="settings">
+          <i class="fas fa-cog text-lg"></i>
+          <span class="text-[10px]">Settings</span>
+        </button>
+      </div>
+    </nav>
   </div>
 
   <!-- Toast Container -->
-  <div id="toastContainer" class="fixed bottom-6 right-6 space-y-2 z-50"></div>
+  <div id="toastContainer" class="fixed bottom-24 md:bottom-6 right-4 md:right-6 left-4 md:left-auto space-y-2 z-50"></div>
+
+  <style>
+    /* Safe area for iPhone notch */
+    .safe-area-pb { padding-bottom: env(safe-area-inset-bottom, 0); }
+    
+    /* Mobile nav active state */
+    .nav-btn-mobile.active { color: #57317A; background: rgba(87, 49, 122, 0.1); }
+    
+    /* Prevent text selection on mobile */
+    @media (max-width: 768px) {
+      .mobile-card, .nav-btn-mobile, button {
+        -webkit-user-select: none;
+        user-select: none;
+      }
+    }
+  </style>
 
   <script>
     // Global state
     let authToken = localStorage.getItem('customerToken');
     let currentCustomer = null;
+    let currentTab = 'overview';
 
     // Initialize
     document.addEventListener('DOMContentLoaded', () => {
@@ -506,6 +612,8 @@
       // Update UI
       document.getElementById('userName').textContent = currentCustomer.name;
       document.getElementById('userTier').textContent = currentCustomer.tier + ' Tier';
+      document.getElementById('userNameMobile').textContent = currentCustomer.name;
+      document.getElementById('userTierMobile').textContent = currentCustomer.tier + ' Tier';
       
       // Load initial data
       loadApiKeys();
@@ -524,18 +632,41 @@
 
     // Dashboard navigation
     function showDashboardTab(tab) {
+      currentTab = tab;
+      
       // Hide all tabs
       document.querySelectorAll('.dashboard-tab').forEach(el => el.classList.add('hidden'));
       document.querySelectorAll('.nav-btn').forEach(el => {
         el.classList.remove('active');
         el.classList.add('text-gray-400');
       });
+      document.querySelectorAll('.nav-btn-mobile').forEach(el => {
+        el.classList.remove('active');
+        el.classList.add('text-gray-400');
+      });
 
       // Show selected tab
       document.getElementById(`tab-${tab}`).classList.remove('hidden');
+      
+      // Update desktop nav
       const navBtn = document.getElementById(`nav-${tab}`);
-      navBtn.classList.add('active');
-      navBtn.classList.remove('text-gray-400');
+      if (navBtn) {
+        navBtn.classList.add('active');
+        navBtn.classList.remove('text-gray-400');
+      }
+      
+      // Update mobile nav
+      document.querySelectorAll('.nav-btn-mobile').forEach(btn => {
+        if (btn.dataset.tab === tab) {
+          btn.classList.add('active');
+          btn.classList.remove('text-gray-400');
+        }
+      });
+
+      // Scroll to top on mobile
+      if (window.innerWidth <= 768) {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
 
       // Load tab data
       if (tab === 'api-keys') loadApiKeys();
@@ -555,17 +686,17 @@
 
         if (data.apiKeys && data.apiKeys.length > 0) {
           container.innerHTML = data.apiKeys.map(key => `
-            <div class="glass rounded-xl p-4 flex justify-between items-center">
-              <div>
-                <h4 class="font-semibold">${key.name}</h4>
-                <p class="text-sm text-gray-400">Created: ${new Date(key.createdAt).toLocaleDateString()}</p>
+            <div class="mobile-card glass rounded-xl p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+              <div class="min-w-0 flex-1">
+                <h4 class="font-semibold text-sm md:text-base truncate">${key.name}</h4>
+                <p class="text-xs text-gray-400">Created: ${new Date(key.createdAt).toLocaleDateString()}</p>
                 ${key.lastUsed ? `<p class="text-xs text-gray-500">Last used: ${new Date(key.lastUsed).toLocaleDateString()}</p>` : ''}
               </div>
-              <div class="flex items-center gap-3">
+              <div class="flex items-center gap-3 w-full md:w-auto">
                 <span class="px-3 py-1 rounded-full text-xs ${key.status === 'active' ? 'bg-success/20 text-success' : 'bg-gray-500/20 text-gray-400'}">
                   ${key.status}
                 </span>
-                <button onclick="revokeApiKey('${key.id}')" class="text-danger hover:text-danger/80" title="Revoke">
+                <button onclick="revokeApiKey('${key.id}')" class="touch-feedback text-danger hover:text-danger/80 ml-auto md:ml-0" title="Revoke">
                   <i class="fas fa-trash"></i>
                 </button>
               </div>
@@ -586,7 +717,15 @@
     }
 
     async function createApiKey() {
-      const name = prompt('Enter a name for this API key:', 'Production');
+      // Mobile-friendly prompt
+      let name = '';
+      if (window.innerWidth <= 768) {
+        // Use custom modal for mobile
+        name = window.prompt('Enter a name for this API key:', 'Production');
+      } else {
+        name = prompt('Enter a name for this API key:', 'Production');
+      }
+      
       if (!name) return;
 
       try {
@@ -601,7 +740,8 @@
 
         const data = await res.json();
         if (data.success) {
-          prompt('Copy your API key (shown only once):', data.apiKey.key);
+          // Show modal instead of prompt for mobile
+          showApiKeyModal(data.apiKey.key);
           loadApiKeys();
           showToast('API key created', 'success');
         } else {
@@ -610,6 +750,26 @@
       } catch (e) {
         showToast('Failed to create API key', 'error');
       }
+    }
+    
+    function showApiKeyModal(apiKey) {
+      // Create modal for showing API key
+      const modal = document.createElement('div');
+      modal.className = 'fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80';
+      modal.innerHTML = `
+        <div class="glass-strong rounded-2xl p-6 w-full max-w-md">
+          <h3 class="text-lg font-bold mb-4">API Key Created</h3>
+          <p class="text-sm text-gray-400 mb-4">Copy this key now. You won't be able to see it again!</p>
+          <div class="bg-white/5 rounded-xl p-4 mb-4">
+            <code class="text-xs break-all">${apiKey}</code>
+          </div>
+          <div class="flex gap-3">
+            <button onclick="this.closest('.fixed').remove()" class="flex-1 py-3 bg-white/10 rounded-xl text-sm">Close</button>
+            <button onclick="navigator.clipboard.writeText('${apiKey}'); showToast('Copied!', 'success'); this.closest('.fixed').remove();" class="flex-1 py-3 bg-accent rounded-xl text-sm font-medium">Copy</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
     }
 
     async function revokeApiKey(keyId) {
@@ -644,33 +804,39 @@
           // Update stats
           document.getElementById('statRequests').textContent = data.usage.totalRequests.toLocaleString();
           document.getElementById('statCost').textContent = '₱' + data.usage.totalCost.toFixed(2);
+          
+          // Update mobile credit
+          const mobileCredit = document.getElementById('mobileCredit');
+          if (mobileCredit) {
+            mobileCredit.textContent = '₱' + data.usage.totalCost.toFixed(2);
+          }
 
           // Render chart (simplified)
           const chartContainer = document.getElementById('usageChart');
           if (data.usage.recentDaily && data.usage.recentDaily.length > 0) {
             const maxValue = Math.max(...data.usage.recentDaily.map(d => d.requests));
             chartContainer.innerHTML = `
-              <div class="flex items-end justify-between h-full gap-1">
+              <div class="flex items-end justify-between h-full gap-1 md:gap-2">
                 ${data.usage.recentDaily.map(day => `
-                  <div class="flex-1 flex flex-col items-center gap-1">
-                    <div class="w-full bg-accent/30 rounded-t" style="height: ${maxValue > 0 ? (day.requests / maxValue * 100) : 0}%"></div>
-                    <span class="text-xs text-gray-500">${day.date.split('-')[2]}</span>
+                  <div class="flex-1 flex flex-col items-center gap-1 min-w-0">
+                    <div class="w-full bg-accent/30 rounded-t min-h-[4px]" style="height: ${maxValue > 0 ? (day.requests / maxValue * 100) : 0}%"></div>
+                    <span class="text-[10px] md:text-xs text-gray-500">${day.date.split('-')[2]}</span>
                   </div>
                 `).join('')}
               </div>
             `;
           } else {
-            chartContainer.innerHTML = '<p class="text-gray-500">No usage data yet</p>';
+            chartContainer.innerHTML = '<p class="text-gray-500 text-sm">No usage data yet</p>';
           }
 
           // Update model usage
           const modelContainer = document.getElementById('usageByModel');
           if (Object.keys(data.usage.requestsByModel).length > 0) {
             modelContainer.innerHTML = Object.entries(data.usage.requestsByModel).map(([model, stats]) => `
-              <div class="flex justify-between items-center p-3 rounded-xl bg-white/5">
-                <span class="font-medium">${model}</span>
-                <div class="text-right">
-                  <p class="text-sm">${stats.requests.toLocaleString()} requests</p>
+              <div class="mobile-card flex justify-between items-center p-3 rounded-xl bg-white/5">
+                <span class="font-medium text-sm truncate flex-1 mr-2">${model}</span>
+                <div class="text-right flex-shrink-0">
+                  <p class="text-xs md:text-sm">${stats.requests.toLocaleString()} req</p>
                   <p class="text-xs text-gray-500">₱${stats.cost.toFixed(2)}</p>
                 </div>
               </div>
@@ -708,6 +874,7 @@
         if (data.success) {
           currentCustomer = data.customer;
           document.getElementById('userName').textContent = currentCustomer.name;
+          document.getElementById('userNameMobile').textContent = currentCustomer.name;
           showToast('Profile updated', 'success');
         }
       } catch (e) {
@@ -851,7 +1018,7 @@
       } else if (paymentStatus === 'cancelled') {
         showToast('Payment was cancelled. You can try again anytime.', 'info');
         // Clear the params from URL
-        window.history.replaceState({}, document.title, window.location.pathname);
+        window.history.history.replaceState({}, document.title, window.location.pathname);
       }
     }
 
@@ -872,14 +1039,21 @@
         info: 'bg-accent/20 text-accent border-accent/30'
       };
 
-      toast.className = `px-6 py-4 rounded-xl border ${colors[type]} fade-in flex items-center gap-3`;
+      toast.className = `px-4 py-3 rounded-xl border ${colors[type]} fade-in flex items-center gap-3 shadow-lg`;
       toast.innerHTML = `
         <i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'}"></i>
-        <span>${message}</span>
+        <span class="text-sm">${message}</span>
       `;
 
       container.appendChild(toast);
-      setTimeout(() => toast.remove(), 5000);
+      
+      // Auto remove
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(100%)';
+        toast.style.transition = 'all 0.3s ease';
+        setTimeout(() => toast.remove(), 300);
+      }, 4000);
     }
   </script>
 </body>

@@ -1,10 +1,16 @@
 {
-  "totalRequests": 0,
+  "totalRequests": 1,
   "totalTokens": 0,
   "totalPromptTokens": 0,
   "totalCompletionTokens": 0,
-  "requestsByModel": {},
-  "requestsByHour": {},
-  "requestsByDay": {},
+  "requestsByModel": {
+    "inno-ai-boyong-4.5": 1
+  },
+  "requestsByHour": {
+    "2026-02-22T04": 1
+  },
+  "requestsByDay": {
+    "2026-02-22": 1
+  },
   "startTime": 1771657520435
 }

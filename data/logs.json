@@ -1,1 +1,17 @@
-[]
+[
+  {
+    "id": "ff054fd0-41ae-4a9f-8dcc-28dae2a25919",
+    "model": "inno-ai-boyong-4.5",
+    "source": "playground",
+    "promptPreview": "Hi",
+    "responsePreview": "⚠️ API rate limit reached. Please try again later.",
+    "promptTokens": 0,
+    "completionTokens": 0,
+    "totalTokens": 0,
+    "latency": 27340,
+    "status": "success",
+    "fullPrompt": "Hi",
+    "fullResponse": "⚠️ API rate limit reached. Please try again later.",
+    "timestamp": "2026-02-22T04:33:32.660Z"
+  }
+]
