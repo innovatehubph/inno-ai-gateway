@@ -57,8 +57,8 @@ The InnoAI platform has been successfully configured for production deployment w
 - **Health Check:** `/health` endpoint every 10s
 
 ### Special Routes:
-1. **`/v1/models`** → Proxied to port 8092 (ai-gateway-proxy-chat)
-2. **`/v1/chat`** → Proxied to port 8092 (ai-gateway-proxy-chat)
+1. **`/v1/models`** → Proxied to port 3456 (ai-gateway-proxy-chat)
+2. **`/v1/chat`** → Proxied to port 3456 (ai-gateway-proxy-chat)
 3. **All other paths** → Port 3456 (main app)
 
 ---

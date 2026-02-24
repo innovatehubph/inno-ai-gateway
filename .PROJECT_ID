@@ -1,5 +1,15 @@
 INNOAI-GATEWAY-PUBLIC
-Customer-facing AI API platform
-Port: 3456
+=====================
+Project: InnoAI Gateway
+Purpose: Public AI API Platform (like Replicate/OpenAI)
 URL: https://ai-gateway.innoserver.cloud
-DO NOT EDIT InnovateHub Hub files in same session
+Port: 3456
+GitHub: https://github.com/innovatehubph/inno-ai-gateway
+
+DO NOT CONFUSE WITH:
+- /root/innovatehub-hub/ (Internal business platform)
+- /root/ai-gateway-proxy/ (Unused Python experiment)
+- /root/innovatehub-hub/ai-proxy/ (Broken internal service)
+
+This is a CUSTOMER-FACING AI API platform.
+Customers buy API keys and use our AI models.

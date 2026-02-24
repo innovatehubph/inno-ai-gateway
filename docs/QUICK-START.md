@@ -1,123 +1,60 @@
-# Quick Start Guide
+# InnoAI Gateway - Quick Start
 
-## 🚀 Get Started in 5 Minutes
+## 🚀 Get Your API Key
 
-### Option 1: Use the Dashboard (No Code)
+1. Visit https://ai-gateway.innoserver.cloud/portal.html
+2. Sign up or login
+3. Generate your API key
 
-1. **Open Dashboard:** https://platapayph.innoserver.cloud
-2. **Login** with your credentials
-3. **Navigate to Image Generator** (`/image-generator`)
-4. **Select a scene** (e.g., "OFW Remittance")
-5. **Click Generate** (~30-60 seconds)
-6. **Enter recipient emails**
-7. **Click Send** ✅
+## 💬 Chat Completion
 
----
-
-### Option 2: API Integration (For Developers)
-
-#### Generate Marketing Image
 ```bash
-curl -X POST https://webhook.innoserver.cloud/api/platapay/generate-scene \
+curl -X POST https://ai-gateway.innoserver.cloud/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -d '{"scene": "agent_success"}'
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "publicUrl": "https://webhook.innoserver.cloud/assets/generated/agent_success_xxx.png",
-  "emailUrl": "https://webhook.innoserver.cloud/assets/generated/agent_success_xxx_email.jpg"
-}
-```
-
-#### Send Marketing Email
-```bash
-curl -X POST https://webhook.innoserver.cloud/api/send-email \
-  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
   -d '{
-    "to": "prospect@email.com",
-    "template": "agent_recruitment",
-    "subject": "Start Your PlataPay Business",
-    "data": {
-      "heroImage": "URL_FROM_ABOVE",
-      "name": "Juan"
-    }
+    "model": "inno-ai-boyong-4.5",
+    "messages": [
+      {"role": "user", "content": "Hello, how are you?"}
+    ]
   }'
 ```
 
-#### One-Click Campaign (Generate + Send)
+## 🖼️ Image Generation
+
 ```bash
-curl -X POST https://webhook.innoserver.cloud/api/automation/generate-and-email \
+curl -X POST https://ai-gateway.innoserver.cloud/v1/images/generations \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
   -d '{
-    "scene": "ofw_remittance",
-    "recipients": ["lead1@email.com", "lead2@email.com"],
-    "subject": "Help OFW Families - Become a PlataPay Agent"
+    "model": "inno-ai-vision-xl",
+    "prompt": "A beautiful sunset over Manila Bay",
+    "size": "1024x1024"
   }'
 ```
 
----
+## 📚 Available Models
 
-### Option 3: n8n / Make / Zapier Integration
+### Chat Models
+| Model | Description | Price |
+|-------|-------------|-------|
+| `inno-ai-boyong-4.5` | Balanced, cost-effective | ₱0.15/1K tokens |
+| `inno-ai-boyong-4.0` | Fast responses | ₱0.10/1K tokens |
+| `inno-ai-boyong-mini` | Budget-friendly | ₱0.05/1K tokens |
 
-**Webhook URL:** `https://webhook.innoserver.cloud/api/automation/generate-and-email`
+### Image Models
+| Model | Description | Price |
+|-------|-------------|-------|
+| `inno-ai-vision-xl` | High-quality images | ₱2.90/image |
+| `inno-flux-1-schnell` | Fast generation | ₱0.06/image |
 
-**Method:** POST
+## 🔗 API Endpoints
 
-**Body:**
-```json
-{
-  "scene": "{{scene_from_trigger}}",
-  "recipients": ["{{email_from_trigger}}"],
-  "subject": "{{custom_subject}}"
-}
-```
+- **Chat**: `POST /v1/chat/completions`
+- **Images**: `POST /v1/images/generations`
+- **Models**: `GET /v1/models`
+- **Embeddings**: `POST /v1/embeddings`
 
----
+## 📖 Full Documentation
 
-## 📸 Available Image Scenes
-
-| Scene ID | Best For |
-|----------|----------|
-| `ofw_remittance` | OFW-targeted campaigns |
-| `rural_queue` | Provincial expansion |
-| `school_students` | Back-to-school campaigns |
-| `market_vendors` | Palengke area marketing |
-| `agent_success` | Recruitment campaigns |
-| `senior_citizen` | Pension/senior services |
-| `motorcycle_delivery` | Rider partnerships |
-| `fiesta_celebration` | Holiday campaigns |
-| `micro_business` | Sari-sari store owners |
-| `tech_savvy_youth` | Digital-first audience |
-
----
-
-## 📧 Email Templates
-
-| Template ID | Use Case |
-|-------------|----------|
-| `agent_recruitment` | Convert leads to agents |
-| `welcome_agent` | New agent onboarding |
-| `franchise_inquiry` | Franchise info |
-| `nurture_earnings` | Earnings potential |
-| `nurture_success` | Success stories |
-| `webinar_registration` | Event confirmations |
-
----
-
-## 💡 Tips
-
-1. **For Facebook Ads:** Use `publicUrl` (full quality PNG)
-2. **For Email Campaigns:** Use `emailUrl` (optimized JPG, ~70KB)
-3. **Cost:** ~$0.05 per image generation
-4. **Speed:** 30-60 seconds per image
-
----
-
-## 🆘 Need Help?
-
-- **Dashboard:** https://platapayph.innoserver.cloud
-- **API Docs:** https://webhook.innoserver.cloud/assets/docs/
-- **Email:** admin@innovatehub.ph
+Visit https://ai-gateway.innoserver.cloud/docs.html

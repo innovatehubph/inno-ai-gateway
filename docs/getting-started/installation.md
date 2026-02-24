@@ -4,64 +4,54 @@
 
 - Node.js 18+ and npm
 - Git
-- Back4App account with an application created
-- Facebook Developer account (for integration features)
+- PM2 (for production)
 
 ## Clone the Repository
 
 ```bash
-git clone https://github.com/innovatehubph/innovatehub-hub.git
-cd innovatehub-hub
+git clone https://github.com/innovatehubph/inno-ai-gateway.git
+cd inno-ai-gateway
 ```
 
-## Install Dashboard Dependencies
+## Install Dependencies
 
 ```bash
-cd dashboard
 npm install
 ```
 
-## Build the Dashboard
+## Configure Environment
 
 ```bash
-npm run build
+cp .env.example .env
+# Edit .env with your API keys:
+# - OPENROUTER_API_KEY
+# - HF_API_TOKEN
+# - MOONSHOT_API_KEY
+# - DIRECTPAY credentials (for billing)
 ```
 
-The built files will be in `dashboard/dist/`.
+## Start the Server
 
-## Run Locally
-
-### Option 1: Vite Dev Server
+### Development
 ```bash
-cd dashboard
 npm run dev
 ```
-Dashboard will be available at `http://localhost:5173`
 
-### Option 2: Static Server (Production)
+### Production (PM2)
 ```bash
-node dashboard-server.js
-```
-Dashboard will be available at `http://localhost:3457`
-
-## Deploy to Back4App
-
-```bash
-# Copy build to deploy directory
-cp -r dashboard/dist/* b4a-deploy/public/
-cp cloud/main.js b4a-deploy/cloud/
-cp cloud/app.js b4a-deploy/cloud/
-
-# Deploy
-cd b4a-deploy
-b4a deploy -f
+pm2 start ecosystem.config.js
 ```
 
-## Start AI Proxy
+## Verify Installation
 
 ```bash
-cd ai-proxy
-npm install
-node server.js
+curl http://localhost:3456/health
+# Should return: {"status":"ok"}
 ```
-AI Proxy will run on `http://localhost:3456`
+
+## Access Points
+
+- **API**: http://localhost:3456/v1/
+- **Admin Panel**: http://localhost:3456/admin.html
+- **Customer Portal**: http://localhost:3456/portal.html
+- **API Docs**: http://localhost:3456/docs.html
