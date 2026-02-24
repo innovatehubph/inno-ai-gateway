@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>InnoAI Gateway - Project Management</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { font-family: 'Inter', sans-serif; }
+    .glass {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .gradient-bg {
+      background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #1e1b4b 100%);
+    }
+    .card-hover {
+      transition: all 0.3s ease;
+    }
+    .card-hover:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 40px rgba(99, 102, 241, 0.3);
+    }
+    .pulse-dot {
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    .status-online { color: #10b981; }
+    .status-offline { color: #ef4444; }
+    .priority-critical { background: #ef4444; }
+    .priority-high { background: #f59e0b; }
+    .priority-medium { background: #3b82f6; }
+    .priority-low { background: #6b7280; }
+    .scrollbar-hide::-webkit-scrollbar { display: none; }
+    .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
+</head>
+<body class="gradient-bg text-white min-h-screen">
+  <!-- Header -->
+  <header class="glass sticky top-0 z-50 border-b border-white/10">
+    <div class="max-w-7xl mx-auto px-4 py-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 bg-indigo-500 rounded-lg flex items-center justify-center">
+            <i class="fas fa-robot text-xl"></i>
+          </div>
+          <div>
+            <h1 class="text-xl font-bold">InnoAI Gateway</h1>
+            <p class="text-xs text-gray-400">Project Management Dashboard</p>
+          </div>
+        </div>
+        <div class="flex items-center space-x-4">
+          <div class="flex items-center space-x-2 text-sm">
+            <div class="w-2 h-2 bg-green-500 rounded-full pulse-dot"></div>
+            <span class="status-online">System Online</span>
+          </div>
+          <button onclick="refreshData()" class="p-2 hover:bg-white/10 rounded-lg transition">
+            <i class="fas fa-sync-alt"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Navigation Tabs -->
+  <nav class="glass border-b border-white/10">
+    <div class="max-w-7xl mx-auto px-4">
+      <div class="flex space-x-1 overflow-x-auto scrollbar-hide">
+        <button onclick="showTab('overview')" class="tab-btn active px-4 py-3 text-sm font-medium border-b-2 border-indigo-500 text-white transition" data-tab="overview">
+          <i class="fas fa-chart-line mr-2"></i>Overview
+        </button>
+        <button onclick="showTab('tasks')" class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-400 hover:text-white transition" data-tab="tasks">
+          <i class="fas fa-tasks mr-2"></i>Tasks
+        </button>
+        <button onclick="showTab('issues')" class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-400 hover:text-white transition" data-tab="issues">
+          <i class="fas fa-bug mr-2"></i>Issues
+        </button>
+        <button onclick="showTab('log')" class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-400 hover:text-white transition" data-tab="log">
+          <i class="fas fa-history mr-2"></i>Activity Log
+        </button>
+        <button onclick="showTab('chat')" class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-400 hover:text-white transition" data-tab="chat">
+          <i class="fas fa-comments mr-2"></i>AI Chat
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="max-w-7xl mx-auto px-4 py-6">
+    
+    <!-- Overview Tab -->
+    <div id="overview" class="tab-content">
+      <!-- Stats Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div class="glass rounded-xl p-4 card-hover">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-gray-400 text-sm">System Status</span>
+            <i class="fas fa-server text-green-400"></i>
+          </div>
+          <div class="text-2xl font-bold text-green-400">Online</div>
+          <div class="text-xs text-gray-500 mt-1">Uptime: 1d 0h</div>
+        </div>
+        
+        <div class="glass rounded-xl p-4 card-hover">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-gray-400 text-sm">Critical Issues</span>
+            <i class="fas fa-exclamation-triangle text-red-400"></i>
+          </div>
+          <div class="text-2xl font-bold text-red-400" id="critical-count">1</div>
+          <div class="text-xs text-gray-500 mt-1">Needs immediate attention</div>
+        </div>
+        
+        <div class="glass rounded-xl p-4 card-hover">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-gray-400 text-sm">Pending Tasks</span>
+            <i class="fas fa-clipboard-list text-yellow-400"></i>
+          </div>
+          <div class="text-2xl font-bold text-yellow-400" id="pending-count">6</div>
+          <div class="text-xs text-gray-500 mt-1">Across all priorities</div>
+        </div>
+        
+        <div class="glass rounded-xl p-4 card-hover">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-gray-400 text-sm">Active Providers</span>
+            <i class="fas fa-plug text-blue-400"></i>
+          </div>
+          <div class="text-2xl font-bold text-blue-400">5</div>
+          <div class="text-xs text-gray-500 mt-1">All operational</div>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="glass rounded-xl p-6 mb-6">
+        <h3 class="text-lg font-semibold mb-4">🚀 Quick Actions</h3>
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+          <button onclick="sendAction('A')" class="bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 rounded-lg p-3 text-left transition">
+            <div class="text-xs text-red-400 mb-1">A</div>
+            <div class="text-sm font-medium">Fix DirectPay</div>
+          </button>
+          <button onclick="sendAction('B')" class="bg-yellow-500/20 hover:bg-yellow-500/30 border border-yellow-500/50 rounded-lg p-3 text-left transition">
+            <div class="text-xs text-yellow-400 mb-1">B</div>
+            <div class="text-sm font-medium">Add Pricing</div>
+          </button>
+          <button onclick="sendAction('C')" class="bg-yellow-500/20 hover:bg-yellow-500/30 border border-yellow-500/50 rounded-lg p-3 text-left transition">
+            <div class="text-xs text-yellow-400 mb-1">C</div>
+            <div class="text-sm font-medium">Usage Limits</div>
+          </button>
+          <button onclick="sendAction('D')" class="bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/50 rounded-lg p-3 text-left transition">
+            <div class="text-xs text-blue-400 mb-1">D</div>
+            <div class="text-sm font-medium">Webhooks</div>
+          </button>
+          <button onclick="sendAction('E')" class="bg-gray-500/20 hover:bg-gray-500/30 border border-gray-500/50 rounded-lg p-3 text-left transition">
+            <div class="text-xs text-gray-400 mb-1">E</div>
+            <div class="text-sm font-medium">Code Review</div>
+          </button>
+        </div>
+      </div>
+
+      <!-- Status Preview -->
+      <div class="glass rounded-xl p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-semibold">📊 Current Status</h3>
+          <button onclick="loadStatus()" class="text-sm text-indigo-400 hover:text-indigo-300">
+            <i class="fas fa-sync-alt mr-1"></i>Refresh
+          </button>
+        </div>
+        <div id="status-content" class="prose prose-invert max-w-none text-sm text-gray-300">
+          <p class="text-gray-500">Loading status...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tasks Tab -->
+    <div id="tasks" class="tab-content hidden">
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-2xl font-bold">📋 Task List</h2>
+        <button onclick="loadTasks()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg text-sm transition">
+          <i class="fas fa-sync-alt mr-2"></i>Refresh
+        </button>
+      </div>
+      <div id="tasks-content" class="space-y-4">
+        <p class="text-gray-500">Loading tasks...</p>
+      </div>
+    </div>
+
+    <!-- Issues Tab -->
+    <div id="issues" class="tab-content hidden">
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-2xl font-bold">🐛 Known Issues</h2>
+        <button onclick="loadIssues()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg text-sm transition">
+          <i class="fas fa-sync-alt mr-2"></i>Refresh
+        </button>
+      </div>
+      <div id="issues-content" class="space-y-4">
+        <p class="text-gray-500">Loading issues...</p>
+      </div>
+    </div>
+
+    <!-- Activity Log Tab -->
+    <div id="log" class="tab-content hidden">
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-2xl font-bold">📒 Activity Log</h2>
+        <button onclick="loadLog()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg text-sm transition">
+          <i class="fas fa-sync-alt mr-2"></i>Refresh
+        </button>
+      </div>
+      <div class="glass rounded-xl p-6">
+        <div id="log-content" class="space-y-3 text-sm">
+          <p class="text-gray-500">Loading log...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI Chat Tab -->
+    <div id="chat" class="tab-content hidden">
+      <div class="flex flex-col h-[calc(100vh-200px)]">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-2xl font-bold">💬 AI Assistant</h2>
+          <div class="text-xs text-gray-400">Send instructions to the AI</div>
+        </div>
+        
+        <div class="glass rounded-xl flex-1 overflow-hidden flex flex-col">
+          <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-4">
+            <div class="flex items-start space-x-3">
+              <div class="w-8 h-8 bg-indigo-500 rounded-full flex items-center justify-center flex-shrink-0">
+                <i class="fas fa-robot text-sm"></i>
+              </div>
+              <div class="bg-white/10 rounded-lg p-3 max-w-[80%]">
+                <p class="text-sm">Hello! I'm your AI assistant. How can I help you with the InnoAI Gateway today?</p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="border-t border-white/10 p-4">
+            <form onsubmit="sendChatMessage(event)" class="flex space-x-3">
+              <input 
+                type="text" 
+                id="chat-input" 
+                placeholder="Type your instruction..."
+                class="flex-1 bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-indigo-500"
+              >
+              <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg transition">
+                <i class="fas fa-paper-plane"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="fixed bottom-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 z-50">
+    <span id="toast-message">Action sent!</span>
+  </div>
+
+  <script>
+    // Tab switching
+    function showTab(tabName) {
+      // Hide all tabs
+      document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.add('hidden');
+      });
+      
+      // Show selected tab
+      document.getElementById(tabName).classList.remove('hidden');
+      
+      // Update tab buttons
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('border-indigo-500', 'text-white');
+        btn.classList.add('border-transparent', 'text-gray-400');
+      });
+      
+      document.querySelector(`[data-tab="${tabName}"]`).classList.add('border-indigo-500', 'text-white');
+      document.querySelector(`[data-tab="${tabName}"]`).classList.remove('border-transparent', 'text-gray-400');
+      
+      // Load data if needed
+      if (tabName === 'tasks') loadTasks();
+      if (tabName === 'issues') loadIssues();
+      if (tabName === 'log') loadLog();
+    }
+
+    // Data loading functions (simulated - will be connected to backend)
+    async function loadStatus() {
+      document.getElementById('status-content').innerHTML = `
+        <div class="animate-pulse">
+          <div class="h-4 bg-white/10 rounded mb-2"></div>
+          <div class="h-4 bg-white/10 rounded mb-2"></div>
+          <div class="h-4 bg-white/10 rounded"></div>
+        </div>
+      `;
+      
+      // In real implementation, fetch from server
+      setTimeout(() => {
+        document.getElementById('status-content').innerHTML = `
+          <div class="space-y-3">
+            <div class="flex items-center space-x-2">
+              <div class="w-2 h-2 bg-green-500 rounded-full"></div>
+              <span>InnoAI Gateway: <strong class="text-green-400">ONLINE</strong></span>
+            </div>
+            <div class="flex items-center space-x-2">
+              <div class="w-2 h-2 bg-green-500 rounded-full"></div>
+              <span>Port: <strong>3456</strong></span>
+            </div>
+            <div class="flex items-center space-x-2">
+              <div class="w-2 h-2 bg-green-500 rounded-full"></div>
+              <span>Memory: <strong>20.16 MB</strong> (91.74% heap)</span>
+            </div>
+            <div class="flex items-center space-x-2">
+              <div class="w-2 h-2 bg-red-500 rounded-full"></div>
+              <span>DirectPay: <strong class="text-red-400">BROKEN</strong> (encryption errors)</span>
+            </div>
+            <p class="text-gray-400 mt-4">Waiting for instruction. Choose a quick action above or go to AI Chat tab.</p>
+          </div>
+        `;
+      }, 500);
+    }
+
+    async function loadTasks() {
+      document.getElementById('tasks-content').innerHTML = `
+        <div class="animate-pulse space-y-4">
+          <div class="h-20 bg-white/10 rounded-lg"></div>
+          <div class="h-20 bg-white/10 rounded-lg"></div>
+          <div class="h-20 bg-white/10 rounded-lg"></div>
+        </div>
+      `;
+      
+      setTimeout(() => {
+        document.getElementById('tasks-content').innerHTML = `
+          <div class="glass rounded-xl p-4 border-l-4 border-red-500">
+            <div class="flex items-start justify-between">
+              <div>
+                <div class="flex items-center space-x-2 mb-1">
+                  <span class="text-xs bg-red-500 px-2 py-0.5 rounded">CRITICAL</span>
+                  <span class="text-gray-400 text-sm">Billing</span>
+                </div>
+                <h4 class="font-semibold">Fix DirectPay encryption</h4>
+                <p class="text-sm text-gray-400 mt-1">Encryption errors preventing payments</p>
+              </div>
+              <button onclick="sendAction('A')" class="text-red-400 hover:text-red-300">
+                <i class="fas fa-play-circle text-xl"></i>
+              </button>
+            </div>
+          </div>
+          
+          <div class="glass rounded-xl p-4 border-l-4 border-yellow-500">
+            <div class="flex items-start justify-between">
+              <div>
+                <div class="flex items-center space-x-2 mb-1">
+                  <span class="text-xs bg-yellow-500 px-2 py-0.5 rounded">HIGH</span>
+                  <span class="text-gray-400 text-sm">Feature</span>
+                </div>
+                <h4 class="font-semibold">Add pricing management</h4>
+                <p class="text-sm text-gray-400 mt-1">Set custom prices per model</p>
+              </div>
+              <button onclick="sendAction('B')" class="text-yellow-400 hover:text-yellow-300">
+                <i class="fas fa-play-circle text-xl"></i>
+              </button>
+            </div>
+          </div>
+          
+          <div class="glass rounded-xl p-4 border-l-4 border-blue-500">
+            <div class="flex items-start justify-between">
+              <div>
+                <div class="flex items-center space-x-2 mb-1">
+                  <span class="text-xs bg-blue-500 px-2 py-0.5 rounded">MEDIUM</span>
+                  <span class="text-gray-400 text-sm">Enhancement</span>
+                </div>
+                <h4 class="font-semibold">Create SDK examples</h4>
+                <p class="text-sm text-gray-400 mt-1">Python and JavaScript clients</p>
+              </div>
+              <span class="text-gray-500 text-sm">Queue</span>
+            </div>
+          </div>
+        `;
+      }, 500);
+    }
+
+    async function loadIssues() {
+      document.getElementById('issues-content').innerHTML = `
+        <div class="animate-pulse space-y-4">
+          <div class="h-32 bg-white/10 rounded-lg"></div>
+        </div>
+      `;
+      
+      setTimeout(() => {
+        document.getElementById('issues-content').innerHTML = `
+          <div class="glass rounded-xl p-6 border border-red-500/50 bg-red-500/10">
+            <div class="flex items-start space-x-4">
+              <div class="w-12 h-12 bg-red-500/20 rounded-full flex items-center justify-center flex-shrink-0">
+                <i class="fas fa-exclamation-triangle text-red-400 text-xl"></i>
+              </div>
+              <div class="flex-1">
+                <div class="flex items-center justify-between mb-2">
+                  <h3 class="text-lg font-semibold text-red-400">DirectPay Billing Broken</h3>
+                  <span class="text-xs bg-red-500 px-2 py-1 rounded">CRITICAL</span>
+                </div>
+                <p class="text-gray-300 mb-3">Encryption errors preventing customers from completing payments.</p>
+                <div class="bg-black/30 rounded-lg p-3 font-mono text-xs text-gray-400">
+                  [DIRECTPAY] Encryption error: Invalid initialization vector<br>
+                  [DIRECTPAY] Encryption error: Invalid key length
+                </div>
+                <div class="mt-4 flex space-x-3">
+                  <button onclick="sendAction('A')" class="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-sm transition">
+                    <i class="fas fa-wrench mr-2"></i>Fix Now
+                  </button>
+                  <span class="text-sm text-gray-500 self-center">Location: /src/services/directpay.js</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="glass rounded-xl p-6">
+            <h4 class="font-semibold mb-4">Other Issues</h4>
+            <div class="space-y-3">
+              <div class="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                <div class="flex items-center space-x-3">
+                  <div class="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                  <span>No pricing management system</span>
+                </div>
+                <span class="text-xs text-yellow-500">HIGH</span>
+              </div>
+              <div class="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                <div class="flex items-center space-x-3">
+                  <div class="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                  <span>No usage limits per API key</span>
+                </div>
+                <span class="text-xs text-yellow-500">HIGH</span>
+              </div>
+            </div>
+          </div>
+        `;
+      }, 500);
+    }
+
+    async function loadLog() {
+      document.getElementById('log-content').innerHTML = `
+        <div class="animate-pulse space-y-2">
+          <div class="h-4 bg-white/10 rounded w-3/4"></div>
+          <div class="h-4 bg-white/10 rounded w-1/2"></div>
+          <div class="h-4 bg-white/10 rounded w-2/3"></div>
+        </div>
+      `;
+      
+      setTimeout(() => {
+        document.getElementById('log-content').innerHTML = `
+          <div class="flex items-start space-x-3">
+            <div class="text-xs text-gray-500 w-20 flex-shrink-0">08:00</div>
+            <div>
+              <span class="text-green-400">✅</span>
+              <span class="text-sm">Created collaboration workspace</span>
+            </div>
+          </div>
+          <div class="flex items-start space-x-3">
+            <div class="text-xs text-gray-500 w-20 flex-shrink-0">07:50</div>
+            <div>
+              <span class="text-blue-400">📊</span>
+              <span class="text-sm">System health check - Gateway online</span>
+            </div>
+          </div>
+          <div class="flex items-start space-x-3">
+            <div class="text-xs text-gray-500 w-20 flex-shrink-0">07:30</div>
+            <div>
+              <span class="text-purple-400">🔧</span>
+              <span class="text-sm">Project separation strategy implemented</span>
+            </div>
+          </div>
+          <div class="flex items-start space-x-3">
+            <div class="text-xs text-gray-500 w-20 flex-shrink-0">07:00</div>
+            <div>
+              <span class="text-yellow-400">⚠️</span>
+              <span class="text-sm">Found DirectPay encryption errors in logs</span>
+            </div>
+          </div>
+        `;
+      }, 500);
+    }
+
+    // Action buttons
+    function sendAction(action) {
+      showToast(`Action "${action}" sent to AI assistant!`);
+      
+      // Add to chat
+      const messagesDiv = document.getElementById('chat-messages');
+      const actionText = {
+        'A': 'Fix DirectPay billing - encryption errors',
+        'B': 'Add pricing management system',
+        'C': 'Add usage limits and quotas',
+        'D': 'Add webhook support',
+        'E': 'Full codebase review'
+      }[action];
+      
+      messagesDiv.innerHTML += `
+        <div class="flex items-start space-x-3 justify-end">
+          <div class="bg-indigo-600 rounded-lg p-3 max-w-[80%]">
+            <p class="text-sm">${actionText}</p>
+          </div>
+          <div class="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center flex-shrink-0">
+            <i class="fas fa-user text-sm"></i>
+          </div>
+        </div>
+      `;
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+      
+      // Simulate AI response
+      setTimeout(() => {
+        messagesDiv.innerHTML += `
+          <div class="flex items-start space-x-3">
+            <div class="w-8 h-8 bg-indigo-500 rounded-full flex items-center justify-center flex-shrink-0">
+              <i class="fas fa-robot text-sm"></i>
+            </div>
+            <div class="bg-white/10 rounded-lg p-3 max-w-[80%]">
+              <p class="text-sm">✅ Received! I'll start working on: ${actionText}</p>
+              <p class="text-xs text-gray-400 mt-1">Check the Activity Log tab for progress updates.</p>
+            </div>
+          </div>
+        `;
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+      }, 1000);
+    }
+
+    // Chat functionality
+    function sendChatMessage(event) {
+      event.preventDefault();
+      const input = document.getElementById('chat-input');
+      const message = input.value.trim();
+      
+      if (!message) return;
+      
+      // Add user message
+      const messagesDiv = document.getElementById('chat-messages');
+      messagesDiv.innerHTML += `
+        <div class="flex items-start space-x-3 justify-end">
+          <div class="bg-indigo-600 rounded-lg p-3 max-w-[80%]">
+            <p class="text-sm">${message}</p>
+          </div>
+          <div class="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center flex-shrink-0">
+            <i class="fas fa-user text-sm"></i>
+          </div>
+        </div>
+      `;
+      
+      input.value = '';
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+      
+      // Simulate AI response
+      setTimeout(() => {
+        messagesDiv.innerHTML += `
+          <div class="flex items-start space-x-3">
+            <div class="w-8 h-8 bg-indigo-500 rounded-full flex items-center justify-center flex-shrink-0">
+              <i class="fas fa-robot text-sm"></i>
+            </div>
+            <div class="bg-white/10 rounded-lg p-3 max-w-[80%]">
+              <p class="text-sm">✅ I've recorded your instruction: "${message}"</p>
+              <p class="text-xs text-gray-400 mt-2">I'll process this and update the project files. Check back soon!</p>
+            </div>
+          </div>
+        `;
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        showToast('Instruction sent to AI!');
+      }, 1500);
+    }
+
+    // Toast notification
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      document.getElementById('toast-message').textContent = message;
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      
+      setTimeout(() => {
+        toast.classList.add('translate-y-20', 'opacity-0');
+      }, 3000);
+    }
+
+    // Refresh all data
+    function refreshData() {
+      showToast('Refreshing data...');
+      loadStatus();
+      loadTasks();
+      loadIssues();
+      loadLog();
+    }
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+      loadStatus();
+    });
+  </script>
+</body>
+</html>

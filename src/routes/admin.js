@@ -739,3 +739,4 @@ router.get('/audit-logs', adminAuth, (req, res) => {
 });
 
 module.exports = router;
+module.exports.adminAuth = adminAuth;

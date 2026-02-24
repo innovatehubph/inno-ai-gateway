@@ -41,5 +41,20 @@
     "latency": 2199,
     "status": "success",
     "timestamp": "2026-02-22T05:05:26.687Z"
+  },
+  {
+    "id": "3435f7ef-967d-43b6-866c-d5733ce6a453",
+    "model": "inno-ai-boyong-4.5",
+    "source": "playground",
+    "promptPreview": "Hi",
+    "responsePreview": "Kamusta, Boss Marc! 🐜\n\nReady to work. What do you need today?",
+    "promptTokens": 10,
+    "completionTokens": 90,
+    "totalTokens": 20790,
+    "latency": 8068,
+    "status": "success",
+    "fullPrompt": "Hi",
+    "fullResponse": "Kamusta, Boss Marc! 🐜\n\nReady to work. What do you need today?",
+    "timestamp": "2026-02-24T02:09:55.320Z"
   }
 ]

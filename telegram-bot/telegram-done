@@ -1,0 +1,20 @@
+#!/bin/bash
+
+# telegram-done - Mark Telegram instruction as completed
+# Usage: ./telegram-done
+
+ALERT_FILE="/srv/apps/openclaw-ai-gateway/collab/.telegram-alert"
+
+echo ""
+echo "✅ Marking Telegram instruction as complete..."
+
+if [ -f "$ALERT_FILE" ]; then
+    rm "$ALERT_FILE"
+    echo "✅ Done! Alert file removed."
+    echo ""
+    echo "You can now tell the user on Telegram that the task is complete."
+else
+    echo "ℹ️  No pending alert file found."
+fi
+
+echo ""

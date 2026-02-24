@@ -95,6 +95,15 @@ app.get('/portal/login', (req, res) => {
   res.sendFile(path.join(BASE_DIR, 'public', 'portal.html'));
 });
 
+// Project Management Dashboard
+app.get('/dashboard-app', (req, res) => {
+  res.redirect('/dashboard-app/');
+});
+
+app.get('/dashboard-app/*', (req, res) => {
+  res.sendFile(path.join(BASE_DIR, 'dashboard-app', 'index.html'));
+});
+
 // OpenAPI JSON endpoint
 app.get('/openapi.json', (req, res) => {
   if (swaggerDocument) {
@@ -123,6 +132,78 @@ app.get('/openapi.json', (req, res) => {
 app.get('/openapi.yaml', (req, res) => {
   res.setHeader('Content-Type', 'text/yaml');
   res.sendFile(path.join(__dirname, 'docs', 'openapi.yaml'));
+});
+
+// Telegram Webhook Bridge - Receives messages from @mykie2026bot
+app.post('/telegram-webhook', express.json(), async (req, res) => {
+  try {
+    const update = req.body;
+    
+    if (update.message) {
+      const { message_id, from, chat, text, date } = update.message;
+      const fs = require('fs');
+      const path = require('path');
+      
+      const COLLAB_PATH = path.join(__dirname, '..', 'collab');
+      const INSTRUCTIONS_PATH = path.join(COLLAB_PATH, 'INSTRUCTIONS.md');
+      const ALERT_PATH = path.join(COLLAB_PATH, '.telegram-alert');
+      const LOG_PATH = path.join(COLLAB_PATH, 'LOG.md');
+      
+      // Save chat ID
+      const CHAT_FILE = path.join(COLLAB_PATH, '.telegram-chat-id');
+      fs.writeFileSync(CHAT_FILE, chat.id.toString());
+      
+      const timestamp = new Date(date * 1000).toISOString();
+      const username = from.username || from.first_name || 'User';
+      
+      console.log('\n🚨 TELEGRAM MESSAGE RECEIVED 🚨');
+      console.log(`From: @${username}`);
+      console.log(`Message: ${text}`);
+      console.log(`Time: ${timestamp}`);
+      
+      // Write instruction
+      const instructionContent = `# TELEGRAM REQUEST\n\n**Status:** NEW - AWAITING AI RESPONSE\n**Time:** ${timestamp}\n**From:** @${username} (ID: ${from.id})\n**Chat ID:** ${chat.id}\n**Message:** ${text}\n**Message ID:** ${message_id}\n\n---\n\n**ACTION REQUIRED:**\nAI Assistant - Please respond to this request immediately.\n`;
+
+      fs.writeFileSync(INSTRUCTIONS_PATH, instructionContent);
+      
+      // Create alert file
+      const alertContent = JSON.stringify({
+        type: 'telegram',
+        timestamp: timestamp,
+        username: username,
+        message: text,
+        chatId: chat.id,
+        messageId: message_id,
+        status: 'pending'
+      }, null, 2);
+      
+      fs.writeFileSync(ALERT_PATH, alertContent);
+      
+      // Log it
+      const logEntry = `\n### ${timestamp} - 📱 TELEGRAM REQUEST\n` +
+        `- **From:** @${username}\n` +
+        `- **Message:** ${text}\n` +
+        `- **Status:** ⏳ PENDING AI RESPONSE\n`;
+      
+      fs.appendFileSync(LOG_PATH, logEntry);
+      
+      console.log('✅ Saved to instruction file\n');
+      
+      // Respond to Telegram
+      res.json({
+        method: 'sendMessage',
+        chat_id: chat.id,
+        text: `✅ *Received!*\n\nMessage: "${text}"\n\n⏳ The AI assistant has been notified and will respond shortly.\n\n💡 *Tip:* You can also chat directly in the terminal for faster responses!`,
+        parse_mode: 'Markdown'
+      });
+      return;
+    }
+    
+    res.sendStatus(200);
+  } catch (e) {
+    console.error('Telegram webhook error:', e);
+    res.sendStatus(500);
+  }
 });
 
 // Error handling middleware

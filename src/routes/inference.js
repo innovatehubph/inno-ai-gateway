@@ -367,7 +367,7 @@ router.post('/chat/completions', authenticate, async (req, res) => {
     'inno-ai-boyong-4.0': 'anthropic/claude-3-sonnet',
     'inno-ai-boyong-mini': 'anthropic/claude-3-haiku'
   };
-  
+
   if (innoAiModelMap[requestedModel]) {
     try {
       const openrouterResponse = await callOpenRouterChat(
